@@ -96,7 +96,7 @@ const Index = () => {
     );
   }
 
-  // Split view with chat and results
+  // Split view with chat and results - updated proportions
   return (
     <div className="h-screen flex flex-col bg-slate-50">
       {/* Header */}
@@ -140,15 +140,15 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Main Content - Updated proportions: 1/3 chat, 2/3 preview */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Chat Panel */}
-        <div className="w-1/2 border-r border-slate-200 bg-white">
+        {/* Chat Panel - 1/3 width */}
+        <div className="w-1/3 border-r border-slate-200 bg-white">
           <ChatInterface onBriefGenerated={handleBriefGenerated} />
         </div>
 
-        {/* Results Panel */}
-        <div className="w-1/2 bg-slate-50">
+        {/* Results Panel - 2/3 width */}
+        <div className="w-2/3 bg-slate-50">
           {productBrief && <ProductPreview brief={productBrief} />}
         </div>
       </div>

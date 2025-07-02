@@ -12,22 +12,19 @@ const ProductPreview = ({ brief }: ProductPreviewProps) => {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="border-b bg-white p-4">
+      <div className="border-b bg-white p-4 flex-shrink-0">
         <h2 className="text-xl font-semibold text-slate-800">Product Brief & Mockups</h2>
         <p className="text-sm text-slate-600">Generated specifications and visual previews</p>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        {/* Product Brief */}
-        <ProductBriefDisplay brief={brief} />
-        
-        {/* Mockups Placeholder */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-slate-800">Product Mockups</h3>
+      {/* Content - Single scrollable pane */}
+      <div className="flex-1 overflow-y-auto">
+        {/* Mockups at the top */}
+        <div className="bg-white p-4 border-b">
+          <h3 className="text-lg font-semibold text-slate-800 mb-4">Product Mockups</h3>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Card>
-              <CardHeader>
+              <CardHeader className="pb-3">
                 <CardTitle className="text-base">Studio Shot</CardTitle>
               </CardHeader>
               <CardContent>
@@ -42,7 +39,7 @@ const ProductPreview = ({ brief }: ProductPreviewProps) => {
             </Card>
             
             <Card>
-              <CardHeader>
+              <CardHeader className="pb-3">
                 <CardTitle className="text-base">Lifestyle Shot</CardTitle>
               </CardHeader>
               <CardContent>
@@ -56,6 +53,11 @@ const ProductPreview = ({ brief }: ProductPreviewProps) => {
               </CardContent>
             </Card>
           </div>
+        </div>
+        
+        {/* Product Brief below mockups */}
+        <div className="p-4">
+          <ProductBriefDisplay brief={brief} />
         </div>
       </div>
     </div>
