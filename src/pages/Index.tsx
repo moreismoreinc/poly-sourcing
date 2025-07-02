@@ -74,16 +74,16 @@ const Index = () => {
   if (!showChat && !productBrief) {
     // Initial landing state - single chat input with past projects
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="min-h-screen bg-background">
         {/* Header */}
-        <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200">
-          <div className="container mx-auto px-4 py-4">
+        <div className="bg-background border-b border-border">
+          <div className="container mx-auto px-4 py-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  Geneering
+              <div className="flex items-center gap-6">
+                <h1 className="text-3xl font-bold text-foreground tracking-tight">
+                  geneering
                 </h1>
-                <div className="text-sm text-slate-600 hidden sm:block">
+                <div className="text-sm text-muted-foreground hidden sm:block tracking-wide uppercase">
                   Product Brief Generator • Phase 1
                 </div>
               </div>
@@ -91,7 +91,7 @@ const Index = () => {
               <div className="flex items-center gap-2">
                 {user ? (
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <User className="h-4 w-4" />
                       {user.email}
                     </div>
@@ -107,13 +107,12 @@ const Index = () => {
                   </div>
                 ) : (
                   <Button
-                    variant="outline"
                     size="sm"
                     onClick={() => navigate('/auth')}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6"
                   >
                     <LogIn className="h-4 w-4" />
-                    Sign In
+                    LET'S GO
                   </Button>
                 )}
               </div>
@@ -122,29 +121,27 @@ const Index = () => {
         </div>
 
         {/* Main Content */}
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col items-center justify-center min-h-[calc(100vh-300px)]">
-            <div className="text-center mb-8 max-w-2xl">
-              <h2 className="text-5xl font-bold text-slate-800 mb-4">
-                Transform Ideas into 
-                <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"> Reality</span>
+        <div className="container mx-auto px-4 py-16">
+          <div className="flex flex-col items-center justify-center min-h-[calc(100vh-400px)]">
+            <div className="text-center mb-16 max-w-3xl">
+              <p className="text-sm text-muted-foreground mb-4 tracking-wider uppercase">
+                Got an idea for a product?
+              </p>
+              <h2 className="text-6xl font-bold text-foreground mb-8 tracking-tight leading-tight">
+                Make it a reality using AI.
               </h2>
-              <p className="text-xl text-slate-600 leading-relaxed mb-8">
-                Tell me about your product idea and I'll generate a complete brief with specifications, materials, and dimensions.
+              <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+                Generate product concepts and documents needed to go from idea to production. Built for founders and operators.
               </p>
             </div>
             
             {/* Single Chat Input */}
-            <div className="w-full max-w-2xl mb-12">
-              <div className="bg-white rounded-xl shadow-lg border border-slate-200">
-                <div className="p-1">
-                  <ChatInterface 
-                    onBriefGenerated={handleBriefGenerated} 
-                    requireAuth={false}
-                    onAuthRequired={() => navigate('/auth')}
-                  />
-                </div>
-              </div>
+            <div className="w-full max-w-3xl mb-16">
+              <ChatInterface 
+                onBriefGenerated={handleBriefGenerated} 
+                requireAuth={false}
+                onAuthRequired={() => navigate('/auth')}
+              />
             </div>
 
             {/* Past Projects Section */}
@@ -157,10 +154,10 @@ const Index = () => {
         </div>
 
         {/* Footer */}
-        <div className="bg-white/50 backdrop-blur-sm border-t border-slate-200 mt-16">
-          <div className="container mx-auto px-4 py-8">
-            <div className="text-center text-slate-600">
-              <p className="mb-2">🧱 Phase 1: Product Brief Generator</p>
+        <div className="bg-background border-t border-border mt-24">
+          <div className="container mx-auto px-4 py-12">
+            <div className="text-center text-muted-foreground">
+              <p className="mb-2 text-sm tracking-wide uppercase">Phase 1: Product Brief Generator</p>
               <p className="text-sm">
                 Coming Next: Image Rendering • Component Breakdown • Technical Drawings • BOM Generation
               </p>
@@ -173,17 +170,17 @@ const Index = () => {
 
   // Split view with chat and results - updated proportions
   return (
-    <div className="h-screen flex flex-col bg-slate-50">
+    <div className="h-screen flex flex-col bg-background">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 flex-shrink-0">
-        <div className="px-4 py-3">
+      <div className="bg-background border-b border-border flex-shrink-0">
+        <div className="px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                Geneering
+              <h1 className="text-xl font-bold text-foreground tracking-tight">
+                geneering
               </h1>
               {productBrief && (
-                <span className="text-sm text-slate-600">
+                <span className="text-sm text-muted-foreground">
                   {productBrief.product_name}
                 </span>
               )}
@@ -191,7 +188,7 @@ const Index = () => {
             
             <div className="flex items-center gap-2">
               {user && (
-                <div className="flex items-center gap-2 text-sm text-slate-600 mr-4">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mr-4">
                   <User className="h-4 w-4" />
                   {user.email}
                 </div>
@@ -225,12 +222,12 @@ const Index = () => {
       {/* Main Content - Updated proportions: 1/3 chat, 2/3 preview */}
       <div className="flex-1 flex overflow-hidden">
         {/* Chat Panel - 1/3 width */}
-        <div className="w-1/3 border-r border-slate-200 bg-white">
+        <div className="w-1/3 border-r border-border bg-background">
           <ChatInterface onBriefGenerated={handleBriefGenerated} />
         </div>
 
         {/* Results Panel - 2/3 width */}
-        <div className="w-2/3 bg-slate-50">
+        <div className="w-2/3 bg-muted/30">
           {productBrief && <ProductPreview brief={productBrief} />}
         </div>
       </div>
