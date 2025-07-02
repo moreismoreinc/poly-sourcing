@@ -33,7 +33,7 @@ const ProductBriefDisplay: React.FC<ProductBriefDisplayProps> = ({ brief }) => {
         </CardHeader>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
         {/* Product Details */}
         <Card className="bg-white shadow-lg">
           <CardHeader>
