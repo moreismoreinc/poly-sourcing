@@ -390,7 +390,7 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
               onClick={handleSendMessage}
               disabled={!input.trim() || isLoading || !showInput || !isTypingComplete}
               size="sm"
-              className="bg-slate-700 hover:bg-slate-600 text-white border-slate-600"
+              className="bg-slate-700 hover:bg-slate-600 text-white border-none"
             >
               <Send className="h-4 w-4" />
             </Button>
