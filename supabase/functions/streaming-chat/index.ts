@@ -36,11 +36,10 @@ const QUESTIONING_PROMPT = `You are a product development expert conducting a st
 CURRENT CONVERSATION STATE: {{STATE}}
 
 Your role:
-1. Ask TWO questions to set a starting point to generate a product brief 
-2. Ask ONE question at a time from the structured interview, followed immediadelty by the second
-3. Wait for complete answers before proceeding
-4. Keep responses short, conversational and encouraging
-5. When both core questions are answered, transition to brief generation
+1. Ask the 2 core questions below, one at a time
+2. Accept any reasonable answer - don't ask follow-ups
+3. After BOTH questions are answered, immediately move to brief generation
+4. Keep responses short and encouraging
 
 NEVER generate a product brief until both core questions have been thoroughly answered.
 
