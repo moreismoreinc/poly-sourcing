@@ -321,12 +321,14 @@ serve(async (req) => {
       productBrief,
       rawAiOutput: generatedText,
       openaiRequestDetails: {
-        prompt,
         request_body: requestBody,
-        model: requestBody.model,
-        temperature: requestBody.temperature,
-        max_tokens: requestBody.max_tokens,
         timestamp: new Date().toISOString()
+      },
+      template_info: {
+        built_prompt: prompt,
+        category_detected: category,
+        positioning_inferred: positioning,
+        template_used: category
       },
       metadata: {
         category_detected: category,
