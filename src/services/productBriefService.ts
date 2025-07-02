@@ -2,7 +2,7 @@
 import { ProductInput, ProductBrief } from '@/types/ProductBrief';
 import { supabase } from '@/integrations/supabase/client';
 
-export const generateProductBrief = async (input: ProductInput): Promise<ProductBrief> => {
+export const generateProductBrief = async (input: ProductInput): Promise<{productBrief: ProductBrief, rawAiOutput?: string}> => {
   console.log('Generating product brief for:', input);
   
   try {
@@ -24,7 +24,10 @@ export const generateProductBrief = async (input: ProductInput): Promise<Product
       throw new Error('No product brief returned from API');
     }
 
-    return data.productBrief;
+    return {
+      productBrief: data.productBrief,
+      rawAiOutput: data.rawAiOutput
+    };
   } catch (error) {
     console.error('Error generating product brief:', error);
     
@@ -62,7 +65,10 @@ export const generateProductBrief = async (input: ProductInput): Promise<Product
       notes: "Requires child-resistant cap for safety. Label must include supplement facts panel and FDA disclaimer. Consider amber tint for UV protection of contents."
     };
     
-    return mockBrief;
+    return {
+      productBrief: mockBrief,
+      rawAiOutput: undefined
+    };
   }
 };
 

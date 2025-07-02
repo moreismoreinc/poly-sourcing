@@ -88,7 +88,7 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
       const productInput = parseUserInput(input);
       console.log('Parsed input:', productInput);
       
-      const brief = await generateProductBrief(productInput);
+      const { productBrief: brief } = await generateProductBrief(productInput);
       
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),

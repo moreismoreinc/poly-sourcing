@@ -39,6 +39,7 @@ export type Database = {
           id: string
           product_brief: Json
           product_name: string
+          raw_ai_output: string | null
           updated_at: string
           user_id: string
         }
@@ -47,6 +48,7 @@ export type Database = {
           id?: string
           product_brief: Json
           product_name: string
+          raw_ai_output?: string | null
           updated_at?: string
           user_id: string
         }
@@ -55,6 +57,7 @@ export type Database = {
           id?: string
           product_brief?: Json
           product_name?: string
+          raw_ai_output?: string | null
           updated_at?: string
           user_id?: string
         }

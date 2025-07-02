@@ -273,6 +273,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ 
       success: true,
       productBrief,
+      rawAiOutput: generatedText,
       metadata: {
         category_detected: category,
         positioning_inferred: positioning,
