@@ -67,7 +67,7 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
     const welcomeMessage: Message = {
       id: 'welcome',
       type: 'assistant',
-      content: "Hi! I'm here to help you create a detailed product brief. Let's start with a few questions to understand exactly what you want to build.\n\n**What product do you want to make?**\n\nDescribe the product you have in mind (e.g., \"Sleep gummies\", \"Fitness tracker\", \"Anti-aging cream\", \"Ergonomic office chair\")",
+      content: "🧃 What product do you want to make?",
       timestamp: new Date()
     };
     setMessages([welcomeMessage]);
@@ -77,13 +77,13 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
   const getNextQuestion = (step: ConversationStep): string => {
     switch (step) {
       case ConversationStep.USE_CASE:
-        return `Great! Now tell me:\n\n**Who will use "${collectedData.product_name}" and how will it be used?**\n\nDescribe the target users and their specific use cases (e.g., \"Athletes who need quick recovery after workouts\", \"Busy professionals who want to track their daily activity\", \"People with sensitive skin who need gentle anti-aging treatment\")`;
+        return `Great! Who will use it and how will it be used?`;
       
       case ConversationStep.REQUIREMENTS:
-        return `Perfect! Next question:\n\n**What specific requirements does this product need to have?**\n\nThink about functional requirements, performance specs, size constraints, regulatory needs, etc. (e.g., \"Must be portable, child-safe, FDA approved\", \"Waterproof, 7-day battery life, heart rate monitoring\", \"Fragrance-free, SPF 30, non-comedogenic\")`;
+        return `Any specific requirements the product needs to fit?`;
       
       case ConversationStep.AESTHETICS:
-        return `Excellent! Final question:\n\n**What are your design inspirations and aesthetic preferences?**\n\nDescribe the look, feel, and style you want. Reference brands, packaging styles, or aesthetic directions (e.g., \"Clean and minimal like Apple products\", \"Luxury skincare like La Mer - elegant glass packaging\", \"Bold and energetic like Nike - vibrant colors and dynamic design\", \"Scandinavian minimalism with natural materials\")`;
+        return `OK! Finally, what's the your design inspo? BRands, aesthetics, packaging styles...`;
       
       default:
         return '';
