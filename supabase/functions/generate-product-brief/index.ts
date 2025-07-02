@@ -8,7 +8,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// STEP 1: Replace your basic system prompt with this enhanced one
+// STEP 1: Enhanced system prompt
 const ENHANCED_SYSTEM_PROMPT = `You are an expert industrial designer and product strategist with 15+ years of experience in CPG, apparel, and hardware development.
 
 EXPERTISE: Manufacturing processes, material compatibility, regulatory compliance (FDA, EPA, FCC), cost engineering, supply chain reality, market positioning.
@@ -23,95 +23,140 @@ RULES:
 
 OUTPUT: Generate ONLY valid JSON matching the exact schema. No additional text or explanations.`;
 
-// STEP 2: Update your TEMPLATES with enhanced versions
+// STEP 2: Fixed templates with dynamic placeholders
 const TEMPLATES = {
   supplement: `Supplement: {product_name} - {use_case}
 Style: {aesthetic} | Positioning: {positioning}
 
-Generate JSON:
+Generate a realistic supplement product brief. Consider the product name, use case, and aesthetic to create appropriate:
+- Specific materials based on the product type and positioning
+- Realistic dimensions for the supplement format
+- Colors that match the aesthetic style
+- Certifications relevant to supplements
+- Variants that make sense for this product
+
+Target price range: {price_range}
+
+Return ONLY this JSON structure with values customized for "{product_name}":
 {{"product_name": "{product_name}", "product_id": "{product_id}", "category": "supplement", "positioning": "{positioning}",
 "intended_use": "{use_case}", "target_aesthetic": "{aesthetic}",
-"form_factor": "HDPE plastic bottle with child-resistant cap", 
-"dimensions": {{"height_mm": 95, "diameter_mm": 65}},
-"materials": {{"jar": "BPA-free HDPE plastic", "cap": "Polypropylene", "label": "Waterproof vinyl"}},
-"finishes": {{"jar": "Matte finish", "cap": "Smooth finish", "label": "Semi-gloss laminated"}},
-"color_scheme": {{"base": "primary_color", "accents": ["accent_color"]}},
+"form_factor": "describe the bottle/container type and closure",
+"dimensions": {{"height_mm": realistic_height_number, "diameter_mm": realistic_diameter_number}},
+"materials": {{"jar": "appropriate_plastic_or_glass_type", "cap": "appropriate_cap_material", "label": "appropriate_label_material"}},
+"finishes": {{"jar": "appropriate_jar_finish", "cap": "appropriate_cap_finish", "label": "appropriate_label_finish"}},
+"color_scheme": {{"base": "color_matching_aesthetic", "accents": ["accent_color_1", "accent_color_2"]}},
 "natural_imperfections": null,
-"target_price_usd": {price_mid},
-"certifications": ["FDA", "GMP", "Third-party tested"],
-"variants": ["30ct", "60ct", "90ct"],
-"notes": "Child-resistant cap required. Supplement facts panel and FDA disclaimer on label."}}`,
+"target_price_usd": price_number_in_range,
+"certifications": ["supplement_relevant_certs"],
+"variants": ["count_options_that_make_sense"],
+"notes": "supplement-specific manufacturing and regulatory details"}}`,
 
   skincare: `Skincare: {product_name} - {use_case}
 Style: {aesthetic} | Positioning: {positioning}
 
-Generate JSON:
+Generate a realistic skincare product brief. Consider the product name, use case, and aesthetic to create appropriate:
+- Container materials suitable for skincare formulation
+- Dimensions appropriate for the product type and market positioning  
+- Colors and finishes that reflect the aesthetic
+- Dispensing mechanism suitable for the product
+- Certifications relevant to skincare
+
+Target price range: {price_range}
+
+Return ONLY this JSON structure with values customized for "{product_name}":
 {{"product_name": "{product_name}", "product_id": "{product_id}", "category": "skincare", "positioning": "{positioning}",
 "intended_use": "{use_case}", "target_aesthetic": "{aesthetic}",
-"form_factor": "Glass bottle with airless pump dispenser", 
-"dimensions": {{"height_mm": 130, "diameter_mm": 45}},
-"materials": {{"jar": "Frosted glass", "cap": "PP plastic pump", "label": "Premium paper"}},
-"finishes": {{"jar": "Frosted finish", "cap": "Matte black", "label": "Soft-touch lamination"}},
-"color_scheme": {{"base": "elegant_neutral", "accents": ["luxury_accent"]}},
+"form_factor": "describe container type and dispensing method",
+"dimensions": {{"height_mm": realistic_height_number, "diameter_mm": realistic_diameter_number}},
+"materials": {{"jar": "appropriate_container_material", "cap": "appropriate_closure_material", "label": "appropriate_label_material"}},
+"finishes": {{"jar": "appropriate_container_finish", "cap": "appropriate_closure_finish", "label": "appropriate_label_finish"}},
+"color_scheme": {{"base": "color_matching_aesthetic", "accents": ["accent_color_matching_aesthetic"]}},
 "natural_imperfections": null,
-"target_price_usd": {price_mid},
-"certifications": ["Dermatologist tested", "Cruelty-free", "Hypoallergenic"],
-"variants": ["30ml", "50ml", "100ml"],
-"notes": "Airless pump preserves formula. Patch test recommendation on label."}}`,
+"target_price_usd": price_number_in_range,
+"certifications": ["skincare_relevant_certifications"],
+"variants": ["size_or_formulation_variants"],
+"notes": "skincare-specific formulation and packaging details"}}`,
 
   food: `Food: {product_name} - {use_case}
 Style: {aesthetic} | Positioning: {positioning}
 
-Generate JSON:
+Generate a realistic food product brief. Consider the product name, use case, and aesthetic to create appropriate:
+- Food-safe packaging materials and barrier properties
+- Package size and format suitable for the food type
+- Colors that make the food appetizing and match aesthetic
+- Closure type appropriate for food preservation
+- Food safety certifications
+
+Target price range: {price_range}
+
+Return ONLY this JSON structure with values customized for "{product_name}":
 {{"product_name": "{product_name}", "product_id": "{product_id}", "category": "food", "positioning": "{positioning}",
 "intended_use": "{use_case}", "target_aesthetic": "{aesthetic}",
-"form_factor": "Stand-up pouch with resealable zip closure", 
-"dimensions": {{"height_mm": 180, "width_mm": 120, "depth_mm": 60}},
-"materials": {{"jar": "Food-grade laminated film", "cap": "Zip seal closure", "label": "Direct print on pouch"}},
-"finishes": {{"jar": "Matte barrier film", "cap": "Easy-grip texture", "label": "Food-safe inks"}},
-"color_scheme": {{"base": "appetizing_color", "accents": ["fresh_accent"]}},
+"form_factor": "describe package type and format",
+"dimensions": {{"height_mm": realistic_height, "width_mm": realistic_width, "depth_mm": realistic_depth}},
+"materials": {{"jar": "food_grade_packaging_material", "cap": "appropriate_closure_type", "label": "food_safe_label_material"}},
+"finishes": {{"jar": "appropriate_package_finish", "cap": "appropriate_closure_finish", "label": "food_safe_printing"}},
+"color_scheme": {{"base": "appetizing_color_matching_aesthetic", "accents": ["accent_colors"]}},
 "natural_imperfections": null,
-"target_price_usd": {price_mid},
-"certifications": ["FDA", "USDA Organic", "Non-GMO"],
-"variants": ["Single serve", "Family size", "Bulk pack"],
-"notes": "Nutrition facts panel required. Best by date and storage instructions prominent."}}`,
+"target_price_usd": price_number_in_range,
+"certifications": ["food_safety_certifications"],
+"variants": ["size_or_flavor_variants"],
+"notes": "food safety and packaging requirements"}}`,
 
   wearable: `Wearable: {product_name} - {use_case}
 Style: {aesthetic} | Positioning: {positioning}
 
-Generate JSON:
+Generate a realistic wearable product brief. Consider the product name, use case, and aesthetic to create appropriate:
+- Materials suitable for skin contact and durability
+- Form factor and dimensions for wearable comfort
+- Tech features appropriate for the use case
+- Colors matching the aesthetic style
+- Electronics certifications
+
+Target price range: {price_range}
+
+Return ONLY this JSON structure with values customized for "{product_name}":
 {{"product_name": "{product_name}", "product_id": "{product_id}", "category": "wearable", "positioning": "{positioning}",
 "intended_use": "{use_case}", "target_aesthetic": "{aesthetic}",
-"form_factor": "Rectangular device with adjustable band", 
-"dimensions": {{"height_mm": 44, "width_mm": 38, "depth_mm": 12}},
-"materials": {{"jar": "Aluminum alloy case", "cap": "Silicone sport band", "label": "Ion-X glass display"}},
-"finishes": {{"jar": "Anodized aluminum", "cap": "Soft-touch silicone", "label": "Oleophobic coating"}},
-"color_scheme": {{"base": "space_gray", "accents": ["accent_color"]}},
+"form_factor": "describe wearable device type and form",
+"dimensions": {{"height_mm": realistic_height, "width_mm": realistic_width, "depth_mm": realistic_thickness}},
+"materials": {{"jar": "device_body_material", "cap": "strap_or_band_material", "label": "display_or_interface_material"}},
+"finishes": {{"jar": "body_finish", "cap": "strap_finish", "label": "display_coating"}},
+"color_scheme": {{"base": "primary_color_matching_aesthetic", "accents": ["accent_colors"]}},
 "natural_imperfections": null,
-"target_price_usd": {price_mid},
-"certifications": ["FCC", "Water resistant IPX7", "Skin safe materials"],
-"variants": ["38mm", "42mm", "Sport band", "Leather band"],
-"notes": "24-hour battery life. Magnetic charging. Hypoallergenic materials for skin contact."}}`,
+"target_price_usd": price_number_in_range,
+"certifications": ["electronics_and_safety_certs"],
+"variants": ["size_color_or_feature_variants"],
+"notes": "wearable tech specifications and features"}}`,
 
   wellness: `Wellness: {product_name} - {use_case}
 Style: {aesthetic} | Positioning: {positioning}
 
-Generate JSON:
+Generate a realistic wellness product brief. Consider the product name, use case, and aesthetic to create appropriate:
+- Materials suitable for health/wellness applications
+- Form factor appropriate for the intended wellness use
+- Safety features and ergonomic considerations
+- Colors that convey trust and match aesthetic
+- Health-related certifications
+
+Target price range: {price_range}
+
+Return ONLY this JSON structure with values customized for "{product_name}":
 {{"product_name": "{product_name}", "product_id": "{product_id}", "category": "wellness", "positioning": "{positioning}",
 "intended_use": "{use_case}", "target_aesthetic": "{aesthetic}",
-"form_factor": "Ergonomic handheld device with intuitive controls", 
-"dimensions": {{"height_mm": 150, "width_mm": 80, "depth_mm": 40}},
-"materials": {{"jar": "Medical-grade ABS plastic", "cap": "Soft-touch TPE grip", "label": "Laser-etched instructions"}},
-"finishes": {{"jar": "Smooth medical grade", "cap": "Anti-slip texture", "label": "Permanent laser marking"}},
-"color_scheme": {{"base": "clean_white", "accents": ["trust_blue"]}},
+"form_factor": "describe wellness device type and design",
+"dimensions": {{"height_mm": realistic_height, "width_mm": realistic_width, "depth_mm": realistic_depth}},
+"materials": {{"jar": "primary_body_material", "cap": "secondary_component_material", "label": "interface_or_grip_material"}},
+"finishes": {{"jar": "body_finish", "cap": "component_finish", "label": "interface_finish"}},
+"color_scheme": {{"base": "trustworthy_color_matching_aesthetic", "accents": ["appropriate_accent_colors"]}},
 "natural_imperfections": null,
-"target_price_usd": {price_mid},
-"certifications": ["FDA cleared", "Medical device Class II", "Quality tested"],
-"variants": ["Standard", "Travel size", "Professional grade"],
-"notes": "Medical disclaimers required. Clear usage instructions. Safety warnings prominent."}}`
+"target_price_usd": price_number_in_range,
+"certifications": ["wellness_health_safety_certs"],
+"variants": ["feature_or_size_variants"],
+"notes": "wellness product safety and usage details"}}`
 };
 
-// STEP 3: Update PRICE_RANGES with more realistic data
+// STEP 3: Price ranges
 const PRICE_RANGES = {
   budget: { 
     supplement: [8, 18], skincare: [5, 15], food: [3, 8], 
@@ -127,11 +172,10 @@ const PRICE_RANGES = {
   }
 };
 
-// STEP 4: Enhance your detectCategory function
+// STEP 4: Enhanced category detection
 function detectCategory(productName: string, useCase: string): string {
   const combined = `${productName} ${useCase}`.toLowerCase();
   
-  // Enhanced regex patterns for better detection
   if (/\b(gummies|supplement|vitamin|mineral|protein|probiotic|omega|capsule|tablet)\b/.test(combined)) {
     return 'supplement';
   }
@@ -148,7 +192,7 @@ function detectCategory(productName: string, useCase: string): string {
   return 'wellness';
 }
 
-// STEP 5: Enhance your inferPositioning function
+// STEP 5: Enhanced positioning inference
 function inferPositioning(aesthetic: string): 'budget' | 'mid-range' | 'premium' {
   const aes = aesthetic.toLowerCase();
   
@@ -162,19 +206,19 @@ function inferPositioning(aesthetic: string): 'budget' | 'mid-range' | 'premium'
   return 'mid-range';
 }
 
-// STEP 6: Keep your existing generateProductId function (it's good!)
+// STEP 6: Product ID generation
 function generateProductId(productName: string): string {
   return productName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 }
 
-// STEP 7: Update buildPrompt function to use middle price
+// STEP 7: CORRECTED buildPrompt function - uses price range, not middle price
 function buildPrompt(productName: string, useCase: string, aesthetic: string): string {
   const category = detectCategory(productName, useCase);
   const positioning = inferPositioning(aesthetic);
   const productId = generateProductId(productName);
   
   const priceRange = PRICE_RANGES[positioning][category] || [20, 50];
-  const priceMiddle = Math.round((priceRange[0] + priceRange[1]) / 2);
+  const priceRangeStr = `$${priceRange[0]}-${priceRange[1]}`;  // THIS IS THE CORRECT VERSION
   
   const template = TEMPLATES[category] || TEMPLATES.wellness;
   
@@ -184,10 +228,10 @@ function buildPrompt(productName: string, useCase: string, aesthetic: string): s
     .replace(/{use_case}/g, useCase)
     .replace(/{aesthetic}/g, aesthetic)
     .replace(/{positioning}/g, positioning)
-    .replace(/{price_mid}/g, priceMiddle.toString());
+    .replace(/{price_range}/g, priceRangeStr);  // Uses price range, not middle price
 }
 
-// STEP 8: Update your serve function (main changes highlighted)
+// STEP 8: Main serve function
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -196,7 +240,7 @@ serve(async (req) => {
   try {
     const { product_name, use_case, aesthetic } = await req.json();
 
-    // Add input validation
+    // Input validation
     if (!product_name || !use_case || !aesthetic) {
       throw new Error('Missing required fields: product_name, use_case, aesthetic');
     }
@@ -224,15 +268,15 @@ serve(async (req) => {
         messages: [
           { 
             role: 'system', 
-            content: ENHANCED_SYSTEM_PROMPT  // ← Changed from basic prompt
+            content: ENHANCED_SYSTEM_PROMPT
           },
           { 
             role: 'user', 
             content: prompt 
           }
         ],
-        temperature: 0.1,  // ← Lowered for more consistent output
-        max_tokens: 1200,  // ← Increased for complete responses
+        temperature: 0.1,
+        max_tokens: 1200,
       }),
     });
 
