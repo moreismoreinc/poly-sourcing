@@ -14,86 +14,86 @@ const TEMPLATES = {
 Style: {aesthetic} | Positioning: {positioning}
 
 Generate JSON:
-{{"product_name": "{product_name}", "product_id": "{product_id}", "category": "supplement", "positioning": "{positioning}",
+{"product_name": "{product_name}", "product_id": "{product_id}", "category": "supplement", "positioning": "{positioning}",
 "intended_use": "{use_case}", "target_aesthetic": "{aesthetic}",
-"form_factor": "bottle|jar|pouch with screw-on cap", 
-"dimensions": {{"height_mm": 85, "diameter_mm": 65}},
-"materials": {{"jar": "BPA-free HDPE plastic", "cap": "Polypropylene", "label": "Waterproof vinyl"}},
-"finishes": {{"jar": "Matte finish", "cap": "Smooth gloss", "label": "Semi-gloss with UV coating"}},
-"color_scheme": {{"base": "primary_color", "accents": ["accent1", "accent2"]}},
+"form_factor": "bottle with screw-on cap", 
+"dimensions": {"height_mm": 85, "diameter_mm": 65},
+"materials": {"jar": "BPA-free HDPE plastic", "cap": "Polypropylene", "label": "Waterproof vinyl"},
+"finishes": {"jar": "Matte finish", "cap": "Smooth gloss", "label": "Semi-gloss with UV coating"},
+"color_scheme": {"base": "primary_color", "accents": ["accent1", "accent2"]},
 "natural_imperfections": null,
 "target_price_usd": {price_range},
 "certifications": ["FDA", "GMP", "Third-party tested"],
 "variants": ["30ct", "60ct", "90ct"],
-"notes": "Requires child-resistant cap for safety. Label must include supplement facts panel and FDA disclaimer."}}`,
+"notes": "Requires child-resistant cap for safety. Label must include supplement facts panel and FDA disclaimer."}`,
 
   skincare: `Skincare: {product_name} - {use_case}
 Style: {aesthetic} | Positioning: {positioning}
 
 Generate JSON:
-{{"product_name": "{product_name}", "product_id": "{product_id}", "category": "skincare", "positioning": "{positioning}",
+{"product_name": "{product_name}", "product_id": "{product_id}", "category": "skincare", "positioning": "{positioning}",
 "intended_use": "{use_case}", "target_aesthetic": "{aesthetic}",
-"form_factor": "pump bottle|jar|tube with precise dispensing", 
-"dimensions": {{"height_mm": 120, "diameter_mm": 45}},
-"materials": {{"container": "Glass|BPA-free plastic", "pump": "PP plastic", "label": "Premium paper"}},
-"finishes": {{"container": "Frosted|Clear glass", "pump": "Matte black", "label": "Soft-touch lamination"}},
-"color_scheme": {{"base": "elegant_neutral", "accents": ["luxury_accent"]}},
+"form_factor": "pump bottle with precise dispensing", 
+"dimensions": {"height_mm": 120, "diameter_mm": 45},
+"materials": {"container": "Glass", "pump": "PP plastic", "label": "Premium paper"},
+"finishes": {"container": "Frosted glass", "pump": "Matte black", "label": "Soft-touch lamination"},
+"color_scheme": {"base": "elegant_neutral", "accents": ["luxury_accent"]},
 "natural_imperfections": null,
 "target_price_usd": {price_range},
 "certifications": ["Dermatologist tested", "Cruelty-free", "Hypoallergenic"],
 "variants": ["30ml", "50ml", "100ml"],
-"notes": "Airless pump for product preservation. SPF labeling if applicable. Patch test recommendation."}}`,
+"notes": "Airless pump for product preservation. SPF labeling if applicable. Patch test recommendation."}`,
 
   food: `Food: {product_name} - {use_case}
 Style: {aesthetic} | Positioning: {positioning}
 
 Generate JSON:
-{{"product_name": "{product_name}", "product_id": "{product_id}", "category": "food", "positioning": "{positioning}",
+{"product_name": "{product_name}", "product_id": "{product_id}", "category": "food", "positioning": "{positioning}",
 "intended_use": "{use_case}", "target_aesthetic": "{aesthetic}",
-"form_factor": "resealable pouch|jar|box with easy open", 
-"dimensions": {{"height_mm": 150, "width_mm": 100, "depth_mm": 50}},
-"materials": {{"container": "Food-grade plastic|Glass", "closure": "Zip seal|Screw cap", "label": "Food-safe vinyl"}},
-"finishes": {{"container": "Clear|Colored", "closure": "Matching", "label": "High-gloss food safe"}},
-"color_scheme": {{"base": "appetizing_color", "accents": ["fresh_accent"]}},
+"form_factor": "resealable pouch with easy open", 
+"dimensions": {"height_mm": 150, "width_mm": 100, "depth_mm": 50},
+"materials": {"container": "Food-grade plastic", "closure": "Zip seal", "label": "Food-safe vinyl"},
+"finishes": {"container": "Clear", "closure": "Matching", "label": "High-gloss food safe"},
+"color_scheme": {"base": "appetizing_color", "accents": ["fresh_accent"]},
 "natural_imperfections": null,
 "target_price_usd": {price_range},
 "certifications": ["FDA", "USDA Organic", "Non-GMO"],
 "variants": ["Small", "Family size", "Bulk"],
-"notes": "Nutrition facts panel required. Best by date prominently displayed. Storage instructions included."}}`,
+"notes": "Nutrition facts panel required. Best by date prominently displayed. Storage instructions included."}`,
 
   wearable: `Wearable: {product_name} - {use_case}
 Style: {aesthetic} | Positioning: {positioning}
 
 Generate JSON:
-{{"product_name": "{product_name}", "product_id": "{product_id}", "category": "wearable", "positioning": "{positioning}",
+{"product_name": "{product_name}", "product_id": "{product_id}", "category": "wearable", "positioning": "{positioning}",
 "intended_use": "{use_case}", "target_aesthetic": "{aesthetic}",
-"form_factor": "band|strap|device with adjustable sizing", 
-"dimensions": {{"height_mm": 45, "width_mm": 40, "depth_mm": 12}},
-"materials": {{"body": "Aluminum|Plastic", "strap": "Silicone|Fabric", "display": "Glass|Acrylic"}},
-"finishes": {{"body": "Anodized|Brushed", "strap": "Soft-touch", "display": "Anti-glare"}},
-"color_scheme": {{"base": "neutral_tech", "accents": ["accent_color"]}},
+"form_factor": "band with adjustable sizing", 
+"dimensions": {"height_mm": 45, "width_mm": 40, "depth_mm": 12},
+"materials": {"body": "Aluminum", "strap": "Silicone", "display": "Glass"},
+"finishes": {"body": "Anodized", "strap": "Soft-touch", "display": "Anti-glare"},
+"color_scheme": {"base": "neutral_tech", "accents": ["accent_color"]},
 "natural_imperfections": null,
 "target_price_usd": {price_range},
 "certifications": ["FCC", "Water resistant", "Skin safe"],
 "variants": ["S/M", "M/L", "Color options"],
-"notes": "Battery life and charging specifications. Water resistance rating. Skin contact materials hypoallergenic."}}`,
+"notes": "Battery life and charging specifications. Water resistance rating. Skin contact materials hypoallergenic."}`,
 
   'health & wellness': `Health & Wellness: {product_name} - {use_case}
 Style: {aesthetic} | Positioning: {positioning}
 
 Generate JSON:
-{{"product_name": "{product_name}", "product_id": "{product_id}", "category": "health & wellness", "positioning": "{positioning}",
+{"product_name": "{product_name}", "product_id": "{product_id}", "category": "health & wellness", "positioning": "{positioning}",
 "intended_use": "{use_case}", "target_aesthetic": "{aesthetic}",
 "form_factor": "ergonomic design with user-friendly interface", 
-"dimensions": {{"height_mm": 100, "diameter_mm": 70}},
-"materials": {{"body": "Medical-grade plastic", "components": "BPA-free materials", "label": "Durable vinyl"}},
-"finishes": {{"body": "Smooth medical grade", "components": "Easy-clean", "label": "Tamper-evident"}},
-"color_scheme": {{"base": "clean_white", "accents": ["trust_blue"]}},
+"dimensions": {"height_mm": 100, "diameter_mm": 70},
+"materials": {"body": "Medical-grade plastic", "components": "BPA-free materials", "label": "Durable vinyl"},
+"finishes": {"body": "Smooth medical grade", "components": "Easy-clean", "label": "Tamper-evident"},
+"color_scheme": {"base": "clean_white", "accents": ["trust_blue"]},
 "natural_imperfections": null,
 "target_price_usd": {price_range},
 "certifications": ["FDA approved", "Medical device", "Quality tested"],
 "variants": ["Standard", "Travel size", "Professional"],
-"notes": "Medical disclaimers required. Usage instructions prominent. Safety warnings clearly displayed."}}`;
+"notes": "Medical disclaimers required. Usage instructions prominent. Safety warnings clearly displayed."}
 };
 
 const PRICE_RANGES = {
