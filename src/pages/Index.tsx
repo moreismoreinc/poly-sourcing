@@ -140,7 +140,7 @@ const Index = () => {
                 <div className="p-1">
                   <ChatInterface 
                     onBriefGenerated={handleBriefGenerated} 
-                    requireAuth={true}
+                    requireAuth={false}
                     onAuthRequired={() => navigate('/auth')}
                   />
                 </div>

@@ -59,13 +59,6 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
   const handleSendMessage = async () => {
     if (!input.trim()) return;
 
-    // Check authentication requirement
-    if (requireAuth && !user) {
-      onAuthRequired?.();
-      toast.error('Please sign in to generate product briefs');
-      return;
-    }
-
     const userMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
@@ -74,6 +67,21 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
     };
 
     setMessages(prev => [...prev, userMessage]);
+    
+    // Check authentication requirement for brief generation
+    if (!user) {
+      const authPromptMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'assistant',
+        content: 'I understand you want to create a product brief! To generate and save your brief, please sign in first. This will also allow you to access your past projects.',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, authPromptMessage]);
+      setInput('');
+      onAuthRequired?.();
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -178,34 +186,23 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
 
       {/* Input */}
       <div className="border-t bg-white p-4">
-        {requireAuth && !user ? (
-          <div className="text-center py-4">
-            <LogIn className="mx-auto h-8 w-8 text-slate-400 mb-2" />
-            <p className="text-slate-600 mb-3">Sign in to start generating product briefs</p>
-            <Button onClick={onAuthRequired} className="mx-auto">
-              <LogIn className="h-4 w-4 mr-2" />
-              Sign In
-            </Button>
-          </div>
-        ) : (
-          <div className="flex gap-2">
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Describe your product idea... (e.g., 'Sleep gummies to help people relax before bed with a clean and calming aesthetic')"
-              className="flex-1"
-              disabled={isLoading}
-            />
-            <Button 
-              onClick={handleSendMessage}
-              disabled={!input.trim() || isLoading}
-              size="icon"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
+        <div className="flex gap-2">
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Describe your product idea... (e.g., 'Sleep gummies to help people relax before bed with a clean and calming aesthetic')"
+            className="flex-1"
+            disabled={isLoading}
+          />
+          <Button 
+            onClick={handleSendMessage}
+            disabled={!input.trim() || isLoading}
+            size="icon"
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );
