@@ -39,8 +39,8 @@ export function generateProductId(productName: string): string {
   return productName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 }
 
-// STEP 7: Build prompt function
-export function buildPrompt(productName: string, useCase: string, aesthetic: string): string {
+// STEP 7: Build prompt function - UPDATED to include requirements
+export function buildPrompt(productName: string, useCase: string, aesthetic: string, requirements: string = ''): string {
   const category = detectCategory(productName, useCase);
   const positioning = inferPositioning(aesthetic);
   const productId = generateProductId(productName);
@@ -56,5 +56,6 @@ export function buildPrompt(productName: string, useCase: string, aesthetic: str
     .replace(/{use_case}/g, useCase)
     .replace(/{aesthetic}/g, aesthetic)
     .replace(/{positioning}/g, positioning)
-    .replace(/{price_range}/g, priceRangeStr);
+    .replace(/{price_range}/g, priceRangeStr)
+    .replace(/{requirements}/g, requirements || 'Standard quality and safety requirements');
 }
