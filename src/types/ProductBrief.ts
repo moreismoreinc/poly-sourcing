@@ -46,4 +46,5 @@ export interface ProductInput {
   product_name: string;
   use_case: string;
   aesthetic: string;
+  requirements?: string; // Add this line
 }
