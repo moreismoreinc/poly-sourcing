@@ -368,11 +368,7 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
           <div className="flex items-center gap-3 text-sm text-slate-400">
             <div className="flex items-center gap-1">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span>Workspace</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <span>Supabase</span>
+              <span>geneering</span>
             </div>
           </div>
 
@@ -385,7 +381,7 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
                 variant="ghost"
                 size="sm"
                 onClick={resetConversation}
-                className="text-slate-400 hover:text-white hover:bg-slate-700"
+                className="text-slate-400 hover:bg-slate-700"
               >
                 <RotateCcw className="h-4 w-4" />
               </Button>
