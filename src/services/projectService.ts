@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ProductBrief } from '@/types/ProductBrief';
 
-export const saveProject = async (productBrief: ProductBrief, rawAiOutput?: string) => {
+export const saveProject = async (productBrief: ProductBrief, rawAiOutput?: string, openaiRequestDetails?: any) => {
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) {
@@ -15,7 +15,8 @@ export const saveProject = async (productBrief: ProductBrief, rawAiOutput?: stri
       user_id: user.id,
       product_name: productBrief.product_name,
       product_brief: JSON.parse(JSON.stringify(productBrief)),
-      raw_ai_output: rawAiOutput
+      raw_ai_output: rawAiOutput,
+      openai_request_details: openaiRequestDetails
     })
     .select()
     .single();

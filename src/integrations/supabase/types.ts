@@ -37,6 +37,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          openai_request_details: Json | null
           product_brief: Json
           product_name: string
           raw_ai_output: string | null
@@ -46,6 +47,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          openai_request_details?: Json | null
           product_brief: Json
           product_name: string
           raw_ai_output?: string | null
@@ -55,6 +57,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          openai_request_details?: Json | null
           product_brief?: Json
           product_name?: string
           raw_ai_output?: string | null

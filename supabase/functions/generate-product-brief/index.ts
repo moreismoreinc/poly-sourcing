@@ -257,27 +257,29 @@ serve(async (req) => {
     console.log(`Generating ${category} product (${positioning}) for: ${product_name}`);
     console.log('Enhanced prompt:', prompt);
 
+    const requestBody = {
+      model: 'gpt-4o-mini',
+      messages: [
+        { 
+          role: 'system', 
+          content: ENHANCED_SYSTEM_PROMPT
+        },
+        { 
+          role: 'user', 
+          content: prompt 
+        }
+      ],
+      temperature: 0.8,
+      max_tokens: 1200,
+    };
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { 
-            role: 'system', 
-            content: ENHANCED_SYSTEM_PROMPT
-          },
-          { 
-            role: 'user', 
-            content: prompt 
-          }
-        ],
-        temperature: 0.8,
-        max_tokens: 1200,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
@@ -318,6 +320,14 @@ serve(async (req) => {
       success: true,
       productBrief,
       rawAiOutput: generatedText,
+      openaiRequestDetails: {
+        prompt,
+        request_body: requestBody,
+        model: requestBody.model,
+        temperature: requestBody.temperature,
+        max_tokens: requestBody.max_tokens,
+        timestamp: new Date().toISOString()
+      },
       metadata: {
         category_detected: category,
         positioning_inferred: positioning,

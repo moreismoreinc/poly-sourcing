@@ -16,7 +16,7 @@ interface Message {
 }
 
 interface ChatInterfaceProps {
-  onBriefGenerated: (brief: ProductBrief, rawAiOutput?: string) => void;
+  onBriefGenerated: (brief: ProductBrief, rawAiOutput?: string, openaiRequestDetails?: any) => void;
   requireAuth?: boolean;
   onAuthRequired?: () => void;
 }
@@ -88,7 +88,7 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
       const productInput = parseUserInput(input);
       console.log('Parsed input:', productInput);
       
-      const { productBrief: brief, rawAiOutput } = await generateProductBrief(productInput);
+      const { productBrief: brief, rawAiOutput, openaiRequestDetails } = await generateProductBrief(productInput);
       
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -98,7 +98,7 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
       };
 
       setMessages(prev => [...prev, assistantMessage]);
-      onBriefGenerated(brief, rawAiOutput);
+      onBriefGenerated(brief, rawAiOutput, openaiRequestDetails);
       toast.success('Product brief generated successfully!');
     } catch (error) {
       console.error('Error generating product brief:', error);
