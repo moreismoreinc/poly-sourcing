@@ -18,14 +18,14 @@ const Index = () => {
   const [productBrief, setProductBrief] = useState<ProductBrief | null>(null);
   const [showChat, setShowChat] = useState(false);
 
-  const handleBriefGenerated = async (brief: ProductBrief) => {
+  const handleBriefGenerated = async (brief: ProductBrief, rawAiOutput?: string) => {
     setProductBrief(brief);
     setShowChat(true);
     
     // Auto-save project if user is authenticated
     if (user) {
       try {
-        await saveProject(brief);
+        await saveProject(brief, rawAiOutput);
         toast.success('Project saved successfully!');
       } catch (error) {
         console.error('Error saving project:', error);
