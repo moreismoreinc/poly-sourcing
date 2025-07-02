@@ -306,17 +306,16 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      {/* Main Display Area - Fixed Height with Typewriter Effect */}
-      <div className="bg-white rounded-lg border border-slate-200 mb-6 shadow-sm">
-        {/* Message Display - Fixed Height */}
-        <div className="h-32 p-8 flex items-center justify-center">
+    <div className="w-full max-w-4xl mx-auto p-6">
+      {/* Message Display - Geneering style */}
+      <div className="bg-card rounded-xl border border-border shadow-sm mb-6">
+        <div className="h-40 p-8 flex items-center justify-center">
           {currentDisplayMessage ? (
             <div className="text-center max-w-2xl">
-              <div className="text-lg text-slate-800 leading-relaxed">
+              <div className="text-lg text-foreground leading-relaxed font-medium">
                 {isLoading ? (
                   <div className="flex items-center justify-center gap-3">
-                    <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
                     <TypewriterText text={currentDisplayMessage} speed={40} />
                   </div>
                 ) : (
@@ -328,29 +327,29 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
               </div>
             </div>
           ) : (
-            <div className="text-center text-slate-400">
-              <div className="w-8 h-8 mx-auto mb-2 bg-slate-100 rounded-full animate-pulse"></div>
+            <div className="text-center text-muted-foreground">
+              <div className="w-8 h-8 mx-auto mb-2 bg-muted rounded-full animate-pulse"></div>
               <p className="text-sm">Starting conversation...</p>
             </div>
           )}
         </div>
 
-        {/* Input Area - Prominent and Fixed */}
-        <div className="border-t bg-slate-50 p-6">
+        {/* Input Area - Clean Geneering style */}
+        <div className="border-t border-border bg-muted/30 p-6">
           <div className={`flex gap-3 items-center max-w-2xl mx-auto transition-opacity duration-300 ${showInput ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder={getPlaceholderText()}
-              className="flex-1 h-12 text-base border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+              className="flex-1 h-12 text-base bg-background border-border focus:border-ring focus:ring-ring"
               disabled={isLoading || !showInput}
             />
             <Button 
               onClick={handleSendMessage}
               disabled={!input.trim() || isLoading || !showInput}
               size="lg"
-              className="h-12 px-6 bg-blue-600 hover:bg-blue-700"
+              className="h-12 px-6 bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               <Send className="h-5 w-5" />
             </Button>
@@ -359,7 +358,7 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
                 variant="outline"
                 size="lg"
                 onClick={resetConversation}
-                className="h-12 px-4 border-slate-300"
+                className="h-12 px-4 border-border"
               >
                 <RotateCcw className="h-5 w-5" />
               </Button>
