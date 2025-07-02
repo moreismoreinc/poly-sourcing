@@ -20,7 +20,7 @@ const ProductPreview = ({ brief }: ProductPreviewProps) => {
       <div className="flex-1 overflow-y-auto">
         {/* Mockups at the top */}
         <div className="bg-white p-4 border-b">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
             <Card>
               <CardContent>
                 <div className="aspect-square w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg flex items-center justify-center">
