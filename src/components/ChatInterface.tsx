@@ -129,8 +129,21 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
     setCollectedData(updatedData);
 
     if (nextStep === ConversationStep.GENERATING) {
+      // Show final cooking message before generating
+      setTimeout(() => {
+        const cookingMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'assistant',
+          content: `🔥 Hold on, we're cooking!`,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, cookingMessage]);
+      }, 500);
+
       // All data collected, generate the brief
-      await generateBrief(updatedData as EnhancedProductInput);
+      setTimeout(() => {
+        generateBrief(updatedData as EnhancedProductInput);
+      }, 1000);
     } else {
       // Ask next question
       setTimeout(() => {
@@ -164,15 +177,6 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
     setIsLoading(true);
     setCurrentStep(ConversationStep.GENERATING);
 
-    // Show generating message
-    const generatingMessage: Message = {
-      id: (Date.now() + 1).toString(),
-      type: 'assistant',
-      content: `Perfect! I'm now generating a comprehensive product brief for "${data.product_name}". This will take a moment...`,
-      timestamp: new Date()
-    };
-    setMessages(prev => [...prev, generatingMessage]);
-
     try {
       // Transform enhanced input to match your existing API
       const productInput: ProductInput = {
@@ -190,7 +194,7 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
       const successMessage: Message = {
         id: (Date.now() + 2).toString(),
         type: 'assistant',
-        content: `🎉 **Product brief generated successfully!**\n\nI've created a comprehensive brief for "${brief.product_name}" - a ${brief.category} product positioned as ${brief.positioning}.\n\nThe brief includes:\n• Detailed specifications and materials\n• Realistic dimensions and pricing\n• Relevant certifications and variants\n• Manufacturing considerations\n\nCheck out the complete details in the panel on the right! Would you like to create another product brief?`,
+        content: `🎉 Done! I've created a comprehensive brief for "${brief.product_name}" - a ${brief.category} product positioned as ${brief.positioning}.\n\nCheck out the complete details in the panel on the right! Want to create another product?`,
         timestamp: new Date()
       };
 
@@ -266,29 +270,9 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
     }
   };
 
-  const getStepNumber = (): number => {
-    const stepOrder = [
-      ConversationStep.GREETING,
-      ConversationStep.PRODUCT_NAME,
-      ConversationStep.USE_CASE,
-      ConversationStep.REQUIREMENTS,
-      ConversationStep.AESTHETICS,
-      ConversationStep.GENERATING,
-      ConversationStep.COMPLETE
-    ];
-    return stepOrder.indexOf(currentStep);
-  };
-
-  const getProgressPercentage = (): number => {
-    const stepNumber = getStepNumber();
-    if (stepNumber <= 1) return 0;
-    if (stepNumber >= 5) return 100;
-    return ((stepNumber - 1) / 4) * 100;
-  };
-
   return (
     <div className="flex flex-col h-full">
-      {/* Messages */}
+      {/* Messages - scrollable area that pushes up */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message) => (
           <div
@@ -339,37 +323,9 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Progress indicator */}
-      {currentStep !== ConversationStep.GREETING && currentStep !== ConversationStep.COMPLETE && (
-        <div className="px-4 py-2 bg-slate-50 border-t border-slate-200">
-          <div className="flex items-center justify-between text-xs text-slate-600">
-            <span>
-              Step {Math.max(1, getStepNumber() - 1)} of 4
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={resetConversation}
-              className="text-xs"
-            >
-              <RotateCcw className="h-3 w-3 mr-1" />
-              Start Over
-            </Button>
-          </div>
-          <div className="w-full bg-slate-200 rounded-full h-1.5 mt-2">
-            <div 
-              className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
-              style={{ 
-                width: `${getProgressPercentage()}%` 
-              }}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Input */}
-      <div className="border-t bg-white p-4">
-        <div className="flex gap-2">
+      {/* Fixed Input at bottom */}
+      <div className="border-t bg-white p-4 flex-shrink-0">
+        <div className="flex gap-2 items-center">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -385,6 +341,16 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
           >
             <Send className="h-4 w-4" />
           </Button>
+          {messages.length > 1 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={resetConversation}
+              className="text-xs"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
     </div>
