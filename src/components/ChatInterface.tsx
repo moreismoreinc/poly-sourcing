@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Loader2, User, Bot, LogIn, RotateCcw } from 'lucide-react';
+import { Send, Loader2, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { ProductInput, ProductBrief } from '@/types/ProductBrief';
 import { generateProductBrief } from '@/services/productBriefService';
@@ -39,6 +39,40 @@ enum ConversationStep {
   COMPLETE = 'complete'
 }
 
+// Typewriter component
+const TypewriterText = ({ text, speed = 30, onComplete }: { text: string; speed?: number; onComplete?: () => void }) => {
+  const [displayedText, setDisplayedText] = useState('');
+  const [isComplete, setIsComplete] = useState(false);
+
+  useEffect(() => {
+    setDisplayedText('');
+    setIsComplete(false);
+    
+    if (!text) return;
+
+    let index = 0;
+    const timer = setInterval(() => {
+      if (index < text.length) {
+        setDisplayedText(text.slice(0, index + 1));
+        index++;
+      } else {
+        setIsComplete(true);
+        clearInterval(timer);
+        onComplete?.();
+      }
+    }, speed);
+
+    return () => clearInterval(timer);
+  }, [text, speed, onComplete]);
+
+  return (
+    <span>
+      {displayedText}
+      {!isComplete && <span className="animate-pulse">|</span>}
+    </span>
+  );
+};
+
 const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }: ChatInterfaceProps) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -46,6 +80,8 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState<ConversationStep>(ConversationStep.GREETING);
   const [collectedData, setCollectedData] = useState<Partial<EnhancedProductInput>>({});
+  const [currentDisplayMessage, setCurrentDisplayMessage] = useState<string>('');
+  const [showInput, setShowInput] = useState(false);
 
   // Initialize conversation
   useEffect(() => {
@@ -62,7 +98,9 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
       timestamp: new Date()
     };
     setMessages([welcomeMessage]);
+    setCurrentDisplayMessage(welcomeMessage.content);
     setCurrentStep(ConversationStep.PRODUCT_NAME);
+    setShowInput(true);
   };
 
   const getNextQuestion = (step: ConversationStep): string => {
@@ -74,14 +112,28 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
         return `Any specific requirements the product needs to fit?`;
       
       case ConversationStep.AESTHETICS:
-        return `OK! Finally, what's the your design inspo? BRands, aesthetics, packaging styles...`;
+        return `OK! Finally, what's your design inspo? Brands, aesthetics, packaging styles...`;
       
       default:
         return '';
     }
   };
 
+  const displayMessage = (content: string, onComplete?: () => void) => {
+    setCurrentDisplayMessage(content);
+    setShowInput(false);
+    // Input will be shown after typewriter completes
+    setTimeout(() => {
+      setShowInput(true);
+      onComplete?.();
+    }, content.length * 30 + 500); // Account for typewriter speed + small delay
+  };
+
   const handleUserResponse = async (response: string) => {
+    // First show user's response
+    setCurrentDisplayMessage(response);
+    setShowInput(false);
+
     const userMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
@@ -122,21 +174,12 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
     if (nextStep === ConversationStep.GENERATING) {
       // Show final cooking message before generating
       setTimeout(() => {
-        const cookingMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          type: 'assistant',
-          content: `🔥 Hold on, we're cooking!`,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, cookingMessage]);
-      }, 500);
-
-      // All data collected, generate the brief
-      setTimeout(() => {
-        generateBrief(updatedData as EnhancedProductInput);
+        displayMessage('🔥 Hold on, we\'re cooking!', () => {
+          generateBrief(updatedData as EnhancedProductInput);
+        });
       }, 1000);
     } else {
-      // Ask next question
+      // Ask next question after a delay
       setTimeout(() => {
         const nextQuestion = getNextQuestion(nextStep);
         const assistantMessage: Message = {
@@ -147,20 +190,15 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
         };
         setMessages(prev => [...prev, assistantMessage]);
         setCurrentStep(nextStep);
-      }, 500);
+        displayMessage(nextQuestion);
+      }, 1000);
     }
   };
 
   const generateBrief = async (data: EnhancedProductInput) => {
     // Check authentication
     if (!user) {
-      const authPromptMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'assistant',
-        content: 'Perfect! I have all the information I need. To generate and save your product brief, please sign in first.',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, authPromptMessage]);
+      displayMessage('Perfect! I have all the information I need. To generate and save your product brief, please sign in first.');
       onAuthRequired?.();
       return;
     }
@@ -181,27 +219,32 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
       
       const { productBrief: brief, rawAiOutput, openaiRequestDetails } = await generateProductBrief(productInput);
       
-      const successMessage: Message = {
+      const successMessage = `🎉 Done! I've created a brief for "${brief.product_name}" - a ${brief.category} product. Check the details on the right!`;
+
+      setMessages(prev => [...prev, {
         id: (Date.now() + 2).toString(),
         type: 'assistant',
-        content: `🎉 Done! I've created a brief for "${brief.product_name}" - a ${brief.category} product. Check the details on the right!`,
+        content: successMessage,
         timestamp: new Date()
-      };
+      }]);
 
-      setMessages(prev => [...prev, successMessage]);
+      displayMessage(successMessage);
       onBriefGenerated(brief, rawAiOutput, openaiRequestDetails);
       setCurrentStep(ConversationStep.COMPLETE);
       toast.success('Product brief generated successfully!');
       
     } catch (error) {
       console.error('Error generating product brief:', error);
-      const errorMessage: Message = {
+      const errorMessage = 'Sorry, I encountered an error. Let\'s try again or start over.';
+      
+      setMessages(prev => [...prev, {
         id: (Date.now() + 2).toString(),
         type: 'assistant',
-        content: 'Sorry, I encountered an error. Let\'s try again or start over.',
+        content: errorMessage,
         timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      }]);
+      
+      displayMessage(errorMessage);
       setCurrentStep(ConversationStep.COMPLETE);
       toast.error('Failed to generate product brief. Please try again.');
     } finally {
@@ -210,7 +253,7 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
   };
 
   const handleSendMessage = async () => {
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isLoading || !showInput) return;
 
     if (currentStep === ConversationStep.COMPLETE) {
       // Reset conversation for new product
@@ -240,6 +283,8 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
     setCollectedData({});
     setCurrentStep(ConversationStep.GREETING);
     setInput('');
+    setCurrentDisplayMessage('');
+    setShowInput(false);
     startConversation();
   };
 
@@ -260,88 +305,52 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
     }
   };
 
-  // Get the most recent message (or show loading state)
-  const getCurrentMessage = () => {
-    if (isLoading) {
-      return {
-        id: 'loading',
-        type: 'assistant' as const,
-        content: 'Generating comprehensive product brief...',
-        timestamp: new Date(),
-        isLoading: true
-      };
-    }
-    
-    return messages[messages.length - 1];
-  };
-
-  const currentMessage = getCurrentMessage();
-
   return (
     <div className="w-full max-w-4xl mx-auto">
-      {/* Main Chat Area - Fixed Height showing only current message */}
-      <div className="bg-white rounded-lg border border-slate-200 mb-6">
-        {/* Current Message Display - Fixed Height */}
-        <div className="h-32 p-6 flex items-center justify-center">
-          {currentMessage ? (
-            <div className="flex gap-4 items-start w-full max-w-2xl">
-              {currentMessage.type === 'assistant' && (
-                <div className="flex-shrink-0">
-                  <Bot className="h-10 w-10 p-2 bg-blue-100 text-blue-600 rounded-full" />
-                </div>
-              )}
-              
-              <div className={`flex-1 ${currentMessage.type === 'user' ? 'text-right' : ''}`}>
-                <div
-                  className={`inline-block rounded-lg px-4 py-3 max-w-lg ${
-                    currentMessage.type === 'user'
-                      ? 'bg-blue-600 text-white ml-auto'
-                      : 'bg-slate-100 text-slate-900'
-                  }`}
-                >
-                  <div className="text-base whitespace-pre-line">
-                    {(currentMessage as any).isLoading ? (
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>{currentMessage.content}</span>
-                      </div>
-                    ) : (
-                      currentMessage.content
-                    )}
+      {/* Main Display Area - Fixed Height with Typewriter Effect */}
+      <div className="bg-white rounded-lg border border-slate-200 mb-6 shadow-sm">
+        {/* Message Display - Fixed Height */}
+        <div className="h-32 p-8 flex items-center justify-center">
+          {currentDisplayMessage ? (
+            <div className="text-center max-w-2xl">
+              <div className="text-lg text-slate-800 leading-relaxed">
+                {isLoading ? (
+                  <div className="flex items-center justify-center gap-3">
+                    <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                    <TypewriterText text={currentDisplayMessage} speed={40} />
                   </div>
-                </div>
+                ) : (
+                  <TypewriterText 
+                    text={currentDisplayMessage} 
+                    speed={30}
+                  />
+                )}
               </div>
-
-              {currentMessage.type === 'user' && (
-                <div className="flex-shrink-0">
-                  <User className="h-10 w-10 p-2 bg-slate-200 text-slate-600 rounded-full" />
-                </div>
-              )}
             </div>
           ) : (
-            <div className="text-center text-slate-500">
-              <Bot className="mx-auto h-12 w-12 mb-2 text-slate-400" />
-              <p>Starting conversation...</p>
+            <div className="text-center text-slate-400">
+              <div className="w-8 h-8 mx-auto mb-2 bg-slate-100 rounded-full animate-pulse"></div>
+              <p className="text-sm">Starting conversation...</p>
             </div>
           )}
         </div>
 
         {/* Input Area - Prominent and Fixed */}
         <div className="border-t bg-slate-50 p-6">
-          <div className="flex gap-3 items-center max-w-2xl mx-auto">
+          <div className={`flex gap-3 items-center max-w-2xl mx-auto transition-opacity duration-300 ${showInput ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder={getPlaceholderText()}
-              className="flex-1 h-12 text-base"
-              disabled={isLoading}
+              className="flex-1 h-12 text-base border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+              disabled={isLoading || !showInput}
             />
             <Button 
               onClick={handleSendMessage}
-              disabled={!input.trim() || isLoading}
+              disabled={!input.trim() || isLoading || !showInput}
               size="lg"
-              className="h-12 px-6"
+              className="h-12 px-6 bg-blue-600 hover:bg-blue-700"
             >
               <Send className="h-5 w-5" />
             </Button>
@@ -350,7 +359,7 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
                 variant="outline"
                 size="lg"
                 onClick={resetConversation}
-                className="h-12 px-4"
+                className="h-12 px-4 border-slate-300"
               >
                 <RotateCcw className="h-5 w-5" />
               </Button>
@@ -358,33 +367,6 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
           </div>
         </div>
       </div>
-
-      {/* Optional: Show conversation history in a collapsible section */}
-      {messages.length > 1 && (
-        <details className="bg-slate-50 rounded-lg border border-slate-200">
-          <summary className="p-4 cursor-pointer text-sm text-slate-600 hover:bg-slate-100 rounded-lg">
-            View conversation history ({messages.length} messages)
-          </summary>
-          <div className="p-4 pt-0 max-h-60 overflow-y-auto space-y-3">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex gap-2 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[80%] rounded px-3 py-2 text-xs ${
-                    message.type === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-slate-900'
-                  }`}
-                >
-                  {message.content}
-                </div>
-              </div>
-            ))}
-          </div>
-        </details>
-      )}
     </div>
   );
 };
