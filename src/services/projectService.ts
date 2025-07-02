@@ -14,7 +14,7 @@ export const saveProject = async (productBrief: ProductBrief) => {
     .insert({
       user_id: user.id,
       product_name: productBrief.product_name,
-      product_brief: productBrief as any
+      product_brief: JSON.parse(JSON.stringify(productBrief))
     })
     .select()
     .single();
@@ -38,7 +38,7 @@ export const updateProject = async (projectId: string, productBrief: ProductBrie
     .from('projects')
     .update({
       product_name: productBrief.product_name,
-      product_brief: productBrief as any,
+      product_brief: JSON.parse(JSON.stringify(productBrief)),
       updated_at: new Date().toISOString()
     })
     .eq('id', projectId)

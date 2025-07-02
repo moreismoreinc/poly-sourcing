@@ -46,7 +46,7 @@ const PastProjects = ({ onProjectSelect }: PastProjectsProps) => {
         // Cast the product_brief from Json to ProductBrief
         const typedProjects = (data || []).map(project => ({
           ...project,
-          product_brief: project.product_brief as ProductBrief
+          product_brief: project.product_brief as unknown as ProductBrief
         }));
         setProjects(typedProjects);
       }
