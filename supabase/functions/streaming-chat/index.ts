@@ -191,7 +191,7 @@ Product brief schema:
         messages: [systemMessage, ...messages],
         temperature: 0.7,
         max_tokens: 1500,
-        stream: true,
+        stream: false, // Changed to false for simpler response
       }),
     });
 
@@ -199,66 +199,21 @@ Product brief schema:
       throw new Error(`OpenAI API error: ${response.statusText}`);
     }
 
-    // Create a readable stream for SSE
-    const encoder = new TextEncoder();
-    const stream = new ReadableStream({
-      async start(controller) {
-        const reader = response.body?.getReader();
-        if (!reader) return;
+    const data = await response.json();
+    const content = data.choices[0].message.content;
 
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
+    // Update conversation state
+    const updatedState = {
+      ...state,
+      phase: state.phase === 'GENERATING' ? 'EDITING' : state.phase,
+      currentQuestion: state.phase === 'QUESTIONING' ? Math.min(state.currentQuestion + 1, QUESTIONS.length - 1) : state.currentQuestion
+    };
 
-            const chunk = new TextDecoder().decode(value);
-            const lines = chunk.split('\n').filter(line => line.trim());
-
-            for (const line of lines) {
-              if (line.startsWith('data: ')) {
-                const data = line.slice(6);
-                if (data === '[DONE]') {
-                  // Send conversation state with the final message
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
-                    content: '',
-                    conversationState: {
-                      ...state,
-                      phase: state.phase === 'GENERATING' ? 'EDITING' : state.phase,
-                      currentQuestion: state.phase === 'QUESTIONING' ? Math.min(state.currentQuestion + 1, QUESTIONS.length - 1) : state.currentQuestion
-                    }
-                  })}\n\n`));
-                  controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-                  break;
-                }
-
-                try {
-                  const parsed = JSON.parse(data);
-                  const content = parsed.choices?.[0]?.delta?.content;
-                  
-                  if (content) {
-                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`));
-                  }
-                } catch (e) {
-                  // Skip invalid JSON
-                }
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Stream error:', error);
-        } finally {
-          controller.close();
-        }
-      },
-    });
-
-    return new Response(stream, {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-      },
+    return new Response(JSON.stringify({ 
+      content,
+      conversationState: updatedState
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {

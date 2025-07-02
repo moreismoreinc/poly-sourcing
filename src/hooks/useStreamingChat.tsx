@@ -77,81 +77,42 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
     abortControllerRef.current = new AbortController();
 
     try {
-      // Direct fetch to the edge function using the correct project URL
-      const response = await fetch(`https://f7618fec-e3a1-4d57-89c7-5e0b3ade9fa5.supabase.co/functions/v1/streaming-chat`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxbGd2Z3VyZnJqbmZnb2h5YW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0Mjg2MDMsImV4cCI6MjA2NzAwNDYwM30.N6Al_9qU94E4OluDiX1oPLhwGoggEv18c2npx7nke8g`,
-        },
-        body: JSON.stringify({
+      // Use Supabase client to invoke the edge function
+      const { data, error } = await supabase.functions.invoke('streaming-chat', {
+        body: {
           messages: [...messages, userMessage].map(m => ({
             role: m.role,
             content: m.content
           })),
           existingBrief,
           conversationState
-        }),
-        signal: abortControllerRef.current.signal,
+        }
       });
 
-      if (!response.body) throw new Error('No response body');
+      if (error) {
+        throw new Error(error.message);
+      }
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let accumulatedResponse = '';
+      // Since we can't stream with supabase.functions.invoke, we'll get the complete response
+      if (data) {
+        let accumulatedResponse = data.content || '';
+        setCurrentResponse(accumulatedResponse);
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+        // Complete the response
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: accumulatedResponse,
+          timestamp: new Date(),
+        };
 
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n');
+        setMessages(prev => [...prev, assistantMessage]);
+        setCurrentResponse('');
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6);
-            if (data === '[DONE]') {
-              // Complete the response
-              const assistantMessage: Message = {
-                id: (Date.now() + 1).toString(),
-                role: 'assistant',
-                content: accumulatedResponse,
-                timestamp: new Date(),
-              };
-
-              setMessages(prev => [...prev, assistantMessage]);
-              setCurrentResponse('');
-
-              // Extract and update brief
-              const extractedBrief = extractBriefFromResponse(accumulatedResponse);
-              if (extractedBrief && onBriefUpdate) {
-                onBriefUpdate(extractedBrief);
-              }
-              break;
-            }
-
-            try {
-              const parsed = JSON.parse(data);
-              if (parsed.content) {
-                accumulatedResponse += parsed.content;
-                setCurrentResponse(accumulatedResponse);
-
-                // Check for brief updates during streaming
-                const briefInProgress = extractBriefFromResponse(accumulatedResponse);
-                if (briefInProgress && onBriefUpdate) {
-                  onBriefUpdate(briefInProgress);
-                }
-              }
-              
-              // Update conversation state if provided
-              if (parsed.conversationState) {
-                setConversationState(parsed.conversationState);
-              }
-            } catch (e) {
-              // Skip invalid JSON
-            }
-          }
+        // Extract and update brief
+        const extractedBrief = extractBriefFromResponse(accumulatedResponse);
+        if (extractedBrief && onBriefUpdate) {
+          onBriefUpdate(extractedBrief);
         }
       }
     } catch (error: any) {
