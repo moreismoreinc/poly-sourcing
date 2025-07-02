@@ -93,7 +93,7 @@ Generate JSON:
 "target_price_usd": {price_range},
 "certifications": ["FDA approved", "Medical device", "Quality tested"],
 "variants": ["Standard", "Travel size", "Professional"],
-"notes": "Medical disclaimers required. Usage instructions prominent. Safety warnings clearly displayed."}
+"notes": "Medical disclaimers required. Usage instructions prominent. Safety warnings clearly displayed."}`
 };
 
 const PRICE_RANGES = {
