@@ -77,24 +77,21 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
     abortControllerRef.current = new AbortController();
 
     try {
-      const { data, error } = await supabase.functions.invoke('streaming-chat', {
-        body: {
+      // Direct fetch to the edge function
+      const response = await fetch(`https://sqlgvgurfirjnfgohyaog.supabase.co/functions/v1/streaming-chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxbGd2Z3VyZnJqbmZnb2h5YW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0Mjg2MDMsImV4cCI6MjA2NzAwNDYwM30.N6Al_9qU94E4OluDiX1oPLhwGoggEv18c2npx7nke8g`,
+        },
+        body: JSON.stringify({
           messages: [...messages, userMessage].map(m => ({
             role: m.role,
             content: m.content
           })),
           existingBrief,
           conversationState
-        },
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (error) throw error;
-
-      // Handle the response as a stream
-      const response = await fetch(data.url, {
+        }),
         signal: abortControllerRef.current.signal,
       });
 

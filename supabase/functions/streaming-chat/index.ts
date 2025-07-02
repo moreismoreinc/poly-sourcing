@@ -82,32 +82,27 @@ function analyzeConversationState(messages: any[], existingBrief: any): Conversa
     };
   }
 
+  if (messages.length === 0) {
+    return {
+      phase: 'QUESTIONING',
+      currentQuestion: 0,
+      answers: {},
+      questionsCompleted: false
+    };
+  }
+
   const answers: Record<string, string> = {};
   let currentQuestion = 0;
   
-  // Analyze conversation to determine which questions have been answered
-  const conversationText = messages.map(m => m.content).join(' ').toLowerCase();
+  // Count user messages to determine progress
+  const userMessages = messages.filter(m => m.role === 'user');
+  currentQuestion = Math.min(userMessages.length - 1, QUESTIONS.length - 1);
   
-  // Simple heuristics to detect answered questions
-  const patterns = {
-    product_type: /(jar|bottle|container|package|product|skincare|cosmetic|food)/,
-    target_use: /(customer|user|target|audience|problem|solve|use)/,
-    price_aesthetic: /(price|cost|budget|premium|aesthetic|design|positioning)/,
-    specifications: /(material|dimension|certification|requirement|technical|spec)/
-  };
-
-  QUESTIONS.forEach((q, index) => {
-    if (patterns[q.id as keyof typeof patterns]?.test(conversationText)) {
-      answers[q.id] = 'answered';
-      currentQuestion = Math.max(currentQuestion, index + 1);
-    }
-  });
-
-  const questionsCompleted = currentQuestion >= QUESTIONS.length;
+  const questionsCompleted = userMessages.length > QUESTIONS.length;
   
   return {
     phase: questionsCompleted ? 'GENERATING' : 'QUESTIONING',
-    currentQuestion: Math.min(currentQuestion, QUESTIONS.length - 1),
+    currentQuestion: Math.max(0, currentQuestion),
     answers,
     questionsCompleted
   };
