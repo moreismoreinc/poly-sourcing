@@ -9,6 +9,15 @@ interface Message {
   timestamp: Date;
 }
 
+type ConversationPhase = 'QUESTIONING' | 'GENERATING' | 'EDITING';
+
+interface ConversationState {
+  phase: ConversationPhase;
+  currentQuestion: number;
+  answers: Record<string, string>;
+  questionsCompleted: boolean;
+}
+
 interface UseStreamingChatProps {
   onBriefUpdate?: (brief: ProductBrief | null) => void;
   existingBrief?: ProductBrief | null;
@@ -20,6 +29,12 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
   const [isLoading, setIsLoading] = useState(false);
   const [currentResponse, setCurrentResponse] = useState('');
   const [conversationStarted, setConversationStarted] = useState(false);
+  const [conversationState, setConversationState] = useState<ConversationState>({
+    phase: existingBrief ? 'EDITING' : 'QUESTIONING',
+    currentQuestion: 0,
+    answers: {},
+    questionsCompleted: !!existingBrief
+  });
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const extractBriefFromResponse = useCallback((text: string): ProductBrief | null => {
@@ -68,7 +83,8 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
             role: m.role,
             content: m.content
           })),
-          existingBrief
+          existingBrief,
+          conversationState
         },
         headers: {
           'Content-Type': 'application/json',
@@ -130,6 +146,11 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
                   onBriefUpdate(briefInProgress);
                 }
               }
+              
+              // Update conversation state if provided
+              if (parsed.conversationState) {
+                setConversationState(parsed.conversationState);
+              }
             } catch (e) {
               // Skip invalid JSON
             }
@@ -160,13 +181,20 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
     setMessages([]);
     setConversationStarted(false);
     setIsLoading(false);
-  }, []);
+    setConversationState({
+      phase: existingBrief ? 'EDITING' : 'QUESTIONING',
+      currentQuestion: 0,
+      answers: {},
+      questionsCompleted: !!existingBrief
+    });
+  }, [existingBrief]);
 
   return {
     messages,
     currentResponse,
     isLoading,
     conversationStarted,
+    conversationState,
     sendMessage,
     resetChat,
   };

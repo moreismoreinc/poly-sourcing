@@ -8,20 +8,143 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const SYSTEM_PROMPT = `You are a product development expert helping users create and edit product briefs. You should:
+type ConversationPhase = 'QUESTIONING' | 'GENERATING' | 'EDITING';
 
-1. Maintain conversational flow while gathering/updating product information
-2. Ask relevant follow-up questions based on context
-3. When editing existing briefs, reference specific sections clearly
-4. When creating new briefs, guide users through product details naturally
-5. After generating a brief, transition to asking how they'd like to edit or improve it
-6. Always return valid JSON for the product brief at the end of your response
+interface ConversationState {
+  phase: ConversationPhase;
+  currentQuestion: number;
+  answers: Record<string, string>;
+  questionsCompleted: boolean;
+}
 
-When you complete generating a new product brief, say something like: "🎉 Perfect! I've created your product brief. You can see all the details on the right. What would you like to edit or improve? I can help you adjust the design, materials, pricing, or any other aspect."
+const QUESTIONS = [
+  {
+    id: 'product_type',
+    text: 'What type of product are you creating? Please describe the category and form factor (e.g., skincare jar, food container, cosmetic bottle, etc.)'
+  },
+  {
+    id: 'target_use',
+    text: 'Who is your target customer and how will they use this product? What problem does it solve for them?'
+  },
+  {
+    id: 'price_aesthetic',
+    text: 'What\'s your target price point and aesthetic vision? Are you aiming for budget-friendly, mid-range, or premium positioning?'
+  },
+  {
+    id: 'specifications',
+    text: 'Any specific materials, certifications, dimensions, or technical requirements? (This can include sustainability goals, regulatory needs, etc.)'
+  }
+];
 
-When editing existing briefs, be specific about what changes you're making and ask for confirmation.
+const QUESTIONING_PROMPT = `You are a product development expert conducting a structured interview to create a comprehensive product brief. 
 
-Current product brief schema:
+CURRENT CONVERSATION STATE: {{STATE}}
+
+Your role:
+1. Ask ONE question at a time from the structured interview
+2. Wait for complete answers before proceeding
+3. Ask natural follow-up questions if answers need clarification
+4. Keep responses conversational and encouraging
+5. When all 4 questions are answered, transition to brief generation
+
+NEVER generate a product brief until all 4 core questions have been thoroughly answered.
+
+The 4 core questions you must cover:
+1. Product type and form factor
+2. Target customer and use case  
+3. Price point and aesthetic vision
+4. Materials and technical specifications
+
+Current question to ask: {{CURRENT_QUESTION}}
+
+If the user has answered the current question, move to the next one. If all questions are complete, announce that you're generating their brief.`;
+
+const EDITING_PROMPT = `You are a product development expert helping to refine an existing product brief through conversation.
+
+CURRENT BRIEF: {{BRIEF}}
+
+Your role:
+1. Help users edit and improve their product brief conversationally
+2. Make specific changes based on user requests
+3. Ask clarifying questions when changes need more detail
+4. Reference specific sections when making edits
+5. Always end with updated JSON in <BRIEF>...</BRIEF> tags
+
+Be conversational and helpful while making precise edits to the brief.`;
+
+function analyzeConversationState(messages: any[], existingBrief: any): ConversationState {
+  if (existingBrief) {
+    return {
+      phase: 'EDITING',
+      currentQuestion: 0,
+      answers: {},
+      questionsCompleted: true
+    };
+  }
+
+  const answers: Record<string, string> = {};
+  let currentQuestion = 0;
+  
+  // Analyze conversation to determine which questions have been answered
+  const conversationText = messages.map(m => m.content).join(' ').toLowerCase();
+  
+  // Simple heuristics to detect answered questions
+  const patterns = {
+    product_type: /(jar|bottle|container|package|product|skincare|cosmetic|food)/,
+    target_use: /(customer|user|target|audience|problem|solve|use)/,
+    price_aesthetic: /(price|cost|budget|premium|aesthetic|design|positioning)/,
+    specifications: /(material|dimension|certification|requirement|technical|spec)/
+  };
+
+  QUESTIONS.forEach((q, index) => {
+    if (patterns[q.id as keyof typeof patterns]?.test(conversationText)) {
+      answers[q.id] = 'answered';
+      currentQuestion = Math.max(currentQuestion, index + 1);
+    }
+  });
+
+  const questionsCompleted = currentQuestion >= QUESTIONS.length;
+  
+  return {
+    phase: questionsCompleted ? 'GENERATING' : 'QUESTIONING',
+    currentQuestion: Math.min(currentQuestion, QUESTIONS.length - 1),
+    answers,
+    questionsCompleted
+  };
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { messages, existingBrief, conversationState } = await req.json();
+
+    if (!openAIApiKey) {
+      throw new Error('OpenAI API key not configured');
+    }
+
+    // Analyze conversation state
+    const state = conversationState || analyzeConversationState(messages, existingBrief);
+    
+    let systemPrompt = '';
+    
+    if (state.phase === 'EDITING' && existingBrief) {
+      systemPrompt = EDITING_PROMPT.replace('{{BRIEF}}', JSON.stringify(existingBrief, null, 2));
+    } else if (state.phase === 'QUESTIONING') {
+      const currentQ = QUESTIONS[state.currentQuestion];
+      systemPrompt = QUESTIONING_PROMPT
+        .replace('{{STATE}}', JSON.stringify(state, null, 2))
+        .replace('{{CURRENT_QUESTION}}', currentQ ? currentQ.text : 'All questions completed');
+    } else if (state.phase === 'GENERATING') {
+      systemPrompt = `You are a product development expert. The user has answered all interview questions. Now generate a comprehensive product brief based on their answers and transition to editing mode.
+
+CONVERSATION HISTORY: ${messages.map(m => `${m.role}: ${m.content}`).join('\n')}
+
+Generate a complete product brief with realistic specifications and end with JSON wrapped in <BRIEF>...</BRIEF> tags. Then ask what they'd like to edit or improve.
+
+Product brief schema:
 {
   "product_name": "string",
   "product_id": "string", 
@@ -54,28 +177,12 @@ Current product brief schema:
   "certifications": ["string"],
   "variants": ["string"],
   "notes": "string"
-}
-
-Always end your response with a JSON object wrapped in <BRIEF>...</BRIEF> tags containing the current state of the product brief.`;
-
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
-    const { messages, existingBrief } = await req.json();
-
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
+}`;
     }
 
-    // Prepare messages with system prompt and existing brief context
     const systemMessage = {
       role: 'system',
-      content: existingBrief 
-        ? `${SYSTEM_PROMPT}\n\nCurrent brief state: ${JSON.stringify(existingBrief)}`
-        : SYSTEM_PROMPT
+      content: systemPrompt
     };
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -116,6 +223,15 @@ serve(async (req) => {
               if (line.startsWith('data: ')) {
                 const data = line.slice(6);
                 if (data === '[DONE]') {
+                  // Send conversation state with the final message
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+                    content: '',
+                    conversationState: {
+                      ...state,
+                      phase: state.phase === 'GENERATING' ? 'EDITING' : state.phase,
+                      currentQuestion: state.phase === 'QUESTIONING' ? Math.min(state.currentQuestion + 1, QUESTIONS.length - 1) : state.currentQuestion
+                    }
+                  })}\n\n`));
                   controller.enqueue(encoder.encode('data: [DONE]\n\n'));
                   break;
                 }

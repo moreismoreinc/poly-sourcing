@@ -39,7 +39,7 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired, 
     setShowWelcome(false);
   };
 
-  const { messages, currentResponse, isLoading, conversationStarted, sendMessage, resetChat } = useStreamingChat({
+  const { messages, currentResponse, isLoading, conversationStarted, conversationState, sendMessage, resetChat } = useStreamingChat({
     onBriefUpdate: handleBriefUpdate,
     existingBrief,
     onConversationStart: handleConversationStart,
@@ -54,7 +54,7 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired, 
     if (existingBrief) {
       await sendMessage(`I have a product brief for "${existingBrief.product_name}". How can I help you edit or improve it?`, true);
     } else {
-      await sendMessage("I'd like to create a product brief. Can you help me get started?", true);
+      await sendMessage("I'd like to create a product brief. Can you help me get started with some questions?", true);
     }
   };
 
@@ -99,7 +99,7 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired, 
             <p className="text-muted-foreground mb-8 leading-relaxed">
               {existingBrief 
                 ? 'I can help you refine and improve your existing product brief through conversation.'
-                : 'I\'ll help you create a detailed product brief through a natural conversation about your idea.'
+                : 'I\'ll guide you through 4 quick questions to create a comprehensive product brief.'
               }
             </p>
             <Button 
@@ -107,7 +107,7 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired, 
               size="lg"
               className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8"
             >
-              {existingBrief ? 'Start Editing' : 'Let\'s Start'}
+              {existingBrief ? 'Start Editing' : 'Answer 4 Questions'}
             </Button>
           </div>
         </div>
@@ -117,6 +117,33 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired, 
       {(conversationStarted || messages.length > 0 || currentResponse) && (
         <>
           <div className="flex-1 bg-background rounded-lg border border-border mb-4 flex flex-col">
+            {/* Progress Header */}
+            {conversationState.phase === 'QUESTIONING' && !existingBrief && (
+              <div className="border-b border-border p-4 bg-muted/30">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Product Brief Interview</span>
+                  <span className="text-primary font-medium">
+                    Question {Math.min(conversationState.currentQuestion + 1, 4)}/4
+                  </span>
+                </div>
+                <div className="mt-2 w-full bg-muted rounded-full h-2">
+                  <div 
+                    className="bg-primary h-2 rounded-full transition-all duration-300" 
+                    style={{ width: `${Math.min((conversationState.currentQuestion + 1) / 4 * 100, 100)}%` }}
+                  />
+                </div>
+              </div>
+            )}
+            
+            {conversationState.phase === 'GENERATING' && (
+              <div className="border-b border-border p-4 bg-primary/5">
+                <div className="flex items-center gap-2 text-sm text-primary">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                  <span className="font-medium">Generating your product brief...</span>
+                </div>
+              </div>
+            )}
+            
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {messages.map((message) => (
                 <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
