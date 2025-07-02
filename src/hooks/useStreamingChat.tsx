@@ -78,6 +78,9 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
 
     try {
       // Use Supabase client to invoke the edge function
+      // Get current user for project saving
+      const { data: { user } } = await supabase.auth.getUser();
+      
       const { data, error } = await supabase.functions.invoke('streaming-chat', {
         body: {
           messages: [...messages, userMessage].map(m => ({
@@ -85,7 +88,8 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
             content: m.content
           })),
           existingBrief,
-          conversationState
+          conversationState,
+          userId: user?.id || null
         }
       });
 

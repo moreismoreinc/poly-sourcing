@@ -38,33 +38,47 @@ export type Database = {
           created_at: string
           id: string
           openai_request_details: Json | null
+          parent_project_id: string | null
           product_brief: Json
           product_name: string
           raw_ai_output: string | null
           updated_at: string
           user_id: string
+          version: number | null
         }
         Insert: {
           created_at?: string
           id?: string
           openai_request_details?: Json | null
+          parent_project_id?: string | null
           product_brief: Json
           product_name: string
           raw_ai_output?: string | null
           updated_at?: string
           user_id: string
+          version?: number | null
         }
         Update: {
           created_at?: string
           id?: string
           openai_request_details?: Json | null
+          parent_project_id?: string | null
           product_brief?: Json
           product_name?: string
           raw_ai_output?: string | null
           updated_at?: string
           user_id?: string
+          version?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "projects_parent_project_id_fkey"
+            columns: ["parent_project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

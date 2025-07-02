@@ -18,17 +18,7 @@ const Index = () => {
   const handleBriefUpdate = async (brief: ProductBrief | null) => {
     if (brief) {
       setProductBrief(brief);
-      
-      // Auto-save project if user is authenticated
-      if (user) {
-        try {
-          await saveProject(brief, '', {});
-          toast.success('Project saved successfully!');
-        } catch (error) {
-          console.error('Error saving project:', error);
-          toast.error('Failed to save project');
-        }
-      }
+      // Project is now automatically saved in the streaming-chat function
     }
   };
 

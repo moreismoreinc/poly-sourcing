@@ -1,7 +1,10 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.2';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const supabaseUrl = Deno.env.get('SUPABASE_URL');
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -108,13 +111,62 @@ function analyzeConversationState(messages: any[], existingBrief: any): Conversa
   };
 }
 
+// Initialize Supabase client
+const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+
+// Helper function to save project with version control
+async function saveProjectWithVersion(userId: string, productBrief: any, rawAiOutput: string, parentProjectId?: string) {
+  try {
+    // If this is an update to existing project, create new version
+    let version = 1;
+    if (parentProjectId) {
+      const { data: latestVersion } = await supabase
+        .from('projects')
+        .select('version')
+        .eq('parent_project_id', parentProjectId)
+        .order('version', { ascending: false })
+        .limit(1)
+        .single();
+      
+      version = (latestVersion?.version || 0) + 1;
+    }
+
+    const { data, error } = await supabase
+      .from('projects')
+      .insert({
+        user_id: userId,
+        product_name: productBrief.product_name,
+        product_brief: productBrief,
+        raw_ai_output: rawAiOutput,
+        version: version,
+        parent_project_id: parentProjectId || null,
+        openai_request_details: {
+          timestamp: new Date().toISOString(),
+          conversation_length: 0
+        }
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error saving project:', error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in saveProjectWithVersion:', error);
+    return null;
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { messages, existingBrief, conversationState } = await req.json();
+    const { messages, existingBrief, conversationState, userId } = await req.json();
 
     if (!openAIApiKey) {
       throw new Error('OpenAI API key not configured');
@@ -133,20 +185,28 @@ serve(async (req) => {
         .replace('{{STATE}}', JSON.stringify(state, null, 2))
         .replace('{{CURRENT_QUESTION}}', currentQ ? currentQ.text : 'All questions completed');
     } else if (state.phase === 'GENERATING') {
-      systemPrompt = `You are a product development expert. The user has answered all interview questions. Now generate a comprehensive product brief based on their answers and transition to editing mode.
+      systemPrompt = `You are a product development expert with 15+ years of experience in CPG, apparel, and hardware development.
 
 CONVERSATION HISTORY: ${messages.map(m => `${m.role}: ${m.content}`).join('\n')}
 
-Generate a complete product brief with realistic specifications and end with JSON wrapped in <BRIEF>...</BRIEF> tags. Then ask what they'd like to edit or improve.
+Based on the conversation, generate a comprehensive product brief with realistic specifications. End with JSON wrapped in <BRIEF>...</BRIEF> tags, then ask what they'd like to edit or improve.
 
-Product brief schema:
+RULES:
+1. Use only manufacturable materials with reliable supply chains
+2. Realistic dimensions for use case and market positioning  
+3. Price according to positioning tier and material costs
+4. Include only relevant certifications for the product category
+5. Ensure material and finish compatibility
+
+Product brief schema (adapt based on product type):
 {
   "product_name": "string",
   "product_id": "string", 
-  "category": "string",
+  "category": "supplement|skincare|food|wearable|wellness|beauty|clothing|tools|other",
   "positioning": "budget|mid-range|premium",
   "intended_use": "string",
   "form_factor": "string",
+  "target_aesthetic": "string",
   "dimensions": {
     "height_mm": number,
     "diameter_mm": number,
@@ -154,20 +214,20 @@ Product brief schema:
     "depth_mm": number
   },
   "materials": {
-    "jar": "string",
-    "cap": "string", 
-    "label": "string"
+    "primary": "string",
+    "secondary": "string", 
+    "tertiary": "string"
   },
   "finishes": {
-    "jar": "string",
-    "cap": "string",
-    "label": "string"
+    "primary": "string",
+    "secondary": "string",
+    "tertiary": "string"
   },
   "color_scheme": {
     "base": "string",
     "accents": ["string"]
   },
-  "target_aesthetic": "string",
+  "natural_imperfections": null,
   "target_price_usd": number,
   "certifications": ["string"],
   "variants": ["string"],
@@ -202,6 +262,25 @@ Product brief schema:
     const data = await response.json();
     const content = data.choices[0].message.content;
 
+    // Extract product brief if present
+    let savedProject = null;
+    const briefMatch = content.match(/<BRIEF>(.*?)<\/BRIEF>/s);
+    if (briefMatch && userId) {
+      try {
+        const productBrief = JSON.parse(briefMatch[1]);
+        
+        // Save or update project with version control
+        const parentProjectId = existingBrief ? existingBrief.project_id : null;
+        savedProject = await saveProjectWithVersion(userId, productBrief, content, parentProjectId);
+        
+        if (savedProject) {
+          console.log(`Project saved with version ${savedProject.version}`);
+        }
+      } catch (error) {
+        console.error('Error processing product brief:', error);
+      }
+    }
+
     // Update conversation state
     const updatedState = {
       ...state,
@@ -211,7 +290,8 @@ Product brief schema:
 
     return new Response(JSON.stringify({ 
       content,
-      conversationState: updatedState
+      conversationState: updatedState,
+      savedProject: savedProject
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
