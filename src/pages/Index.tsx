@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ProductBrief } from '@/types/ProductBrief';
 import { Button } from '@/components/ui/button';
@@ -13,9 +14,9 @@ import { saveProject } from '@/services/projectService';
 
 const Index = () => {
   const { user, signOut, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [productBrief, setProductBrief] = useState<ProductBrief | null>(null);
   const [showChat, setShowChat] = useState(false);
-  const [showAuthDialog, setShowAuthDialog] = useState(false);
 
   const handleBriefGenerated = async (brief: ProductBrief) => {
     setProductBrief(brief);
@@ -108,7 +109,7 @@ const Index = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setShowAuthDialog(true)}
+                    onClick={() => navigate('/auth')}
                     className="flex items-center gap-2"
                   >
                     <LogIn className="h-4 w-4" />
@@ -140,7 +141,7 @@ const Index = () => {
                   <ChatInterface 
                     onBriefGenerated={handleBriefGenerated} 
                     requireAuth={true}
-                    onAuthRequired={() => setShowAuthDialog(true)}
+                    onAuthRequired={() => navigate('/auth')}
                   />
                 </div>
               </div>
@@ -166,9 +167,6 @@ const Index = () => {
             </div>
           </div>
         </div>
-
-        {/* Auth Dialog */}
-        <AuthDialog open={showAuthDialog} onOpenChange={setShowAuthDialog} />
       </div>
     );
   }
