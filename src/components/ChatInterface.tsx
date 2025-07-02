@@ -2,10 +2,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Loader2, User, Bot } from 'lucide-react';
+import { Send, Loader2, User, Bot, LogIn } from 'lucide-react';
 import { toast } from 'sonner';
 import { ProductInput, ProductBrief } from '@/types/ProductBrief';
 import { generateProductBrief } from '@/services/productBriefService';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Message {
   id: string;
@@ -16,9 +17,12 @@ interface Message {
 
 interface ChatInterfaceProps {
   onBriefGenerated: (brief: ProductBrief) => void;
+  requireAuth?: boolean;
+  onAuthRequired?: () => void;
 }
 
-const ChatInterface = ({ onBriefGenerated }: ChatInterfaceProps) => {
+const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }: ChatInterfaceProps) => {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -54,6 +58,13 @@ const ChatInterface = ({ onBriefGenerated }: ChatInterfaceProps) => {
 
   const handleSendMessage = async () => {
     if (!input.trim()) return;
+
+    // Check authentication requirement
+    if (requireAuth && !user) {
+      onAuthRequired?.();
+      toast.error('Please sign in to generate product briefs');
+      return;
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -167,23 +178,34 @@ const ChatInterface = ({ onBriefGenerated }: ChatInterfaceProps) => {
 
       {/* Input */}
       <div className="border-t bg-white p-4">
-        <div className="flex gap-2">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Describe your product idea... (e.g., 'Sleep gummies to help people relax before bed with a clean and calming aesthetic')"
-            className="flex-1"
-            disabled={isLoading}
-          />
-          <Button 
-            onClick={handleSendMessage}
-            disabled={!input.trim() || isLoading}
-            size="icon"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
+        {requireAuth && !user ? (
+          <div className="text-center py-4">
+            <LogIn className="mx-auto h-8 w-8 text-slate-400 mb-2" />
+            <p className="text-slate-600 mb-3">Sign in to start generating product briefs</p>
+            <Button onClick={onAuthRequired} className="mx-auto">
+              <LogIn className="h-4 w-4 mr-2" />
+              Sign In
+            </Button>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Describe your product idea... (e.g., 'Sleep gummies to help people relax before bed with a clean and calming aesthetic')"
+              className="flex-1"
+              disabled={isLoading}
+            />
+            <Button 
+              onClick={handleSendMessage}
+              disabled={!input.trim() || isLoading}
+              size="icon"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

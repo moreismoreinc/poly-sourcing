@@ -137,7 +137,11 @@ const Index = () => {
             <div className="w-full max-w-2xl mb-12">
               <div className="bg-white rounded-xl shadow-lg border border-slate-200">
                 <div className="p-1">
-                  <ChatInterface onBriefGenerated={handleBriefGenerated} />
+                  <ChatInterface 
+                    onBriefGenerated={handleBriefGenerated} 
+                    requireAuth={true}
+                    onAuthRequired={() => setShowAuthDialog(true)}
+                  />
                 </div>
               </div>
             </div>
