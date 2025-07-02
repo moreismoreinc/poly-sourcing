@@ -22,24 +22,16 @@ interface ConversationState {
 
 const QUESTIONS = [
   {
-    id: 'product_type',
-    text: 'What type of product are you creating? Please describe the category and form factor (e.g., skincare jar, food container, cosmetic bottle, etc.)'
+    id: 'product_concept',
+    text: 'What product do you want to make? Please describe what it is, who it\'s for, and what problem it solves.'
   },
   {
-    id: 'target_use',
-    text: 'Who is your target customer and how will they use this product? What problem does it solve for them?'
-  },
-  {
-    id: 'price_aesthetic',
-    text: 'What\'s your target price point and aesthetic vision? Are you aiming for budget-friendly, mid-range, or premium positioning?'
-  },
-  {
-    id: 'specifications',
-    text: 'Any specific materials, certifications, dimensions, or technical requirements? (This can include sustainability goals, regulatory needs, etc.)'
+    id: 'reference_brand',
+    text: 'What\'s a good reference brand or product that inspires the aesthetic, quality level, or market positioning you\'re aiming for?'
   }
 ];
 
-const QUESTIONING_PROMPT = `You are a product development expert conducting a structured interview to create a comprehensive product brief. 
+const QUESTIONING_PROMPT = `You are a product development expert conducting a streamlined interview to create a comprehensive product brief. 
 
 CURRENT CONVERSATION STATE: {{STATE}}
 
@@ -48,19 +40,17 @@ Your role:
 2. Wait for complete answers before proceeding
 3. Ask natural follow-up questions if answers need clarification
 4. Keep responses conversational and encouraging
-5. When all 4 questions are answered, transition to brief generation
+5. When both core questions are answered, transition to brief generation
 
-NEVER generate a product brief until all 4 core questions have been thoroughly answered.
+NEVER generate a product brief until both core questions have been thoroughly answered.
 
-The 4 core questions you must cover:
-1. Product type and form factor
-2. Target customer and use case  
-3. Price point and aesthetic vision
-4. Materials and technical specifications
+The 2 core questions you must cover:
+1. Product concept: What they want to make, target audience, and problem it solves
+2. Reference brand/product: What inspires their aesthetic, quality, or positioning
 
 Current question to ask: {{CURRENT_QUESTION}}
 
-If the user has answered the current question, move to the next one. If all questions are complete, announce that you're generating their brief.`;
+If the user has answered the current question, move to the next one. If both questions are complete, announce that you're generating their brief.`;
 
 const EDITING_PROMPT = `You are a product development expert helping to refine an existing product brief through conversation.
 
@@ -185,11 +175,11 @@ serve(async (req) => {
         .replace('{{STATE}}', JSON.stringify(state, null, 2))
         .replace('{{CURRENT_QUESTION}}', currentQ ? currentQ.text : 'All questions completed');
     } else if (state.phase === 'GENERATING') {
-      systemPrompt = `You are a product development expert with 15+ years of experience in CPG, apparel, and hardware development.
+      systemPrompt = `You are a product development expert with 15+ years of experience. Based on the conversation about their product concept and reference inspirations, generate a comprehensive and detailed product brief.
 
 CONVERSATION HISTORY: ${messages.map(m => `${m.role}: ${m.content}`).join('\n')}
 
-Based on the conversation, generate a comprehensive product brief with realistic specifications. End with JSON wrapped in <BRIEF>...</BRIEF> tags, then ask what they'd like to edit or improve.
+Using the product concept and reference brand/product mentioned, create a complete product brief with realistic specifications. Analyze the reference to infer quality level, market positioning, aesthetic style, and pricing tier. End with JSON wrapped in <BRIEF>...</BRIEF> tags, then ask what they'd like to edit or improve.
 
 RULES:
 1. Use only manufacturable materials with reliable supply chains

@@ -130,13 +130,13 @@ const SplitViewChat = ({
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Product Brief Interview</span>
                   <span className="text-primary font-medium">
-                    Question {Math.min(conversationState.currentQuestion + 1, 4)}/4
+                    Question {Math.min(conversationState.currentQuestion + 1, 2)}/2
                   </span>
                 </div>
                 <div className="mt-2 w-full bg-muted rounded-full h-2">
                   <div 
                     className="bg-primary h-2 rounded-full transition-all duration-300" 
-                    style={{ width: `${Math.min((conversationState.currentQuestion + 1) / 4 * 100, 100)}%` }}
+                    style={{ width: `${Math.min((conversationState.currentQuestion + 1) / 2 * 100, 100)}%` }}
                   />
                 </div>
               </div>
