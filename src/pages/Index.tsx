@@ -72,113 +72,126 @@ const Index = () => {
   }
 
   if (!showChat && !productBrief) {
-    // Initial landing state - Geneering inspired design
+    // Initial landing state - single chat input with past projects
     return (
-      <div className="min-h-screen bg-background">
-        {/* Header - Geneering style */}
-        <div className="absolute top-6 left-6 z-10">
-          <Button 
-            className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6 py-2"
-            onClick={() => navigate('/auth')}
-          >
-            LET'S GO
-          </Button>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+        {/* Header */}
+        <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                  Geneering
+                </h1>
+                <div className="text-sm text-slate-600 hidden sm:block">
+                  Product Brief Generator • Phase 1
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                {user ? (
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                      <User className="h-4 w-4" />
+                      {user.email}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={signOut}
+                      className="flex items-center gap-2"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sign Out
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate('/auth')}
+                    className="flex items-center gap-2"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    Sign In
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Main Content - Centered like Geneering */}
-        <div className="flex flex-col items-center justify-center min-h-screen px-4">
-          <div className="text-center max-w-4xl mx-auto space-y-12">
-            {/* Hero Text */}
-            <div className="space-y-6">
-              <p className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
-                Got an idea for a product?
-              </p>
-              
-              <h1 className="text-6xl md:text-8xl font-black tracking-tight text-foreground">
-                geneering
-              </h1>
-              
-              <p className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
-                Make it a reality using AI.
+        {/* Main Content */}
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex flex-col items-center justify-center min-h-[calc(100vh-300px)]">
+            <div className="text-center mb-8 max-w-2xl">
+              <h2 className="text-5xl font-bold text-slate-800 mb-4">
+                Transform Ideas into 
+                <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"> Reality</span>
+              </h2>
+              <p className="text-xl text-slate-600 leading-relaxed mb-8">
+                Tell me about your product idea and I'll generate a complete brief with specifications, materials, and dimensions.
               </p>
             </div>
             
-            {/* Chat Interface - Clean and minimal */}
-            <div className="w-full max-w-2xl mx-auto">
-              <div className="bg-card border border-border rounded-xl shadow-sm">
-                <ChatInterface 
-                  onBriefGenerated={handleBriefGenerated} 
-                  requireAuth={false}
-                  onAuthRequired={() => navigate('/auth')}
-                />
+            {/* Single Chat Input */}
+            <div className="w-full max-w-2xl mb-12">
+              <div className="bg-white rounded-xl shadow-lg border border-slate-200">
+                <div className="p-1">
+                  <ChatInterface 
+                    onBriefGenerated={handleBriefGenerated} 
+                    requireAuth={false}
+                    onAuthRequired={() => navigate('/auth')}
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Tagline */}
-            <div className="text-center space-y-2">
-              <p className="text-sm text-muted-foreground font-medium">The Product Co-pilot</p>
-              <p className="text-xs text-muted-foreground">
-                Built for founders and operators.
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Generate product concepts and documents needed to go from idea to production.
-              </p>
-            </div>
-
-            {/* Past Projects Section - Only show if user is logged in */}
+            {/* Past Projects Section */}
             {user && (
-              <div className="w-full max-w-6xl mx-auto pt-16">
+              <div className="w-full max-w-6xl">
                 <PastProjects onProjectSelect={handleProjectSelect} />
               </div>
             )}
           </div>
         </div>
 
-        {/* User info in top right if logged in */}
-        {user && (
-          <div className="absolute top-6 right-6 z-10">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <User className="h-4 w-4" />
-                {user.email}
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={signOut}
-                className="flex items-center gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                Sign Out
-              </Button>
+        {/* Footer */}
+        <div className="bg-white/50 backdrop-blur-sm border-t border-slate-200 mt-16">
+          <div className="container mx-auto px-4 py-8">
+            <div className="text-center text-slate-600">
+              <p className="mb-2">🧱 Phase 1: Product Brief Generator</p>
+              <p className="text-sm">
+                Coming Next: Image Rendering • Component Breakdown • Technical Drawings • BOM Generation
+              </p>
             </div>
           </div>
-        )}
+        </div>
       </div>
     );
   }
 
-  // Split view with chat and results - Geneering style
+  // Split view with chat and results - updated proportions
   return (
-    <div className="h-screen flex flex-col bg-background">
-      {/* Header - Clean minimal style */}
-      <div className="bg-card border-b border-border flex-shrink-0">
-        <div className="px-6 py-4">
+    <div className="h-screen flex flex-col bg-slate-50">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-200 flex-shrink-0">
+        <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <h1 className="text-2xl font-black tracking-tight text-foreground">
-                geneering
+              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                Geneering
               </h1>
               {productBrief && (
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-slate-600">
                   {productBrief.product_name}
                 </span>
               )}
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               {user && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mr-4">
+                <div className="flex items-center gap-2 text-sm text-slate-600 mr-4">
                   <User className="h-4 w-4" />
                   {user.email}
                 </div>
@@ -209,15 +222,15 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Main Content - Clean layout */}
+      {/* Main Content - Updated proportions: 1/3 chat, 2/3 preview */}
       <div className="flex-1 flex overflow-hidden">
         {/* Chat Panel - 1/3 width */}
-        <div className="w-1/3 border-r border-border bg-card">
+        <div className="w-1/3 border-r border-slate-200 bg-white">
           <ChatInterface onBriefGenerated={handleBriefGenerated} />
         </div>
 
         {/* Results Panel - 2/3 width */}
-        <div className="w-2/3 bg-muted/30">
+        <div className="w-2/3 bg-slate-50">
           {productBrief && <ProductPreview brief={productBrief} />}
         </div>
       </div>
