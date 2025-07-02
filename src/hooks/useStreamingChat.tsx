@@ -12,12 +12,14 @@ interface Message {
 interface UseStreamingChatProps {
   onBriefUpdate?: (brief: ProductBrief | null) => void;
   existingBrief?: ProductBrief | null;
+  onConversationStart?: () => void;
 }
 
-export const useStreamingChat = ({ onBriefUpdate, existingBrief }: UseStreamingChatProps = {}) => {
+export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationStart }: UseStreamingChatProps = {}) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentResponse, setCurrentResponse] = useState('');
+  const [conversationStarted, setConversationStarted] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const extractBriefFromResponse = useCallback((text: string): ProductBrief | null => {
@@ -32,8 +34,14 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief }: UseStreamingC
     return null;
   }, []);
 
-  const sendMessage = useCallback(async (content: string) => {
+  const sendMessage = useCallback(async (content: string, isInitial = false) => {
     if (isLoading) return;
+
+    // Mark conversation as started
+    if (!conversationStarted) {
+      setConversationStarted(true);
+      onConversationStart?.();
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -143,14 +151,14 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief }: UseStreamingC
       setIsLoading(false);
       abortControllerRef.current = null;
     }
-  }, [messages, isLoading, existingBrief, onBriefUpdate, extractBriefFromResponse]);
+  }, [messages, isLoading, existingBrief, onBriefUpdate, extractBriefFromResponse, conversationStarted, onConversationStart]);
 
   const resetChat = useCallback(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
     setMessages([]);
-    setCurrentResponse('');
+    setConversationStarted(false);
     setIsLoading(false);
   }, []);
 
@@ -158,6 +166,7 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief }: UseStreamingC
     messages,
     currentResponse,
     isLoading,
+    conversationStarted,
     sendMessage,
     resetChat,
   };
