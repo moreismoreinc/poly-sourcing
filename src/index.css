@@ -38,6 +38,14 @@ All colors MUST be HSL.
 
     --radius: 0.5rem;
 
+    /* Beautiful gradient background */
+    --gradient-lovable: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+    
+    /* Chat input styling */
+    --chat-input-bg: 0 0% 7%;
+    --chat-input-text: 0 0% 85%;
+    --chat-input-placeholder: 0 0% 55%;
+
     --sidebar-background: 0 0% 98%;
 
     --sidebar-foreground: 240 5.3% 26.1%;

@@ -324,76 +324,80 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      {/* Single Input Area with Overlay */}
-      <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
-        {/* Combined Display and Input Area */}
-        <div className="relative p-8">
-          {/* Typewriter Display - Shows as placeholder when input is active */}
-          <div className="absolute inset-8 flex items-start justify-start pointer-events-none">
-            <div className="text-left w-full">
-              {currentDisplayMessage && (
-                <div className={`text-lg leading-relaxed transition-opacity duration-300 ${
-                  showInput && isTypingComplete ? 'text-slate-400' : 'text-slate-800'
-                }`}>
-                  {isLoading ? (
-                    <div className="flex items-start gap-3">
-                      <Loader2 className="h-5 w-5 animate-spin text-blue-600 mt-1 flex-shrink-0" />
-                      <TypewriterText 
-                        text={currentDisplayMessage} 
-                        speed={40} 
-                        onComplete={onTypewriterComplete}
-                      />
-                    </div>
-                  ) : (
+    <div className="min-h-screen bg-gradient-lovable flex flex-col items-center justify-center p-6">
+      {/* Header */}
+      <div className="text-center mb-12">
+        <h1 className="text-5xl font-bold text-white mb-4">
+          Build something <span className="text-white/90">Lovable</span>
+        </h1>
+        <p className="text-xl text-white/80">
+          Create apps and websites by chatting with AI
+        </p>
+      </div>
+
+      {/* Chat Input Container */}
+      <div className="w-full max-w-3xl">
+        <div className="relative bg-chat-input rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+          {/* Typewriter Display - Shows inside input area */}
+          <div className="relative p-6">
+            {currentDisplayMessage && !showInput && (
+              <div className="text-chat-input-foreground text-lg leading-relaxed">
+                {isLoading ? (
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="h-5 w-5 animate-spin text-white/60 flex-shrink-0" />
                     <TypewriterText 
                       text={currentDisplayMessage} 
-                      speed={30}
+                      speed={40} 
                       onComplete={onTypewriterComplete}
                     />
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <TypewriterText 
+                    text={currentDisplayMessage} 
+                    speed={30}
+                    onComplete={onTypewriterComplete}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* Input Field - Appears after typewriter */}
+            {showInput && isTypingComplete && (
+              <Input
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder={getPlaceholderText()}
+                className="w-full bg-transparent border-none text-lg text-chat-input-foreground placeholder:text-chat-input-placeholder focus:ring-0 focus:border-none p-0 shadow-none"
+                disabled={isLoading}
+              />
+            )}
+
+            {/* Control Buttons */}
+            <div className={`absolute bottom-6 right-6 flex gap-2 transition-opacity duration-300 ${
+              showInput && isTypingComplete ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            }`}>
+              <Button 
+                onClick={handleSendMessage}
+                disabled={!input.trim() || isLoading || !showInput || !isTypingComplete}
+                size="sm"
+                className="bg-white/20 hover:bg-white/30 text-white border-white/20 backdrop-blur-sm"
+                variant="outline"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+              {messages.length > 1 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={resetConversation}
+                  className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-sm"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
               )}
             </div>
-          </div>
-
-          {/* Input Field - Overlays the typewriter text */}
-          <div className={`relative transition-opacity duration-300 ${
-            showInput && isTypingComplete ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          }`}>
-            <Input
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder={getPlaceholderText()}
-              className="w-full h-16 text-lg border-none shadow-none bg-transparent focus:ring-0 focus:border-none p-0 text-slate-800 placeholder:text-slate-300"
-              disabled={isLoading || !showInput || !isTypingComplete}
-            />
-          </div>
-
-          {/* Control Buttons */}
-          <div className={`absolute bottom-8 right-8 flex gap-2 transition-opacity duration-300 ${
-            showInput && isTypingComplete ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          }`}>
-            <Button 
-              onClick={handleSendMessage}
-              disabled={!input.trim() || isLoading || !showInput || !isTypingComplete}
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-            {messages.length > 1 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={resetConversation}
-                className="border-slate-300"
-              >
-                <RotateCcw className="h-4 w-4" />
-              </Button>
-            )}
           </div>
         </div>
       </div>
