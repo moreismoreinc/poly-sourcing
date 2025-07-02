@@ -77,8 +77,8 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
     abortControllerRef.current = new AbortController();
 
     try {
-      // Direct fetch to the edge function
-      const response = await fetch(`https://sqlgvgurfirjnfgohyaog.supabase.co/functions/v1/streaming-chat`, {
+      // Direct fetch to the edge function using the correct project URL
+      const response = await fetch(`https://f7618fec-e3a1-4d57-89c7-5e0b3ade9fa5.supabase.co/functions/v1/streaming-chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
