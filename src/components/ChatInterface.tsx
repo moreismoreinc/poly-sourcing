@@ -46,15 +46,6 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState<ConversationStep>(ConversationStep.GREETING);
   const [collectedData, setCollectedData] = useState<Partial<EnhancedProductInput>>({});
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
   // Initialize conversation
   useEffect(() => {
@@ -166,7 +157,7 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
       const authPromptMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'assistant',
-        content: 'Perfect! I have all the information I need. To generate and save your product brief, please sign in first. This will also allow you to access your past projects.',
+        content: 'Perfect! I have all the information I need. To generate and save your product brief, please sign in first.',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, authPromptMessage]);
@@ -183,7 +174,6 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
         product_name: data.product_name,
         use_case: data.use_case,
         aesthetic: data.aesthetic,
-        // Add requirements as additional context - you may need to update your ProductInput type
         requirements: data.requirements
       } as any;
 
@@ -194,7 +184,7 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
       const successMessage: Message = {
         id: (Date.now() + 2).toString(),
         type: 'assistant',
-        content: `🎉 Done! I've created a comprehensive brief for "${brief.product_name}" - a ${brief.category} product positioned as ${brief.positioning}.\n\nCheck out the complete details in the panel on the right! Want to create another product?`,
+        content: `🎉 Done! I've created a brief for "${brief.product_name}" - a ${brief.category} product. Check the details on the right!`,
         timestamp: new Date()
       };
 
@@ -208,7 +198,7 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
       const errorMessage: Message = {
         id: (Date.now() + 2).toString(),
         type: 'assistant',
-        content: 'Sorry, I encountered an error while generating the product brief. Let me try again or we can start over with different information.',
+        content: 'Sorry, I encountered an error. Let\'s try again or start over.',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -270,89 +260,131 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
     }
   };
 
+  // Get the most recent message (or show loading state)
+  const getCurrentMessage = () => {
+    if (isLoading) {
+      return {
+        id: 'loading',
+        type: 'assistant' as const,
+        content: 'Generating comprehensive product brief...',
+        timestamp: new Date(),
+        isLoading: true
+      };
+    }
+    
+    return messages[messages.length - 1];
+  };
+
+  const currentMessage = getCurrentMessage();
+
   return (
-    <div className="flex flex-col h-full">
-      {/* Messages - scrollable area that pushes up */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            {message.type === 'assistant' && (
-              <div className="flex-shrink-0">
-                <Bot className="h-8 w-8 p-1.5 bg-blue-100 text-blue-600 rounded-full" />
+    <div className="w-full max-w-4xl mx-auto">
+      {/* Main Chat Area - Fixed Height showing only current message */}
+      <div className="bg-white rounded-lg border border-slate-200 mb-6">
+        {/* Current Message Display - Fixed Height */}
+        <div className="h-32 p-6 flex items-center justify-center">
+          {currentMessage ? (
+            <div className="flex gap-4 items-start w-full max-w-2xl">
+              {currentMessage.type === 'assistant' && (
+                <div className="flex-shrink-0">
+                  <Bot className="h-10 w-10 p-2 bg-blue-100 text-blue-600 rounded-full" />
+                </div>
+              )}
+              
+              <div className={`flex-1 ${currentMessage.type === 'user' ? 'text-right' : ''}`}>
+                <div
+                  className={`inline-block rounded-lg px-4 py-3 max-w-lg ${
+                    currentMessage.type === 'user'
+                      ? 'bg-blue-600 text-white ml-auto'
+                      : 'bg-slate-100 text-slate-900'
+                  }`}
+                >
+                  <div className="text-base whitespace-pre-line">
+                    {(currentMessage as any).isLoading ? (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>{currentMessage.content}</span>
+                      </div>
+                    ) : (
+                      currentMessage.content
+                    )}
+                  </div>
+                </div>
               </div>
-            )}
-            
-            <div
-              className={`max-w-[85%] rounded-lg px-4 py-3 ${
-                message.type === 'user'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-100 text-slate-900'
-              }`}
-            >
-              <div className="text-sm whitespace-pre-line">{message.content}</div>
-              <p className="text-xs opacity-70 mt-2">
-                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </p>
-            </div>
 
-            {message.type === 'user' && (
-              <div className="flex-shrink-0">
-                <User className="h-8 w-8 p-1.5 bg-slate-200 text-slate-600 rounded-full" />
-              </div>
-            )}
-          </div>
-        ))}
-        
-        {isLoading && (
-          <div className="flex gap-3 justify-start">
-            <div className="flex-shrink-0">
-              <Bot className="h-8 w-8 p-1.5 bg-blue-100 text-blue-600 rounded-full" />
+              {currentMessage.type === 'user' && (
+                <div className="flex-shrink-0">
+                  <User className="h-10 w-10 p-2 bg-slate-200 text-slate-600 rounded-full" />
+                </div>
+              )}
             </div>
-            <div className="bg-slate-100 rounded-lg px-4 py-3">
-              <div className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-sm text-slate-600">Generating comprehensive product brief...</span>
-              </div>
+          ) : (
+            <div className="text-center text-slate-500">
+              <Bot className="mx-auto h-12 w-12 mb-2 text-slate-400" />
+              <p>Starting conversation...</p>
             </div>
-          </div>
-        )}
-        
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Fixed Input at bottom */}
-      <div className="border-t bg-white p-4 flex-shrink-0">
-        <div className="flex gap-2 items-center">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder={getPlaceholderText()}
-            className="flex-1"
-            disabled={isLoading}
-          />
-          <Button 
-            onClick={handleSendMessage}
-            disabled={!input.trim() || isLoading}
-            size="icon"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-          {messages.length > 1 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={resetConversation}
-              className="text-xs"
-            >
-              <RotateCcw className="h-4 w-4" />
-            </Button>
           )}
         </div>
+
+        {/* Input Area - Prominent and Fixed */}
+        <div className="border-t bg-slate-50 p-6">
+          <div className="flex gap-3 items-center max-w-2xl mx-auto">
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder={getPlaceholderText()}
+              className="flex-1 h-12 text-base"
+              disabled={isLoading}
+            />
+            <Button 
+              onClick={handleSendMessage}
+              disabled={!input.trim() || isLoading}
+              size="lg"
+              className="h-12 px-6"
+            >
+              <Send className="h-5 w-5" />
+            </Button>
+            {messages.length > 1 && (
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={resetConversation}
+                className="h-12 px-4"
+              >
+                <RotateCcw className="h-5 w-5" />
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
+
+      {/* Optional: Show conversation history in a collapsible section */}
+      {messages.length > 1 && (
+        <details className="bg-slate-50 rounded-lg border border-slate-200">
+          <summary className="p-4 cursor-pointer text-sm text-slate-600 hover:bg-slate-100 rounded-lg">
+            View conversation history ({messages.length} messages)
+          </summary>
+          <div className="p-4 pt-0 max-h-60 overflow-y-auto space-y-3">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex gap-2 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-[80%] rounded px-3 py-2 text-xs ${
+                    message.type === 'user'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-slate-900'
+                  }`}
+                >
+                  {message.content}
+                </div>
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
     </div>
   );
 };
