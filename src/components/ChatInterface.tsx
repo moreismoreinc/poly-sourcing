@@ -352,12 +352,12 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
           )}
 
           {/* Actual Input Field */}
-          <Input
+          <input
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="w-full bg-transparent border-none text-white text-lg placeholder:text-slate-500 focus:ring-0 focus:outline-none focus:border-none focus:ring-offset-0 focus:shadow-none p-0 h-8"
+            className="w-full bg-transparent border-none text-white text-lg placeholder:text-slate-500 focus:ring-0 focus:outline-none p-0 h-8 focus:border-none focus:ring-0"
             disabled={isLoading || !showInput || !isTypingComplete}
           />
         </div>
