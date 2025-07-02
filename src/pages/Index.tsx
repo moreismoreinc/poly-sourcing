@@ -76,7 +76,7 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
         {/* Header */}
-        <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200">
+        <div className="bg-glass backdrop-blur-md border-b border-glass-border">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -136,7 +136,7 @@ const Index = () => {
             
             {/* Single Chat Input */}
             <div className="w-full max-w-2xl mb-12">
-              <div className="bg-white rounded-xl shadow-lg border border-slate-200">
+              <div className="bg-glass backdrop-blur-lg border border-glass-border rounded-xl shadow-[var(--glass-shadow)]">
                 <div className="p-1">
                   <ChatInterface 
                     onBriefGenerated={handleBriefGenerated} 
@@ -157,7 +157,7 @@ const Index = () => {
         </div>
 
         {/* Footer */}
-        <div className="bg-white/50 backdrop-blur-sm border-t border-slate-200 mt-16">
+        <div className="bg-glass backdrop-blur-sm border-t border-glass-border mt-16">
           <div className="container mx-auto px-4 py-8">
             <div className="text-center text-slate-600">
               <p className="mb-2">🧱 Phase 1: Product Brief Generator</p>
@@ -175,7 +175,7 @@ const Index = () => {
   return (
     <div className="h-screen flex flex-col bg-slate-50">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 flex-shrink-0">
+      <div className="bg-glass backdrop-blur-md border-b border-glass-border flex-shrink-0">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -225,12 +225,12 @@ const Index = () => {
       {/* Main Content - Updated proportions: 1/3 chat, 2/3 preview */}
       <div className="flex-1 flex overflow-hidden">
         {/* Chat Panel - 1/3 width */}
-        <div className="w-1/3 border-r border-slate-200 bg-white">
+        <div className="w-1/3 border-r border-glass-border bg-glass backdrop-blur-sm">
           <ChatInterface onBriefGenerated={handleBriefGenerated} />
         </div>
 
         {/* Results Panel - 2/3 width */}
-        <div className="w-2/3 bg-slate-50">
+        <div className="w-2/3 bg-glass backdrop-blur-xs">
           {productBrief && <ProductPreview brief={productBrief} />}
         </div>
       </div>
