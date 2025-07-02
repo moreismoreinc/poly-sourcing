@@ -324,27 +324,27 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-lovable flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-lovable flex flex-col items-center justify-center p-8">
       {/* Header */}
-      <div className="text-center mb-12">
-        <h1 className="text-5xl font-bold text-white mb-4">
-          Build something <span className="text-white/90">Lovable</span>
+      <div className="text-center mb-16 max-w-4xl">
+        <h1 className="text-6xl md:text-7xl font-bold text-white mb-6 leading-tight">
+          Build something <span className="text-white/95">🧃 Lovable</span>
         </h1>
-        <p className="text-xl text-white/80">
+        <p className="text-xl md:text-2xl text-white/70 font-light">
           Create apps and websites by chatting with AI
         </p>
       </div>
 
       {/* Chat Input Container */}
-      <div className="w-full max-w-3xl">
-        <div className="relative bg-chat-input rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+      <div className="w-full max-w-4xl">
+        <div className="relative bg-chat-input rounded-3xl border border-white/20 shadow-2xl backdrop-blur-sm overflow-hidden">
           {/* Typewriter Display - Shows inside input area */}
-          <div className="relative p-6">
+          <div className="relative px-8 py-6 min-h-[80px] flex items-center">
             {currentDisplayMessage && !showInput && (
-              <div className="text-chat-input-foreground text-lg leading-relaxed">
+              <div className="text-chat-input-foreground text-xl leading-relaxed w-full">
                 {isLoading ? (
-                  <div className="flex items-center gap-3">
-                    <Loader2 className="h-5 w-5 animate-spin text-white/60 flex-shrink-0" />
+                  <div className="flex items-center gap-4">
+                    <Loader2 className="h-6 w-6 animate-spin text-white/60 flex-shrink-0" />
                     <TypewriterText 
                       text={currentDisplayMessage} 
                       speed={40} 
@@ -369,20 +369,20 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder={getPlaceholderText()}
-                className="w-full bg-transparent border-none text-lg text-chat-input-foreground placeholder:text-chat-input-placeholder focus:ring-0 focus:border-none p-0 shadow-none"
+                className="w-full bg-transparent border-none text-xl text-chat-input-foreground placeholder:text-chat-input-placeholder focus:ring-0 focus:border-none p-0 shadow-none"
                 disabled={isLoading}
               />
             )}
 
             {/* Control Buttons */}
-            <div className={`absolute bottom-6 right-6 flex gap-2 transition-opacity duration-300 ${
+            <div className={`absolute bottom-6 right-6 flex gap-3 transition-opacity duration-300 ${
               showInput && isTypingComplete ? 'opacity-100' : 'opacity-0 pointer-events-none'
             }`}>
               <Button 
                 onClick={handleSendMessage}
                 disabled={!input.trim() || isLoading || !showInput || !isTypingComplete}
                 size="sm"
-                className="bg-white/20 hover:bg-white/30 text-white border-white/20 backdrop-blur-sm"
+                className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm rounded-xl px-4 py-2"
                 variant="outline"
               >
                 <Send className="h-4 w-4" />
@@ -392,12 +392,24 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
                   variant="outline"
                   size="sm"
                   onClick={resetConversation}
-                  className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-sm"
+                  className="bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-sm rounded-xl px-4 py-2"
                 >
                   <RotateCcw className="h-4 w-4" />
                 </Button>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* Additional spacing for workspace/supabase indicators if needed */}
+        <div className="flex justify-center items-center gap-4 mt-8 opacity-60">
+          <div className="flex items-center gap-2 text-white/50 text-sm">
+            <div className="w-2 h-2 bg-white/30 rounded-full"></div>
+            <span>Workspace</span>
+          </div>
+          <div className="flex items-center gap-2 text-white/50 text-sm">
+            <div className="w-2 h-2 bg-green-400/60 rounded-full"></div>
+            <span>Supabase</span>
           </div>
         </div>
       </div>
