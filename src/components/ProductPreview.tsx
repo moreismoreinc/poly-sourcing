@@ -23,7 +23,8 @@ const ProductPreview = ({ brief }: ProductPreviewProps) => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Card>
               <CardContent>
-                <div className="aspect-square w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg flex items-center justify-center">                  <div className="text-center text-slate-500">
+                <div className="aspect-square w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg flex items-center justify-center">
+                  <div className="text-center text-slate-500">
                     <div className="text-4xl mb-2">📦</div>
                     <p className="text-sm">Mockup rendering</p>
                   </div>
@@ -33,7 +34,7 @@ const ProductPreview = ({ brief }: ProductPreviewProps) => {
             
             <Card>
               <CardContent>
-                <div className="aspect-square w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg flex items-center justify-center">                  <div className="text-center text-slate-500">
+                <div className="aspect-square bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg flex items-center justify-center">
                   <div className="text-center text-slate-500">
                     <div className="text-4xl mb-2">🏠</div>
                     <p className="text-sm">Context mockup</p>
