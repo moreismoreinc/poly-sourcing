@@ -21,7 +21,6 @@ const ProductPreview = ({ brief }: ProductPreviewProps) => {
       <div className="flex-1 overflow-y-auto">
         {/* Mockups at the top */}
         <div className="bg-white p-4 border-b">
-          <h3 className="text-lg font-semibold text-slate-800 mb-4">Product Mockups</h3>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Card>
               <CardHeader className="pb-3">
