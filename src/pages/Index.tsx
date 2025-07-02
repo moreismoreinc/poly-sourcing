@@ -222,8 +222,11 @@ const Index = () => {
       {/* Main Content - Updated proportions: 1/3 chat, 2/3 preview */}
       <div className="flex-1 flex overflow-hidden">
         {/* Chat Panel - 1/3 width */}
-        <div className="w-1/3 border-r border-border bg-background">
-          <ChatInterface onBriefGenerated={handleBriefGenerated} />
+        <div className="w-1/3 border-r border-border bg-background p-4">
+          <ChatInterface 
+            onBriefGenerated={handleBriefGenerated} 
+            existingBrief={productBrief}
+          />
         </div>
 
         {/* Results Panel - 2/3 width */}
