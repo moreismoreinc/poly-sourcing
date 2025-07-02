@@ -7,11 +7,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2, ArrowLeft } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Auth = () => {
-  const { user, signIn, signUp, loading: authLoading } = useAuth();
+  const { user, signIn, signUp, resetPassword, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -49,6 +51,19 @@ const Auth = () => {
     }
     
     setLoading(false);
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.email) {
+      toast.error('Please enter your email address');
+      return;
+    }
+    
+    setLoading(true);
+    await resetPassword(formData.email);
+    setLoading(false);
+    setShowForgotPassword(false);
   };
 
   if (authLoading) {
@@ -117,31 +132,73 @@ const Auth = () => {
                 </TabsList>
                 
                 <TabsContent value="signin">
-                  <form onSubmit={handleSignIn} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signin-email">Email</Label>
-                      <Input
-                        id="signin-email"
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signin-password">Password</Label>
-                      <Input
-                        id="signin-password"
-                        type="password"
-                        value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <Button type="submit" disabled={loading} className="w-full">
-                      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sign In'}
-                    </Button>
-                  </form>
+                  {!showForgotPassword ? (
+                    <form onSubmit={handleSignIn} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="signin-email">Email</Label>
+                        <Input
+                          id="signin-email"
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="signin-password">Password</Label>
+                        <Input
+                          id="signin-password"
+                          type="password"
+                          value={formData.password}
+                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <Button type="submit" disabled={loading} className="w-full">
+                        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sign In'}
+                      </Button>
+                      <div className="text-center">
+                        <button
+                          type="button"
+                          onClick={() => setShowForgotPassword(true)}
+                          className="text-sm text-blue-600 hover:underline"
+                        >
+                          Forgot your password?
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <form onSubmit={handleForgotPassword} className="space-y-4">
+                      <div className="text-center mb-4">
+                        <h3 className="text-lg font-medium">Reset Password</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Enter your email address and we'll send you a link to reset your password.
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="reset-email">Email</Label>
+                        <Input
+                          id="reset-email"
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <Button type="submit" disabled={loading} className="w-full">
+                        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send Reset Link'}
+                      </Button>
+                      <div className="text-center">
+                        <button
+                          type="button"
+                          onClick={() => setShowForgotPassword(false)}
+                          className="text-sm text-blue-600 hover:underline"
+                        >
+                          Back to sign in
+                        </button>
+                      </div>
+                    </form>
+                  )}
                 </TabsContent>
                 
                 <TabsContent value="signup">
