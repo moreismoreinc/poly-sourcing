@@ -3,17 +3,34 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { ProductBrief } from '@/types/ProductBrief';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Download } from 'lucide-react';
+import { ArrowLeft, Download, LogIn, LogOut, User } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import ChatInterface from '@/components/ChatInterface';
 import ProductPreview from '@/components/ProductPreview';
+import AuthDialog from '@/components/AuthDialog';
+import PastProjects from '@/components/PastProjects';
+import { saveProject } from '@/services/projectService';
 
 const Index = () => {
+  const { user, signOut, loading: authLoading } = useAuth();
   const [productBrief, setProductBrief] = useState<ProductBrief | null>(null);
   const [showChat, setShowChat] = useState(false);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
 
-  const handleBriefGenerated = (brief: ProductBrief) => {
+  const handleBriefGenerated = async (brief: ProductBrief) => {
     setProductBrief(brief);
     setShowChat(true);
+    
+    // Auto-save project if user is authenticated
+    if (user) {
+      try {
+        await saveProject(brief);
+        toast.success('Project saved successfully!');
+      } catch (error) {
+        console.error('Error saving project:', error);
+        toast.error('Failed to save project');
+      }
+    }
   };
 
   const handleStartOver = () => {
@@ -37,8 +54,24 @@ const Index = () => {
     toast.success('Product brief downloaded!');
   };
 
+  const handleProjectSelect = (brief: ProductBrief) => {
+    setProductBrief(brief);
+    setShowChat(true);
+  };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!showChat && !productBrief) {
-    // Initial landing state - single chat input
+    // Initial landing state - single chat input with past projects
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
         {/* Header */}
@@ -53,13 +86,43 @@ const Index = () => {
                   Product Brief Generator • Phase 1
                 </div>
               </div>
+              
+              <div className="flex items-center gap-2">
+                {user ? (
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                      <User className="h-4 w-4" />
+                      {user.email}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={signOut}
+                      className="flex items-center gap-2"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sign Out
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAuthDialog(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    Sign In
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
         {/* Main Content */}
         <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
+          <div className="flex flex-col items-center justify-center min-h-[calc(100vh-300px)]">
             <div className="text-center mb-8 max-w-2xl">
               <h2 className="text-5xl font-bold text-slate-800 mb-4">
                 Transform Ideas into 
@@ -71,13 +134,20 @@ const Index = () => {
             </div>
             
             {/* Single Chat Input */}
-            <div className="w-full max-w-2xl">
+            <div className="w-full max-w-2xl mb-12">
               <div className="bg-white rounded-xl shadow-lg border border-slate-200">
                 <div className="p-1">
                   <ChatInterface onBriefGenerated={handleBriefGenerated} />
                 </div>
               </div>
             </div>
+
+            {/* Past Projects Section */}
+            {user && (
+              <div className="w-full max-w-6xl">
+                <PastProjects onProjectSelect={handleProjectSelect} />
+              </div>
+            )}
           </div>
         </div>
 
@@ -92,6 +162,9 @@ const Index = () => {
             </div>
           </div>
         </div>
+
+        {/* Auth Dialog */}
+        <AuthDialog open={showAuthDialog} onOpenChange={setShowAuthDialog} />
       </div>
     );
   }
@@ -115,6 +188,13 @@ const Index = () => {
             </div>
             
             <div className="flex items-center gap-2">
+              {user && (
+                <div className="flex items-center gap-2 text-sm text-slate-600 mr-4">
+                  <User className="h-4 w-4" />
+                  {user.email}
+                </div>
+              )}
+              
               {productBrief && (
                 <Button
                   variant="outline"
