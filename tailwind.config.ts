@@ -52,10 +52,6 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				glass: {
-					DEFAULT: 'rgba(var(--glass-bg))',
-					border: 'rgba(var(--glass-border))'
-				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -66,15 +62,6 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				}
-			},
-			backdropBlur: {
-				'xs': '2px',
-				'sm': '4px',
-				'md': '8px',
-				'lg': '12px',
-				'xl': '16px',
-				'2xl': '24px',
-				'3xl': '32px'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

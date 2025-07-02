@@ -66,7 +66,7 @@ const TypewriterText = ({ text, speed = 30, onComplete }: { text: string; speed?
   }, [text, speed, onComplete]);
 
   return (
-    <span className="text-left">
+    <span>
       {displayedText}
       {!isComplete && <span className="animate-pulse">|</span>}
     </span>
@@ -82,8 +82,6 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
   const [collectedData, setCollectedData] = useState<Partial<EnhancedProductInput>>({});
   const [currentDisplayMessage, setCurrentDisplayMessage] = useState<string>('');
   const [showInput, setShowInput] = useState(false);
-  const [isTypingComplete, setIsTypingComplete] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   // Initialize conversation
   useEffect(() => {
@@ -91,13 +89,6 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
       startConversation();
     }
   }, []);
-
-  // Focus input when it becomes available
-  useEffect(() => {
-    if (showInput && isTypingComplete && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [showInput, isTypingComplete]);
 
   const startConversation = () => {
     const welcomeMessage: Message = {
@@ -109,7 +100,7 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
     setMessages([welcomeMessage]);
     setCurrentDisplayMessage(welcomeMessage.content);
     setCurrentStep(ConversationStep.PRODUCT_NAME);
-    setIsTypingComplete(false);
+    setShowInput(true);
   };
 
   const getNextQuestion = (step: ConversationStep): string => {
@@ -128,26 +119,20 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
     }
   };
 
-  const displayMessage = (content: string, enableInputAfter: boolean = true) => {
+  const displayMessage = (content: string, onComplete?: () => void) => {
     setCurrentDisplayMessage(content);
     setShowInput(false);
-    setIsTypingComplete(false);
-    setInput('');
-    
-    // Will be handled by typewriter onComplete
-    if (enableInputAfter) {
-      // Input availability handled by typewriter completion
-    }
-  };
-
-  const onTypewriterComplete = () => {
-    setIsTypingComplete(true);
-    setShowInput(true);
+    // Input will be shown after typewriter completes
+    setTimeout(() => {
+      setShowInput(true);
+      onComplete?.();
+    }, content.length * 30 + 500); // Account for typewriter speed + small delay
   };
 
   const handleUserResponse = async (response: string) => {
+    // First show user's response
+    setCurrentDisplayMessage(response);
     setShowInput(false);
-    setIsTypingComplete(false);
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -189,10 +174,9 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
     if (nextStep === ConversationStep.GENERATING) {
       // Show final cooking message before generating
       setTimeout(() => {
-        displayMessage('🔥 Hold on, we\'re cooking!', false);
-        setTimeout(() => {
+        displayMessage('🔥 Hold on, we\'re cooking!', () => {
           generateBrief(updatedData as EnhancedProductInput);
-        }, 2000);
+        });
       }, 1000);
     } else {
       // Ask next question after a delay
@@ -214,7 +198,7 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
   const generateBrief = async (data: EnhancedProductInput) => {
     // Check authentication
     if (!user) {
-      displayMessage('Perfect! I have all the information I need. To generate and save your product brief, please sign in first.', false);
+      displayMessage('Perfect! I have all the information I need. To generate and save your product brief, please sign in first.');
       onAuthRequired?.();
       return;
     }
@@ -262,13 +246,14 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
       
       displayMessage(errorMessage);
       setCurrentStep(ConversationStep.COMPLETE);
+      toast.error('Failed to generate product brief. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleSendMessage = async () => {
-    if (!input.trim() || isLoading || !showInput || !isTypingComplete) return;
+    if (!input.trim() || isLoading || !showInput) return;
 
     if (currentStep === ConversationStep.COMPLETE) {
       // Reset conversation for new product
@@ -277,8 +262,6 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
         setCollectedData({});
         setCurrentStep(ConversationStep.GREETING);
         setInput('');
-        setShowInput(false);
-        setIsTypingComplete(false);
         startConversation();
         return;
       }
@@ -302,7 +285,6 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
     setInput('');
     setCurrentDisplayMessage('');
     setShowInput(false);
-    setIsTypingComplete(false);
     startConversation();
   };
 
@@ -325,75 +307,63 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      {/* Input Field styled like Lovable homepage */}
-      <div className="relative bg-slate-800 rounded-2xl px-6 py-5 shadow-lg">
-        {/* Typewriter placeholder that gets replaced by user input */}
-        <div className="relative">
-          {/* Typewriter Display - Acts as dynamic placeholder */}
-          {!input && (
-            <div className="absolute inset-0 flex items-center pointer-events-none text-slate-400">
-              {isLoading ? (
-                <div className="flex items-center gap-3">
-                  <Loader2 className="h-5 w-5 animate-spin flex-shrink-0" />
+      {/* Main Display Area - Fixed Height with Typewriter Effect */}
+      <div className="bg-white rounded-lg border border-slate-200 mb-6 shadow-sm">
+        {/* Message Display - Fixed Height */}
+        <div className="h-32 p-8 flex items-center justify-center">
+          {currentDisplayMessage ? (
+            <div className="text-center max-w-2xl">
+              <div className="text-lg text-slate-800 leading-relaxed">
+                {isLoading ? (
+                  <div className="flex items-center justify-center gap-3">
+                    <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                    <TypewriterText text={currentDisplayMessage} speed={40} />
+                  </div>
+                ) : (
                   <TypewriterText 
                     text={currentDisplayMessage} 
-                    speed={40} 
-                    onComplete={onTypewriterComplete}
+                    speed={30}
                   />
-                </div>
-              ) : (
-                <TypewriterText 
-                  text={currentDisplayMessage} 
-                  speed={30}
-                  onComplete={onTypewriterComplete}
-                />
-              )}
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center text-slate-400">
+              <div className="w-8 h-8 mx-auto mb-2 bg-slate-100 rounded-full animate-pulse"></div>
+              <p className="text-sm">Starting conversation...</p>
             </div>
           )}
-
-          {/* Actual Input Field */}
-          <input
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className="w-full bg-transparent border-none text-white text-lg placeholder:text-slate-500 focus:ring-0 focus:outline-none p-0 h-8 focus:border-none focus:ring-0"
-            disabled={isLoading || !showInput || !isTypingComplete}
-          />
         </div>
 
-        {/* Bottom row with controls */}
-        <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-700">
-          {/* Left side - workspace indicators */}
-          <div className="flex items-center gap-3 text-sm text-slate-400">
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span>geneering</span>
-            </div>
-          </div>
-
-          {/* Right side - action buttons */}
-          <div className={`flex gap-2 transition-opacity duration-300 ${
-            showInput && isTypingComplete ? 'opacity-100' : 'opacity-50 pointer-events-none'
-          }`}>
-            {messages.length > 1 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={resetConversation}
-                className="text-slate-400 hover:bg-slate-700"
-              >
-                <RotateCcw className="h-4 w-4" />
-              </Button>
-            )}
+        {/* Input Area - Prominent and Fixed */}
+        <div className="border-t bg-slate-50 p-6">
+          <div className={`flex gap-3 items-center max-w-2xl mx-auto transition-opacity duration-300 ${showInput ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder={getPlaceholderText()}
+              className="flex-1 h-12 text-base border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+              disabled={isLoading || !showInput}
+            />
             <Button 
               onClick={handleSendMessage}
-              disabled={!input.trim() || isLoading || !showInput || !isTypingComplete}
-              size="sm"
-              className="bg-slate-700 hover:bg-slate-600 text-white border-none"
+              disabled={!input.trim() || isLoading || !showInput}
+              size="lg"
+              className="h-12 px-6 bg-blue-600 hover:bg-blue-700"
             >
-              <Send className="h-4 w-4" />
+              <Send className="h-5 w-5" />
             </Button>
+            {messages.length > 1 && (
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={resetConversation}
+                className="h-12 px-4 border-slate-300"
+              >
+                <RotateCcw className="h-5 w-5" />
+              </Button>
+            )}
           </div>
         </div>
       </div>
