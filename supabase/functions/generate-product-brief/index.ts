@@ -78,7 +78,7 @@ Generate JSON:
 "variants": ["S/M", "M/L", "Color options"],
 "notes": "Battery life and charging specifications. Water resistance rating. Skin contact materials hypoallergenic."}`,
 
-  'health & wellness': `Health & Wellness: {product_name} - {use_case}
+  wellness: `Health & Wellness: {product_name} - {use_case}
 Style: {aesthetic} | Positioning: {positioning}
 
 Generate JSON:
@@ -97,9 +97,9 @@ Generate JSON:
 };
 
 const PRICE_RANGES = {
-  budget: { supplement: [15, 25], skincare: [12, 30], food: [8, 20], wearable: [25, 60], 'health & wellness': [20, 40] },
-  'mid-range': { supplement: [25, 45], skincare: [30, 70], food: [20, 40], wearable: [60, 150], 'health & wellness': [40, 100] },
-  premium: { supplement: [45, 80], skincare: [70, 200], food: [40, 80], wearable: [150, 400], 'health & wellness': [100, 300] }
+  budget: { supplement: [15, 25], skincare: [12, 30], food: [8, 20], wearable: [25, 60], wellness: [20, 40] },
+  'mid-range': { supplement: [25, 45], skincare: [30, 70], food: [20, 40], wearable: [60, 150], wellness: [40, 100] },
+  premium: { supplement: [45, 80], skincare: [70, 200], food: [40, 80], wearable: [150, 400], wellness: [100, 300] }
 };
 
 function detectCategory(productName: string, useCase: string): string {
@@ -119,7 +119,7 @@ function detectCategory(productName: string, useCase: string): string {
     return 'wearable';
   }
   
-  return 'health & wellness';
+  return 'wellness';
 }
 
 function inferPositioning(aesthetic: string): 'budget' | 'mid-range' | 'premium' {
@@ -147,7 +147,7 @@ function buildPrompt(productName: string, useCase: string, aesthetic: string): s
   const priceRange = PRICE_RANGES[positioning][category] || [20, 50];
   const priceStr = `${priceRange[0]}-${priceRange[1]}`;
   
-  const template = TEMPLATES[category] || TEMPLATES['health & wellness'];
+  const template = TEMPLATES[category] || TEMPLATES.wellness;
   
   return template
     .replace(/{product_name}/g, productName)
