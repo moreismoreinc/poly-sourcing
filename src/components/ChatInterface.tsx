@@ -325,75 +325,79 @@ const ChatInterface = ({ onBriefGenerated, requireAuth = false, onAuthRequired }
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      {/* Single Input Area with Overlay */}
-      <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
-        {/* Combined Display and Input Area */}
-        <div className="relative p-8">
-          {/* Typewriter Display - Shows as placeholder when input is active */}
-          <div className="absolute inset-8 flex items-start justify-start pointer-events-none">
-            <div className="text-left w-full">
-              {currentDisplayMessage && (
-                <div className={`text-lg leading-relaxed transition-opacity duration-300 ${
-                  showInput && isTypingComplete ? 'text-slate-400' : 'text-slate-800'
-                }`}>
-                  {isLoading ? (
-                    <div className="flex items-start gap-3">
-                      <Loader2 className="h-5 w-5 animate-spin text-blue-600 mt-1 flex-shrink-0" />
-                      <TypewriterText 
-                        text={currentDisplayMessage} 
-                        speed={40} 
-                        onComplete={onTypewriterComplete}
-                      />
-                    </div>
-                  ) : (
-                    <TypewriterText 
-                      text={currentDisplayMessage} 
-                      speed={30}
-                      onComplete={onTypewriterComplete}
-                    />
-                  )}
+      {/* Input Field styled like Lovable homepage */}
+      <div className="relative bg-slate-800 rounded-2xl px-6 py-5 shadow-lg">
+        {/* Typewriter placeholder that gets replaced by user input */}
+        <div className="relative">
+          {/* Typewriter Display - Acts as dynamic placeholder */}
+          {!input && (
+            <div className="absolute inset-0 flex items-center pointer-events-none text-slate-400">
+              {isLoading ? (
+                <div className="flex items-center gap-3">
+                  <Loader2 className="h-5 w-5 animate-spin flex-shrink-0" />
+                  <TypewriterText 
+                    text={currentDisplayMessage} 
+                    speed={40} 
+                    onComplete={onTypewriterComplete}
+                  />
                 </div>
+              ) : (
+                <TypewriterText 
+                  text={currentDisplayMessage} 
+                  speed={30}
+                  onComplete={onTypewriterComplete}
+                />
               )}
+            </div>
+          )}
+
+          {/* Actual Input Field */}
+          <Input
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            className="w-full bg-transparent border-none text-white text-lg placeholder:text-slate-500 focus:ring-0 focus:outline-none p-0 h-8"
+            disabled={isLoading || !showInput || !isTypingComplete}
+          />
+        </div>
+
+        {/* Bottom row with controls */}
+        <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-700">
+          {/* Left side - workspace indicators */}
+          <div className="flex items-center gap-3 text-sm text-slate-400">
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>Workspace</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <span>Supabase</span>
             </div>
           </div>
 
-          {/* Input Field - Overlays the typewriter text */}
-          <div className={`relative transition-opacity duration-300 ${
-            showInput && isTypingComplete ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          {/* Right side - action buttons */}
+          <div className={`flex gap-2 transition-opacity duration-300 ${
+            showInput && isTypingComplete ? 'opacity-100' : 'opacity-50 pointer-events-none'
           }`}>
-            <Input
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder={getPlaceholderText()}
-              className="w-full h-16 text-lg border-none shadow-none bg-transparent focus:ring-0 focus:border-none p-0 text-slate-800 placeholder:text-slate-300"
-              disabled={isLoading || !showInput || !isTypingComplete}
-            />
-          </div>
-
-          {/* Control Buttons */}
-          <div className={`absolute bottom-8 right-8 flex gap-2 transition-opacity duration-300 ${
-            showInput && isTypingComplete ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          }`}>
-            <Button 
-              onClick={handleSendMessage}
-              disabled={!input.trim() || isLoading || !showInput || !isTypingComplete}
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
             {messages.length > 1 && (
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={resetConversation}
-                className="border-slate-300"
+                className="text-slate-400 hover:text-white hover:bg-slate-700"
               >
                 <RotateCcw className="h-4 w-4" />
               </Button>
             )}
+            <Button 
+              onClick={handleSendMessage}
+              disabled={!input.trim() || isLoading || !showInput || !isTypingComplete}
+              size="sm"
+              className="bg-slate-700 hover:bg-slate-600 text-white border-slate-600"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
