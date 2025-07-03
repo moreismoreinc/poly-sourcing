@@ -229,11 +229,8 @@ Product brief schema (adapt based on product type):
       content: systemPrompt
     };
 
-    // Convert messages to input format for Responses API
-    let inputContent = '';
-    messages.forEach(msg => {
-      inputContent += `${msg.role}: ${msg.content}\n`;
-    });
+    // Convert messages to the proper input format for Responses API
+    const inputMessages = [systemMessage, ...messages];
 
     const response = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
@@ -242,42 +239,37 @@ Product brief schema (adapt based on product type):
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1',
+        model: 'gpt-4o', // Valid model name
         instructions: systemPrompt,
-        input: inputContent,
+        input: inputMessages, // Use the messages array format
         tools: [
           {
             type: 'web_search',
             web_search: {
               max_results: 5
             }
-          },
-          {
-            type: 'image_generation',
-            image_generation: {
-              model: 'dall-e-3',
-              quality: 'standard',
-              size: '1024x1024'
-            }
           }
+          // Note: image_generation is not available as a built-in tool in Responses API
+          // You would need to call the separate DALL-E API for image generation
         ],
         temperature: 0.7,
-        max_output_tokens: 1500,
+        max_output_tokens: 1500, // Correct parameter name
         stream: false,
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('OpenAI API Error:', errorText);
+      throw new Error(`OpenAI API error: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     const data = await response.json();
-    
-    // Handle Responses API format
+
+    // Handle Responses API format correctly
     let content = '';
     let generatedImages: string[] = [];
-    
-    // Parse the new Responses API format
+
     if (data.output && data.output.length > 0) {
       // Extract text content from output messages
       for (const outputItem of data.output) {
@@ -288,14 +280,19 @@ Product brief schema (adapt based on product type):
             }
           }
         }
-        
-        // Extract tool call results if any
-        if (outputItem.type === 'tool_call') {
-          if (outputItem.tool_type === 'image_generation' && outputItem.result) {
-            if (outputItem.result.url) {
-              generatedImages.push(outputItem.result.url);
-            }
-          }
+      }
+    } else {
+      console.error('Unexpected response format:', data);
+      throw new Error('No output received from OpenAI API');
+    }
+
+    // Web search results would be available in tool call outputs if any
+    // Check for tool calls in the response
+    if (data.output) {
+      for (const outputItem of data.output) {
+        if (outputItem.type === 'tool_call' && outputItem.tool_type === 'web_search') {
+          // Tool call results would be in outputItem.result
+          console.log('Web search results:', outputItem.result);
         }
       }
     }
