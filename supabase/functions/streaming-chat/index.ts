@@ -49,10 +49,7 @@ CURRENT CONVERSATION STATE: {{STATE}}
 Your role:
 1. Ask the 2 core questions below, one at a time
 2. Accept any reasonable answer - don't ask follow-ups
-3. After BOTH questions are answered, immediately move to brief generation
-4. Keep responses short and encouraging
-
-NEVER generate a product brief until both core questions have been thoroughly answered.
+3. Keep responses short and encouraging
 
 The 2 core questions you must cover:
 1. Product concept: What they want to make
@@ -60,7 +57,58 @@ The 2 core questions you must cover:
 
 Current question to ask: {{CURRENT_QUESTION}}
 
-If the user has answered the current question, move to the next one. If both questions are complete, announce that you're generating their brief.`;
+If this is the first question, ask about their product concept.
+If this is the second question, ask about their reference brand.
+`;
+
+const GENERATING_PROMPT = `CRITICAL INSTRUCTION: You MUST generate a product brief JSON immediately based on the conversation history.
+
+CONVERSATION HISTORY: {{CONVERSATION_HISTORY}}
+
+Do the following in order:
+1. Generate a comprehensive product brief JSON wrapped in <BRIEF>...</BRIEF> tags
+2. After the brief, add a short message saying "I've created your product brief based on our conversation!"
+3. Then add: "Let me know if you'd like to make any edits or changes to any part of it."
+
+Example format for the brief:
+<BRIEF>
+{
+  "product_name": "Clarity Mind Gummies",
+  "product_id": "clarity-mind-gummies",
+  "category": "supplement",
+  "positioning": "premium",
+  "intended_use": "Daily cognitive enhancement and mental clarity support",
+  "form_factor": "Chewable gummy supplement",
+  "target_aesthetic": "Clean, modern, sophisticated wellness brand",
+  "dimensions": {
+    "height_mm": 85,
+    "diameter_mm": 65,
+    "width_mm": 65,
+    "depth_mm": 65
+  },
+  "materials": {
+    "primary": "Food-grade HDPE plastic",
+    "secondary": "Tamper-evident aluminum seal",
+    "tertiary": "Premium matte paper label"
+  },
+  "finishes": {
+    "primary": "Matte black container",
+    "secondary": "Glossy aluminum foil seal",
+    "tertiary": "Soft-touch label with UV spot coating"
+  },
+  "color_scheme": {
+    "base": "#1a1a1a",
+    "accents": ["#ffffff", "#f8f9fa"]
+  },
+  "natural_imperfections": null,
+  "target_price_usd": 45,
+  "certifications": ["FDA Facility", "cGMP", "Third-party tested"],
+  "variants": ["30-count", "60-count"],
+  "notes": "Premium positioning with clean, minimalist design targeting health-conscious professionals"
+}
+</BRIEF>
+
+Generate the brief now, then confirm it's created and ask about edits.`;
 
 const EDITING_PROMPT = `You are a product development expert helping to refine an existing product brief through conversation.
 
@@ -76,6 +124,7 @@ Your role:
 Be conversational and helpful while making precise edits to the brief.`;
 
 function analyzeConversationState(messages: any[], existingBrief: any): ConversationState {
+  // If we have an existing brief, we're in editing mode
   if (existingBrief) {
     return {
       phase: 'EDITING',
@@ -85,6 +134,7 @@ function analyzeConversationState(messages: any[], existingBrief: any): Conversa
     };
   }
 
+  // If no messages, start questioning
   if (messages.length === 0) {
     return {
       phase: 'QUESTIONING',
@@ -94,21 +144,40 @@ function analyzeConversationState(messages: any[], existingBrief: any): Conversa
     };
   }
 
-  const answers: Record<string, string> = {};
-  let currentQuestion = 0;
-  
-  // Count user messages to determine progress
   const userMessages = messages.filter(m => m.role === 'user');
-  currentQuestion = Math.min(userMessages.length - 1, QUESTIONS.length - 1);
-  
-  const questionsCompleted = userMessages.length >= QUESTIONS.length;
-  
-  return {
-    phase: questionsCompleted ? 'GENERATING' : 'QUESTIONING',
-    currentQuestion: Math.max(0, currentQuestion),
-    answers,
-    questionsCompleted
-  };
+  const userMessageCount = userMessages.length;
+
+  console.log('=== CONVERSATION ANALYSIS ===');
+  console.log('Total messages:', messages.length);
+  console.log('User messages:', userMessageCount);
+  console.log('User message contents:', userMessages.map(m => m.content.substring(0, 50) + '...'));
+
+  // Determine phase based on user message count
+  if (userMessageCount === 1) {
+    // After first user message, ask second question
+    return {
+      phase: 'QUESTIONING',
+      currentQuestion: 1,
+      answers: {},
+      questionsCompleted: false
+    };
+  } else if (userMessageCount >= 2) {
+    // After second user message, generate brief
+    return {
+      phase: 'GENERATING',
+      currentQuestion: 0,
+      answers: {},
+      questionsCompleted: true
+    };
+  } else {
+    // Initial state - ask first question
+    return {
+      phase: 'QUESTIONING',
+      currentQuestion: 0,
+      answers: {},
+      questionsCompleted: false
+    };
+  }
 }
 
 // Initialize Supabase client
@@ -193,55 +262,17 @@ serve(async (req) => {
         .replace('{{STATE}}', JSON.stringify(state, null, 2))
         .replace('{{CURRENT_QUESTION}}', currentQ ? currentQ.text : 'All questions completed');
     } else if (state.phase === 'GENERATING') {
-      systemPrompt = OVERALL_SYSTEM_PROMPT + '\n' + `CRITICAL INSTRUCTION: You MUST generate a product brief JSON immediately. Do not say you will generate it - GENERATE IT NOW.
-
-CONVERSATION HISTORY: ${messages.map(m => `${m.role}: ${m.content}`).join('\n')}
-
-Based on the conversation above, output ONLY a JSON product brief wrapped in <BRIEF>...</BRIEF> tags. NO other text, explanations, or confirmations.
-
-Example format:
-<BRIEF>
-{
-  "product_name": "Clarity Mind Gummies",
-  "product_id": "clarity-mind-gummies",
-  "category": "supplement",
-  "positioning": "premium",
-  "intended_use": "Daily cognitive enhancement and mental clarity support",
-  "form_factor": "Chewable gummy supplement",
-  "target_aesthetic": "Clean, modern, sophisticated wellness brand",
-  "dimensions": {
-    "height_mm": 85,
-    "diameter_mm": 65,
-    "width_mm": 65,
-    "depth_mm": 65
-  },
-  "materials": {
-    "primary": "Food-grade HDPE plastic",
-    "secondary": "Tamper-evident aluminum seal",
-    "tertiary": "Premium matte paper label"
-  },
-  "finishes": {
-    "primary": "Matte black container",
-    "secondary": "Glossy aluminum foil seal",
-    "tertiary": "Soft-touch label with UV spot coating"
-  },
-  "color_scheme": {
-    "base": "#1a1a1a",
-    "accents": ["#ffffff", "#f8f9fa"]
-  },
-  "natural_imperfections": null,
-  "target_price_usd": 45,
-  "certifications": ["FDA Facility", "cGMP", "Third-party tested"],
-  "variants": ["30-count", "60-count"],
-  "notes": "Premium positioning with clean, minimalist design targeting health-conscious professionals"
-}
-</BRIEF>
-
-GENERATE NOW - DO NOT SAY YOU WILL GENERATE, JUST DO IT.`;
+      const conversationHistory = messages.map(m => `${m.role}: ${m.content}`).join('\n');
+      systemPrompt = OVERALL_SYSTEM_PROMPT + '\n' + GENERATING_PROMPT
+        .replace('{{CONVERSATION_HISTORY}}', conversationHistory);
     }
 
+    console.log('=== SYSTEM PROMPT ===');
+    console.log('Phase:', state.phase);
+    console.log('Prompt length:', systemPrompt.length);
+    console.log('First 200 chars:', systemPrompt.substring(0, 200));
+
     // Convert messages to the proper format for Responses API
-    // Input should only contain user messages, instructions is separate
     const userMessages = messages.map(m => ({
       role: m.role,
       content: m.content
@@ -263,7 +294,7 @@ GENERATE NOW - DO NOT SAY YOU WILL GENERATE, JUST DO IT.`;
           }
         ],
         temperature: 0.7,
-        max_output_tokens: 1500,
+        max_output_tokens: 2000,
         stream: false,
       }),
     });
@@ -310,7 +341,7 @@ GENERATE NOW - DO NOT SAY YOU WILL GENERATE, JUST DO IT.`;
     console.log('=== DEBUG: Checking for product brief ===');
     console.log('Content length:', content.length);
     console.log('Has userId:', !!userId);
-    console.log('Full content:', content);
+    console.log('Content preview:', content.substring(0, 200));
     console.log('Looking for <BRIEF> tags...');
     
     const briefMatch = content.match(/<BRIEF>(.*?)<\/BRIEF>/s);
@@ -339,12 +370,16 @@ GENERATE NOW - DO NOT SAY YOU WILL GENERATE, JUST DO IT.`;
       console.log('No brief match or userId missing - briefMatch:', !!briefMatch, 'userId:', !!userId);
     }
 
-    // Update conversation state
+    // Update conversation state for next interaction
     const updatedState = {
       ...state,
       phase: state.phase === 'GENERATING' ? 'EDITING' : state.phase,
-      currentQuestion: state.phase === 'QUESTIONING' ? Math.min(state.currentQuestion + 1, QUESTIONS.length - 1) : state.currentQuestion
+      currentQuestion: state.currentQuestion
     };
+
+    console.log('=== UPDATED STATE ===');
+    console.log('Updated phase:', updatedState.phase);
+    console.log('Updated currentQuestion:', updatedState.currentQuestion);
 
     return new Response(JSON.stringify({ 
       content,
