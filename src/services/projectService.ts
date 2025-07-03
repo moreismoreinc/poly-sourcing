@@ -78,3 +78,25 @@ export const getMostRecentProject = async () => {
 
   return data;
 };
+
+export const getProjectById = async (projectId: string) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('id', projectId)
+    .eq('user_id', user.id)
+    .single();
+
+  if (error) {
+    console.error('Error fetching project by ID:', error);
+    return null;
+  }
+
+  return data;
+};

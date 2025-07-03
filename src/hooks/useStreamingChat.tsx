@@ -20,7 +20,7 @@ interface ConversationState {
 }
 
 interface UseStreamingChatProps {
-  onBriefUpdate?: (brief: Record<string, any> | null, productName?: string) => void;
+  onBriefUpdate?: (brief: Record<string, any> | null, productName?: string, projectId?: string) => void;
   existingBrief?: Record<string, any> | null;
   onConversationStart?: () => void;
 }
@@ -118,7 +118,7 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
         // Extract and update brief
         const extractedBrief = extractBriefFromResponse(accumulatedResponse);
         if (extractedBrief && onBriefUpdate) {
-          onBriefUpdate(extractedBrief, data.productName);
+          onBriefUpdate(extractedBrief, data.productName, data.savedProject?.id);
         }
 
         // Update conversation state

@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useStreamingChat } from '@/hooks/useStreamingChat';
 import SingleInputStart from '@/components/SingleInputStart';
 import SplitViewChat from '@/components/SplitViewChat';
-import { getMostRecentProject } from '@/services/projectService';
+import { getMostRecentProject, getProjectById } from '@/services/projectService';
 import { useEffect } from 'react';
 
 const Index = () => {
@@ -16,11 +16,13 @@ const Index = () => {
   const [productBrief, setProductBrief] = useState<Record<string, any> | null>(null);
   const [productName, setProductName] = useState<string>('');
   const [showSplitView, setShowSplitView] = useState(false);
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
 
-  const handleBriefUpdate = async (brief: Record<string, any> | null, name?: string) => {
+  const handleBriefUpdate = async (brief: Record<string, any> | null, name?: string, projectId?: string) => {
     if (brief) {
       setProductBrief(brief);
       if (name) setProductName(name);
+      if (projectId) setCurrentProjectId(projectId);
     }
   };
 
@@ -29,21 +31,22 @@ const Index = () => {
     onConversationStart: () => setShowSplitView(true),
   });
 
-  // Load most recent project on mount
+  // Load most recent project on mount only if no conversation is active
   useEffect(() => {
     const loadRecentProject = async () => {
-      if (user) {
+      if (user && !conversationStarted && !currentProjectId) {
         const project = await getMostRecentProject();
         if (project) {
           setProductBrief(project.product_brief as Record<string, any>);
           setProductName(project.product_name);
+          setCurrentProjectId(project.id);
           setShowSplitView(true);
         }
       }
     };
     
     loadRecentProject();
-  }, [user]);
+  }, [user, conversationStarted, currentProjectId]);
 
   const handleStartConversation = async (message: string) => {
     if (!user) {
@@ -51,12 +54,19 @@ const Index = () => {
       return;
     }
     
+    // Clear any existing project data when starting a new conversation
+    setProductBrief(null);
+    setProductName('');
+    setCurrentProjectId(null);
+    
     setShowSplitView(true);
     await sendMessage(message, true);
   };
 
   const handleStartOver = () => {
     setProductBrief(null);
+    setProductName('');
+    setCurrentProjectId(null);
     setShowSplitView(false);
     resetChat();
   };
