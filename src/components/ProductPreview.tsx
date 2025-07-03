@@ -29,7 +29,7 @@ const ProductPreview = ({ brief, productName }: ProductPreviewProps) => {
           </div>
 
           {/* Right Side: Mockups */}
-          <div className="w-80 flex-1 flex-col gap-6">
+          <div className="flex-1 flex flex-col gap-6">
             {/* Product Mockup */}
             <Card className="flex-1 bg-card shadow-lg rounded-2xl">
               <CardHeader className="pb-3">
