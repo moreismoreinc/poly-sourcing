@@ -313,7 +313,8 @@ Required JSON schema:
     console.log('=== DEBUG: Checking for product brief ===');
     console.log('Content length:', content.length);
     console.log('Has userId:', !!userId);
-    console.log('Content preview:', content.substring(0, 500));
+    console.log('Full content:', content);
+    console.log('Looking for <BRIEF> tags...');
     
     const briefMatch = content.match(/<BRIEF>(.*?)<\/BRIEF>/s);
     console.log('Brief match found:', !!briefMatch);
