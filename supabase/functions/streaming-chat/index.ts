@@ -63,7 +63,9 @@ Current question to ask: {{CURRENT_QUESTION}}
 If this is the first question, ask about their product concept.
 If this is the second question, ask about their reference brand.
 
-On completion of this phase, automatically start the Generating phase.  
+On completion of this phase, do 2 things: 
+1. Send a message saying you will start generating the product brief, specifically "Gotcha, let me start generating a product brief based on that to get us started." 
+2. Automatically start the Generating phase.  
 
 `;
 
