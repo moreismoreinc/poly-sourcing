@@ -193,54 +193,51 @@ serve(async (req) => {
         .replace('{{STATE}}', JSON.stringify(state, null, 2))
         .replace('{{CURRENT_QUESTION}}', currentQ ? currentQ.text : 'All questions completed');
     } else if (state.phase === 'GENERATING') {
-      systemPrompt = OVERALL_SYSTEM_PROMPT + '\n' + `You are a product development expert. Based on the conversation, create a comprehensive product brief with realistic specifications.
+      systemPrompt = OVERALL_SYSTEM_PROMPT + '\n' + `CRITICAL INSTRUCTION: You MUST generate a product brief JSON immediately. Do not say you will generate it - GENERATE IT NOW.
 
 CONVERSATION HISTORY: ${messages.map(m => `${m.role}: ${m.content}`).join('\n')}
 
-CRITICAL: Output ONLY the JSON product brief wrapped in <BRIEF>...</BRIEF> tags. Do not include any additional text, explanations, or questions.
+Based on the conversation above, output ONLY a JSON product brief wrapped in <BRIEF>...</BRIEF> tags. NO other text, explanations, or confirmations.
 
-RULES:
-1. Use manufacturable materials with reliable supply chains
-2. Realistic dimensions for use case and market positioning  
-3. Price according to positioning tier and material costs
-4. Include relevant certifications for the product category
-5. Ensure material and finish compatibility
-
-Required JSON schema:
+Example format:
+<BRIEF>
 {
-  "product_name": "string",
-  "product_id": "string", 
-  "category": "supplement|skincare|food|wearable|wellness|beauty|clothing|tools|other",
-  "positioning": "budget|mid-range|premium",
-  "intended_use": "string",
-  "form_factor": "string",
-  "target_aesthetic": "string",
+  "product_name": "Clarity Mind Gummies",
+  "product_id": "clarity-mind-gummies",
+  "category": "supplement",
+  "positioning": "premium",
+  "intended_use": "Daily cognitive enhancement and mental clarity support",
+  "form_factor": "Chewable gummy supplement",
+  "target_aesthetic": "Clean, modern, sophisticated wellness brand",
   "dimensions": {
-    "height_mm": number,
-    "diameter_mm": number,
-    "width_mm": number,
-    "depth_mm": number
+    "height_mm": 85,
+    "diameter_mm": 65,
+    "width_mm": 65,
+    "depth_mm": 65
   },
   "materials": {
-    "primary": "string",
-    "secondary": "string", 
-    "tertiary": "string"
+    "primary": "Food-grade HDPE plastic",
+    "secondary": "Tamper-evident aluminum seal",
+    "tertiary": "Premium matte paper label"
   },
   "finishes": {
-    "primary": "string",
-    "secondary": "string",
-    "tertiary": "string"
+    "primary": "Matte black container",
+    "secondary": "Glossy aluminum foil seal",
+    "tertiary": "Soft-touch label with UV spot coating"
   },
   "color_scheme": {
-    "base": "string",
-    "accents": ["string"]
+    "base": "#1a1a1a",
+    "accents": ["#ffffff", "#f8f9fa"]
   },
   "natural_imperfections": null,
-  "target_price_usd": number,
-  "certifications": ["string"],
-  "variants": ["string"],
-  "notes": "string"
-}`;
+  "target_price_usd": 45,
+  "certifications": ["FDA Facility", "cGMP", "Third-party tested"],
+  "variants": ["30-count", "60-count"],
+  "notes": "Premium positioning with clean, minimalist design targeting health-conscious professionals"
+}
+</BRIEF>
+
+GENERATE NOW - DO NOT SAY YOU WILL GENERATE, JUST DO IT.`;
     }
 
     // Convert messages to the proper format for Responses API
