@@ -187,6 +187,55 @@ function analyzeConversationState(messages: any[], existingBrief: any): Conversa
 // Initialize Supabase client
 const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
+// Helper function to extract product name from first user message
+function extractProductNameFromConversation(messages: any[]): string {
+  const firstUserMessage = messages.find(m => m.role === 'user');
+  if (!firstUserMessage) return 'Untitled Product';
+  
+  const content = firstUserMessage.content.toLowerCase();
+  
+  // Try to extract product name using common patterns
+  let productName = 'Untitled Product';
+  
+  // Pattern 1: "I want to make/create [product]"
+  let match = content.match(/(?:i want to|want to|planning to|going to|need to)\s+(?:make|create|build|develop|design)\s+(?:a|an|some)?\s*([^.!?]+)/);
+  if (match) {
+    productName = match[1].trim();
+  }
+  
+  // Pattern 2: "It's [product]" or "It is [product]"
+  if (!match) {
+    match = content.match(/(?:it'?s|it is)\s+(?:a|an)?\s*([^.!?]+)/);
+    if (match) {
+      productName = match[1].trim();
+    }
+  }
+  
+  // Pattern 3: Direct product mention at start
+  if (!match) {
+    match = content.match(/^(?:a|an)?\s*([^.!?]+?)(?:\s+(?:for|that|which))/);
+    if (match) {
+      productName = match[1].trim();
+    }
+  }
+  
+  // Clean up the extracted name
+  productName = productName
+    .replace(/\b(?:for|that|which|to|the|a|an)\b.*$/i, '') // Remove trailing words
+    .replace(/^\b(?:the|a|an)\s+/i, '') // Remove leading articles
+    .trim();
+  
+  // Capitalize first letter of each word
+  productName = productName.replace(/\b\w/g, l => l.toUpperCase());
+  
+  // Fallback if still empty
+  if (!productName || productName.length < 2) {
+    productName = 'Untitled Product';
+  }
+  
+  return productName;
+}
+
 // Helper function to save project with version control
 async function saveProjectWithVersion(userId: string, productBrief: any, rawAiOutput: string, parentProjectId?: string) {
   try {
@@ -267,8 +316,11 @@ serve(async (req) => {
         .replace('{{CURRENT_QUESTION}}', currentQ ? currentQ.text : 'All questions completed');
     } else if (state.phase === 'GENERATING') {
       const conversationHistory = messages.map(m => `${m.role}: ${m.content}`).join('\n');
+      const extractedProductName = extractProductNameFromConversation(messages);
+      console.log('Extracted product name:', extractedProductName);
       systemPrompt = OVERALL_SYSTEM_PROMPT + '\n' + GENERATING_PROMPT
-        .replace('{{CONVERSATION_HISTORY}}', conversationHistory);
+        .replace('{{CONVERSATION_HISTORY}}', conversationHistory)
+        .replace('"Product Name Here"', `"${extractedProductName}"`);
     }
 
     console.log('=== SYSTEM PROMPT ===');
@@ -421,11 +473,25 @@ serve(async (req) => {
     console.log('Updated phase:', updatedState.phase);
     console.log('Updated currentQuestion:', updatedState.currentQuestion);
 
+    // Extract product name for response if we have a saved project
+    let responseProductName = '';
+    if (savedProject && savedProject.product_name) {
+      responseProductName = savedProject.product_name;
+    } else if (briefMatch) {
+      try {
+        const productBrief = JSON.parse(briefMatch[1]);
+        responseProductName = productBrief.product_name || '';
+      } catch (error) {
+        console.log('Could not parse brief for product name');
+      }
+    }
+
     return new Response(JSON.stringify({ 
       content: finalContent,
       conversationState: updatedState,
       savedProject: savedProject,
-      generatedImages: generatedImages
+      generatedImages: generatedImages,
+      productName: responseProductName
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
