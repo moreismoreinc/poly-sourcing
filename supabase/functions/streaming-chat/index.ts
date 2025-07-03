@@ -175,6 +175,14 @@ serve(async (req) => {
     // Analyze conversation state
     const state = conversationState || analyzeConversationState(messages, existingBrief);
     
+    console.log('=== CONVERSATION STATE DEBUG ===');
+    console.log('Phase:', state.phase);
+    console.log('Current question:', state.currentQuestion);
+    console.log('Questions completed:', state.questionsCompleted);
+    console.log('Total user messages:', messages.filter(m => m.role === 'user').length);
+    console.log('Message count:', messages.length);
+    console.log('Has existing brief:', !!existingBrief);
+    
     let systemPrompt = '';
     
     if (state.phase === 'EDITING' && existingBrief) {
