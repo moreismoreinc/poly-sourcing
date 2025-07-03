@@ -308,7 +308,7 @@ Product brief schema (adapt based on product type):
         const productBrief = JSON.parse(briefMatch[1]);
         
         // Save or update project with version control
-        const parentProjectId = existingBrief ? existingBrief.project_id : null;
+        const parentProjectId = existingBrief?.id || null;
         savedProject = await saveProjectWithVersion(userId, productBrief, content, parentProjectId);
         
         if (savedProject) {
