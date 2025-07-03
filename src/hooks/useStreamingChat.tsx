@@ -115,10 +115,15 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
         setMessages(prev => [...prev, assistantMessage]);
         setCurrentResponse('');
 
-        // Extract and update brief
-        const extractedBrief = extractBriefFromResponse(accumulatedResponse);
-        if (extractedBrief && onBriefUpdate) {
-          onBriefUpdate(extractedBrief, data.productName, data.savedProject?.id);
+        // Use saved project data if available, otherwise extract from response
+        if (data.savedProject && onBriefUpdate) {
+          onBriefUpdate(data.savedProject.product_brief, data.savedProject.product_name, data.savedProject.id);
+        } else {
+          // Fallback to extracting from response text
+          const extractedBrief = extractBriefFromResponse(accumulatedResponse);
+          if (extractedBrief && onBriefUpdate) {
+            onBriefUpdate(extractedBrief, data.productName, data.savedProject?.id);
+          }
         }
 
         // Update conversation state
@@ -127,12 +132,12 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
         }
 
         // If a brief was just generated, automatically send a transition message
-        if (data.savedProject && extractedBrief) {
+        if (data.savedProject) {
           setTimeout(() => {
             const transitionMessage: Message = {
               id: (Date.now() + 2).toString(),
               role: 'assistant',
-              content: `Perfect! I've generated your product brief for "${data.productName || 'your product'}". You can now review it in the preview panel and tell me what you'd like to edit or improve. What changes would you like to make?`,
+              content: `Perfect! I've generated your product brief for "${data.savedProject.product_name || 'your product'}". You can now review it in the preview panel and tell me what you'd like to edit or improve. What changes would you like to make?`,
               timestamp: new Date(),
             };
             setMessages(prev => [...prev, transitionMessage]);
