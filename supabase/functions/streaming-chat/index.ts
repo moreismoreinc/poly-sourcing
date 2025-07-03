@@ -400,7 +400,21 @@ function buildPrompt(productName: string, useCase: string, aesthetic: string): s
     .replace(/{price_range}/g, priceRangeText);
 }
 
-const GENERATING_PROMPT = `{{ENHANCED_PROMPT}}`;
+const GENERATING_PROMPT_BASE = `You are an expert industrial designer and product strategist. CRITICAL INSTRUCTION: You MUST output ONLY a product brief JSON wrapped in <BRIEF>...</BRIEF> tags. NO conversation. NO explanations. ONLY JSON.
+
+CONVERSATION HISTORY: {{CONVERSATION_HISTORY}}
+
+Your task is to take the user's input from the conversation history and create a detailed product brief using the enhanced template provided below.
+
+OUTPUT REQUIREMENTS:
+- ONLY output JSON wrapped in <BRIEF>...</BRIEF> tags
+- NO other text before or after the tags
+- NO conversational messages
+- NO explanations or confirmations
+
+{{ENHANCED_TEMPLATE}}
+
+GENERATE THE JSON NOW. NOTHING ELSE.`;
 
 const EDITING_PROMPT = `You are a product development expert helping to refine an existing product brief through conversation.
 
@@ -613,10 +627,12 @@ serve(async (req) => {
       const aesthetic = userMessages[1]?.content || 'modern';
       
       // Build enhanced prompt using category-specific template
-      const enhancedPrompt = buildPrompt(extractedProductName, useCase, aesthetic);
+      const enhancedTemplate = buildPrompt(extractedProductName, useCase, aesthetic);
       console.log('Enhanced prompt built for category:', detectCategory(extractedProductName, useCase));
       
-      systemPrompt = ENHANCED_SYSTEM_PROMPT + '\n\n' + enhancedPrompt;
+      systemPrompt = GENERATING_PROMPT_BASE
+        .replace('{{CONVERSATION_HISTORY}}', conversationHistory)
+        .replace('{{ENHANCED_TEMPLATE}}', enhancedTemplate);
     }
 
     console.log('=== SYSTEM PROMPT ===');
