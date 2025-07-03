@@ -59,6 +59,9 @@ Current question to ask: {{CURRENT_QUESTION}}
 
 If this is the first question, ask about their product concept.
 If this is the second question, ask about their reference brand.
+
+On completion of this phase, automatically start the Generating phase.  
+
 `;
 
 const GENERATING_PROMPT = `CRITICAL INSTRUCTION: You MUST generate a product brief JSON immediately based on the conversation history.
