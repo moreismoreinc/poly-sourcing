@@ -277,7 +277,7 @@ function extractProductNameFromConversation(messages: any[]): string {
   const content = firstUserMessage.content.toLowerCase();
   
   // Try to extract product name using common patterns
-  let productName = '';
+  let productName = 'Untitled Product';
   
   // Pattern 1: "I want to make/create [product]"
   let match = content.match(/(?:i want to|want to|planning to|going to|need to)\s+(?:make|create|build|develop|design)\s+(?:a|an|some)?\s*([^.!?]+)/);
@@ -301,34 +301,18 @@ function extractProductNameFromConversation(messages: any[]): string {
     }
   }
   
-  // Pattern 4: Extract the first noun phrase if no other patterns match
-  if (!match) {
-    // Look for noun patterns: adjective + noun, noun + noun, single noun
-    const nounMatch = content.match(/(?:^|\s)(?:(?:smart|eco|bio|auto|mini|micro|ultra|super|multi|digital|wireless|portable|compact|premium|luxury|custom)\s+)?([a-zA-Z]+(?:\s+[a-zA-Z]+){0,2})(?:\s|$)/);
-    if (nounMatch) {
-      productName = nounMatch[1].trim();
-    }
-  }
-  
-  // Pattern 5: If still no match, take the first few words and clean them up
-  if (!productName) {
-    const words = content.split(/\s+/).slice(0, 3);
-    productName = words.join(' ');
-  }
-  
   // Clean up the extracted name
   productName = productName
-    .replace(/\b(?:for|that|which|to|the|a|an|with|using|by|from|in|on|at|about|like|as)\b.*$/i, '') // Remove trailing words
-    .replace(/^\b(?:the|a|an|my|our|this|that)\s+/i, '') // Remove leading articles
-    .replace(/[^\w\s-]/g, '') // Remove special characters except spaces and hyphens
+    .replace(/\b(?:for|that|which|to|the|a|an)\b.*$/i, '') // Remove trailing words
+    .replace(/^\b(?:the|a|an)\s+/i, '') // Remove leading articles
     .trim();
   
   // Capitalize first letter of each word
   productName = productName.replace(/\b\w/g, l => l.toUpperCase());
   
-  // Fallback if still empty or too short
+  // Fallback if still empty
   if (!productName || productName.length < 2) {
-    productName = 'Custom Product';
+    productName = 'Untitled Product';
   }
   
   return productName;
@@ -451,20 +435,23 @@ serve(async (req) => {
       content: m.content
     }));
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...userMessages
+        model: 'gpt-4.1',
+        instructions: systemPrompt,
+        input: userMessages,
+        tools: [
+          {
+            type: 'web_search'
+          }
         ],
         temperature: 0.7,
-        max_tokens: 2000,
+        max_output_tokens: 2000,
         stream: false,
       }),
     });
@@ -477,15 +464,33 @@ serve(async (req) => {
 
     const data = await response.json();
 
-    // Handle Chat Completions API format
+    // Handle Responses API format correctly
     let content = '';
     let generatedImages: string[] = [];
 
-    if (data.choices && data.choices.length > 0) {
-      content = data.choices[0].message?.content || '';
+    if (data.output && data.output.length > 0) {
+      // Extract text content from output messages
+      for (const outputItem of data.output) {
+        if (outputItem.type === 'message' && outputItem.content) {
+          for (const contentPart of outputItem.content) {
+            if (contentPart.type === 'output_text') {
+              content += contentPart.text;
+            }
+          }
+        }
+      }
     } else {
       console.error('Unexpected response format:', data);
-      throw new Error('No content received from OpenAI API');
+      throw new Error('No output received from OpenAI API');
+    }
+
+    // Web search results would be available in tool call outputs if any
+    if (data.output) {
+      for (const outputItem of data.output) {
+        if (outputItem.type === 'tool_call' && outputItem.tool_type === 'web_search') {
+          console.log('Web search results:', outputItem.result);
+        }
+      }
     }
 
     // Extract product brief if present with fallback parsing
