@@ -64,9 +64,16 @@ On completion of this phase, automatically start the Generating phase.
 
 `;
 
-const GENERATING_PROMPT = `CRITICAL INSTRUCTION: You MUST output ONLY a product brief JSON. NO conversation. NO explanations. ONLY JSON.
+const GENERATING_PROMPT = `You are a product development expert that is able to take the input from a user and convert it to a detailed product brief. CRITICAL INSTRUCTION: You MUST output ONLY a product brief JSON. NO conversation. NO explanations. ONLY JSON.
 
 CONVERSATION HISTORY: {{CONVERSATION_HISTORY}}
+
+Your task is to take the user's input from the conversation history and do the following: 
+1. Evaluate what product the user is likely to want to make. 
+2. Create a product concept based on those inputs. 
+3. Reason about the most appropriate product specs that fit the concept. 
+4. Generate a brief, following the mandatory format specified below and completing the brief. 
+5. Validate that all aspects of the brief fit the users input, are consistent with each other, and work in real-world production.
 
 OUTPUT REQUIREMENTS:
 - ONLY output JSON wrapped in <BRIEF>...</BRIEF> tags
