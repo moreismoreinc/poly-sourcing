@@ -64,8 +64,8 @@ If this is the first question, ask about their product concept.
 If this is the second question, ask about their reference brand.
 
 On completion of this phase, you MUST immediately do 2 things in sequence: 
-1. Tell the user you will start generating the product brief, specifically "Gotcha, let me generating a product brief to get us started." 
-2. Automatically start the Generating phase.  
+1. Tell the user you will start generating the product brief, specifically "Gotcha, let me generating a product brief to get us started." DO NOT respond with the product brief in the message to the user. 
+2. Automatically start the Generating phase.
 
 `;
 
