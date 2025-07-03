@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ProductBrief } from '@/types/ProductBrief';
@@ -7,49 +7,18 @@ import { useAuth } from '@/hooks/useAuth';
 import { useStreamingChat } from '@/hooks/useStreamingChat';
 import SingleInputStart from '@/components/SingleInputStart';
 import SplitViewChat from '@/components/SplitViewChat';
-import { getUserProjects, Project } from '@/services/projectService';
+import { saveProject } from '@/services/projectService';
 
 const Index = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [productBrief, setProductBrief] = useState<ProductBrief | null>(null);
   const [showSplitView, setShowSplitView] = useState(false);
-  const [currentProject, setCurrentProject] = useState<Project | null>(null);
-
-  // Load the most recent project when user is authenticated
-  useEffect(() => {
-    const loadMostRecentProject = async () => {
-      if (user && !authLoading) {
-        try {
-          const projects = await getUserProjects();
-          if (projects.length > 0) {
-            const mostRecent = projects[0];
-            setCurrentProject(mostRecent);
-            setProductBrief(mostRecent.product_brief);
-            setShowSplitView(true);
-          }
-        } catch (error) {
-          console.error('Error loading projects:', error);
-        }
-      }
-    };
-
-    loadMostRecentProject();
-  }, [user, authLoading]);
 
   const handleBriefUpdate = async (brief: ProductBrief | null) => {
     if (brief) {
       setProductBrief(brief);
       // Project is now automatically saved in the streaming-chat function
-      // Reload projects to get the updated data from database
-      try {
-        const projects = await getUserProjects();
-        if (projects.length > 0) {
-          setCurrentProject(projects[0]);
-        }
-      } catch (error) {
-        console.error('Error reloading projects:', error);
-      }
     }
   };
 

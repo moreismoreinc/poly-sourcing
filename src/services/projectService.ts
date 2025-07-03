@@ -2,20 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ProductBrief } from '@/types/ProductBrief';
 
-export interface Project {
-  id: string;
-  user_id: string;
-  product_name: string;
-  product_brief: ProductBrief;
-  raw_ai_output?: string;
-  openai_request_details?: any;
-  created_at: string;
-  updated_at: string;
-  version?: number;
-  parent_project_id?: string;
-}
-
-export const saveProject = async (productBrief: ProductBrief, rawAiOutput?: string, openaiRequestDetails?: any): Promise<Project> => {
+export const saveProject = async (productBrief: ProductBrief, rawAiOutput?: string, openaiRequestDetails?: any) => {
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) {
@@ -39,13 +26,10 @@ export const saveProject = async (productBrief: ProductBrief, rawAiOutput?: stri
     throw error;
   }
 
-  return {
-    ...data,
-    product_brief: data.product_brief as unknown as ProductBrief
-  };
+  return data;
 };
 
-export const updateProject = async (projectId: string, productBrief: ProductBrief): Promise<Project> => {
+export const updateProject = async (projectId: string, productBrief: ProductBrief) => {
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) {
@@ -69,65 +53,5 @@ export const updateProject = async (projectId: string, productBrief: ProductBrie
     throw error;
   }
 
-  return {
-    ...data,
-    product_brief: data.product_brief as unknown as ProductBrief
-  };
-};
-
-export const getUserProjects = async (): Promise<Project[]> => {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return [];
-    }
-
-    const { data, error } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('updated_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching projects:', error);
-      return [];
-    }
-
-    return (data || []).map(project => ({
-      ...project,
-      product_brief: project.product_brief as unknown as ProductBrief
-    }));
-  } catch (error) {
-    console.error('Error fetching projects:', error);
-    return [];
-  }
-};
-
-export const getProjectById = async (id: string): Promise<Project | null> => {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-
-    const { data, error } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('id', id)
-      .eq('user_id', user.id)
-      .single();
-
-    if (error) {
-      console.error('Error fetching project:', error);
-      return null;
-    }
-
-    return {
-      ...data,
-      product_brief: data.product_brief as unknown as ProductBrief
-    };
-  } catch (error) {
-    console.error('Error fetching project:', error);
-    return null;
-  }
+  return data;
 };

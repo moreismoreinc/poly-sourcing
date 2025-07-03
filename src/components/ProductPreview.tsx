@@ -52,7 +52,15 @@ const ProductPreview = ({ brief }: ProductPreviewProps) => {
           </div>
         </div>
         
-        {/* Product Brief */}
+        {/* Raw JSON Data */}
+        <div className="p-4 border-b bg-slate-50">
+          <h3 className="text-lg font-semibold text-slate-800 mb-3">Raw JSON Data</h3>
+          <pre className="bg-white p-3 rounded-lg border text-xs overflow-auto max-h-48 text-slate-700">
+            {JSON.stringify(brief, null, 2)}
+          </pre>
+        </div>
+        
+        {/* Product Brief below JSON */}
         <div className="p-4">
           <ProductBriefDisplay brief={brief} />
         </div>
