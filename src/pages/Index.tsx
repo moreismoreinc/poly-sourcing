@@ -34,7 +34,7 @@ const Index = () => {
   // Load most recent project on mount only if no conversation is active
   useEffect(() => {
     const loadRecentProject = async () => {
-      if (user && !conversationStarted && !currentProjectId) {
+      if (user && !conversationStarted && !showSplitView) {
         const project = await getMostRecentProject();
         if (project) {
           setProductBrief(project.product_brief as Record<string, any>);
@@ -46,7 +46,7 @@ const Index = () => {
     };
     
     loadRecentProject();
-  }, [user, conversationStarted, currentProjectId]);
+  }, [user, conversationStarted, showSplitView]);
 
   const handleStartConversation = async (message: string) => {
     if (!user) {
