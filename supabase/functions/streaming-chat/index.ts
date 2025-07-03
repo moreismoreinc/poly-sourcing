@@ -158,10 +158,10 @@ function analyzeConversationState(messages: any[], existingBrief: any): Conversa
     };
   }
 
-  // If no messages, start questioning (skip project naming)
+  // If no messages, start with project naming
   if (messages.length === 0) {
     return {
-      phase: 'QUESTIONING',
+      phase: 'PROJECT_NAMING',
       currentQuestion: 0,
       answers: {},
       questionsCompleted: false
@@ -178,15 +178,23 @@ function analyzeConversationState(messages: any[], existingBrief: any): Conversa
 
   // Determine phase based on user message count
   if (userMessageCount === 1) {
-    // After first user message, ask second question
+    // After first user message (project naming), start questioning
+    return {
+      phase: 'QUESTIONING',
+      currentQuestion: 0,
+      answers: {},
+      questionsCompleted: false
+    };
+  } else if (userMessageCount === 2) {
+    // After second user message, ask second question
     return {
       phase: 'QUESTIONING',
       currentQuestion: 1,
       answers: {},
       questionsCompleted: false
     };
-  } else if (userMessageCount >= 2) {
-    // After second user message, generate brief
+  } else if (userMessageCount >= 3) {
+    // After third user message, generate brief
     return {
       phase: 'GENERATING',
       currentQuestion: 0,
@@ -194,9 +202,9 @@ function analyzeConversationState(messages: any[], existingBrief: any): Conversa
       questionsCompleted: true
     };
   } else {
-    // Initial state - start questioning
+    // Initial state - project naming
     return {
-      phase: 'QUESTIONING',
+      phase: 'PROJECT_NAMING',
       currentQuestion: 0,
       answers: {},
       questionsCompleted: false
@@ -329,6 +337,10 @@ serve(async (req) => {
     
     if (state.phase === 'EDITING' && existingBrief) {
       systemPrompt = OVERALL_SYSTEM_PROMPT + '\n' + EDITING_PROMPT.replace('{{BRIEF}}', JSON.stringify(existingBrief, null, 2));
+    } else if (state.phase === 'PROJECT_NAMING') {
+      const firstUserMessage = messages.find(m => m.role === 'user');
+      const userInput = firstUserMessage ? firstUserMessage.content : '';
+      systemPrompt = OVERALL_SYSTEM_PROMPT + '\n' + PROJECT_NAMING_PROMPT.replace('{{USER_INPUT}}', userInput);
     } else if (state.phase === 'QUESTIONING') {
       const currentQ = QUESTIONS[state.currentQuestion];
       systemPrompt = OVERALL_SYSTEM_PROMPT + '\n' + QUESTIONING_PROMPT
@@ -484,6 +496,13 @@ serve(async (req) => {
         ...state,
         currentQuestion: 1
       };
+    } else if (state.phase === 'PROJECT_NAMING') {
+      // Project named, move to questioning
+      updatedState = {
+        ...state,
+        phase: 'QUESTIONING' as ConversationPhase,
+        currentQuestion: 0
+      };
     } else {
       // Default: keep current state
       updatedState = state;
@@ -493,12 +512,9 @@ serve(async (req) => {
     console.log('Updated phase:', updatedState.phase);
     console.log('Updated currentQuestion:', updatedState.currentQuestion);
 
-    // Extract product name for response - generate it from first user message
+    // Extract product name for response if we have a saved project
     let responseProductName = '';
-    if (state.phase === 'QUESTIONING' && state.currentQuestion === 0 && messages.length >= 2) {
-      // This is after the first user input, generate project name
-      responseProductName = extractProductNameFromConversation(messages);
-    } else if (savedProject && savedProject.product_name) {
+    if (savedProject && savedProject.product_name) {
       responseProductName = savedProject.product_name;
     } else if (briefMatch) {
       try {

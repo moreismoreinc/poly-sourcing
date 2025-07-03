@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useStreamingChat } from '@/hooks/useStreamingChat';
 import SingleInputStart from '@/components/SingleInputStart';
+import ProjectNaming from '@/components/ProjectNaming';
 import SplitViewChat from '@/components/SplitViewChat';
 import { getMostRecentProject } from '@/services/projectService';
 import { useEffect } from 'react';
@@ -15,7 +16,9 @@ const Index = () => {
   const navigate = useNavigate();
   const [productBrief, setProductBrief] = useState<Record<string, any> | null>(null);
   const [productName, setProductName] = useState<string>('');
+  const [generatedProjectName, setGeneratedProjectName] = useState<string>('');
   const [showSplitView, setShowSplitView] = useState(false);
+  const [showProjectNaming, setShowProjectNaming] = useState(false);
 
   const handleBriefUpdate = async (brief: Record<string, any> | null, name?: string) => {
     if (brief) {
@@ -25,13 +28,20 @@ const Index = () => {
   };
 
   const handleProjectNameGenerated = (projectName: string) => {
-    setProductName(projectName);
+    setGeneratedProjectName(projectName);
+    setShowProjectNaming(true);
+  };
+
+  const handleProjectNameConfirmed = (finalName: string) => {
+    setProductName(finalName);
+    setShowProjectNaming(false);
+    setShowSplitView(true);
   };
 
   const { messages, currentResponse, isLoading, conversationStarted, conversationState, sendMessage, resetChat } = useStreamingChat({
     onBriefUpdate: handleBriefUpdate,
     onProjectNameGenerated: handleProjectNameGenerated,
-    onConversationStart: () => setShowSplitView(true),
+    onConversationStart: () => {}, // Don't auto-show split view anymore
   });
 
   // Load most recent project on mount
@@ -61,8 +71,9 @@ const Index = () => {
 
   const handleStartOver = () => {
     setProductBrief(null);
-    setProductName('');
+    setGeneratedProjectName('');
     setShowSplitView(false);
+    setShowProjectNaming(false);
     resetChat();
   };
 
@@ -93,6 +104,17 @@ const Index = () => {
     );
   }
 
+  // Show project naming screen after initial input
+  if (showProjectNaming) {
+    return (
+      <ProjectNaming 
+        generatedName={generatedProjectName}
+        isLoading={isLoading && conversationState.phase === 'PROJECT_NAMING'}
+        onProceed={handleProjectNameConfirmed}
+      />
+    );
+  }
+
   // Show single input start screen
   if (!showSplitView) {
     return (
@@ -116,7 +138,6 @@ const Index = () => {
       onResetChat={resetChat}
       onStartOver={handleStartOver}
       onDownload={handleDownload}
-      onProjectNameUpdate={setProductName}
     />
   );
 };
