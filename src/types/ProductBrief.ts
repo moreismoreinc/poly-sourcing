@@ -7,15 +7,15 @@ export interface ProductDimensions {
 }
 
 export interface ProductMaterials {
-  jar: string;
-  cap: string;
-  label: string;
+  primary: string;
+  secondary?: string;
+  tertiary?: string;
 }
 
 export interface ProductFinishes {
-  jar: string;
-  cap: string;
-  label: string;
+  primary: string;
+  secondary?: string;
+  tertiary?: string;
 }
 
 export interface ColorScheme {

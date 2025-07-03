@@ -111,17 +111,21 @@ const ProductBriefDisplay: React.FC<ProductBriefDisplayProps> = ({ brief }) => {
               <div className="text-sm font-medium text-slate-600 mb-2">Materials</div>
               <div className="grid grid-cols-1 gap-2">
                 <div className="flex justify-between">
-                  <span>Jar:</span>
-                  <span className="font-medium">{brief.materials.jar}</span>
+                  <span>Primary:</span>
+                  <span className="font-medium">{brief.materials.primary}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Cap:</span>
-                  <span className="font-medium">{brief.materials.cap}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Label:</span>
-                  <span className="font-medium">{brief.materials.label}</span>
-                </div>
+                {brief.materials.secondary && (
+                  <div className="flex justify-between">
+                    <span>Secondary:</span>
+                    <span className="font-medium">{brief.materials.secondary}</span>
+                  </div>
+                )}
+                {brief.materials.tertiary && (
+                  <div className="flex justify-between">
+                    <span>Tertiary:</span>
+                    <span className="font-medium">{brief.materials.tertiary}</span>
+                  </div>
+                )}
               </div>
             </div>
             <Separator />
@@ -129,17 +133,21 @@ const ProductBriefDisplay: React.FC<ProductBriefDisplayProps> = ({ brief }) => {
               <div className="text-sm font-medium text-slate-600 mb-2">Finishes</div>
               <div className="grid grid-cols-1 gap-2">
                 <div className="flex justify-between">
-                  <span>Jar:</span>
-                  <span className="font-medium">{brief.finishes.jar}</span>
+                  <span>Primary:</span>
+                  <span className="font-medium">{brief.finishes.primary}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Cap:</span>
-                  <span className="font-medium">{brief.finishes.cap}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Label:</span>
-                  <span className="font-medium">{brief.finishes.label}</span>
-                </div>
+                {brief.finishes.secondary && (
+                  <div className="flex justify-between">
+                    <span>Secondary:</span>
+                    <span className="font-medium">{brief.finishes.secondary}</span>
+                  </div>
+                )}
+                {brief.finishes.tertiary && (
+                  <div className="flex justify-between">
+                    <span>Tertiary:</span>
+                    <span className="font-medium">{brief.finishes.tertiary}</span>
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>

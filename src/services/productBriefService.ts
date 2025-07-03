@@ -45,14 +45,14 @@ export const generateProductBrief = async (input: ProductInput): Promise<{produc
         diameter_mm: 65
       },
       materials: {
-        jar: "BPA-free HDPE plastic",
-        cap: "Polypropylene",
-        label: "Waterproof vinyl"
+        primary: "BPA-free HDPE plastic",
+        secondary: "Polypropylene",
+        tertiary: "Waterproof vinyl"
       },
       finishes: {
-        jar: "Matte finish",
-        cap: "Smooth gloss",
-        label: "Semi-gloss with UV coating"
+        primary: "Matte finish",
+        secondary: "Smooth gloss",
+        tertiary: "Semi-gloss with UV coating"
       },
       color_scheme: {
         base: inferBaseColor(input.aesthetic),
