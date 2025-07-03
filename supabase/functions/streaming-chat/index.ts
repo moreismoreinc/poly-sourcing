@@ -224,13 +224,12 @@ Product brief schema (adapt based on product type):
 }`;
     }
 
-    const systemMessage = {
-      role: 'system',
-      content: systemPrompt
-    };
-
-    // Convert messages to the proper input format for Responses API
-    const inputMessages = [systemMessage, ...messages];
+    // Convert messages to the proper format for Responses API
+    // Input should only contain user messages, instructions is separate
+    const userMessages = messages.map(m => ({
+      role: m.role,
+      content: m.content
+    }));
 
     const response = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
@@ -241,7 +240,7 @@ Product brief schema (adapt based on product type):
       body: JSON.stringify({
         model: 'gpt-4.1', // Valid model name for Responses API
         instructions: systemPrompt,
-        input: inputMessages, // Use the messages array format
+        input: userMessages, // Only user messages, not system message
         tools: [
           {
             type: 'web_search',
