@@ -43,6 +43,23 @@ const StreamingText = ({ text }: { text: string }) => {
   );
 };
 
+// Typing indicator component
+const TypingIndicator = () => {
+  return (
+    <div className="flex justify-start">
+      <div className="max-w-[85%] p-3 rounded-lg bg-muted text-foreground">
+        <div className="flex items-center gap-1">
+          <div className="flex space-x-1">
+            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const SplitViewChat = ({ 
   messages, 
   currentResponse, 
@@ -177,6 +194,11 @@ const SplitViewChat = ({
                    </div>
                 </div>
               ))}
+              
+              {/* Show typing indicator when loading but no response yet */}
+              {isLoading && !currentResponse && (
+                <TypingIndicator />
+              )}
               
               {/* Show streaming response */}
               {currentResponse && (
