@@ -243,13 +243,8 @@ Product brief schema (adapt based on product type):
         input: userMessages, // Only user messages, not system message
         tools: [
           {
-            type: 'web_search',
-            web_search: {
-              max_results: 5
-            }
+            type: 'web_search'
           }
-          // Note: image_generation is not available as a built-in tool in Responses API
-          // You would need to call the separate DALL-E API for image generation
         ],
         temperature: 0.7,
         max_output_tokens: 1500, // Correct parameter name
