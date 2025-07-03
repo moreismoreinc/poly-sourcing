@@ -442,14 +442,9 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1',
+        model: 'gpt-4.1-2025-04-14',
         instructions: systemPrompt,
-        input: userMessages,
-        tools: [
-          {
-            type: 'web_search'
-          }
-        ],
+        input: userMessages.filter(m => m.role === 'user'),
         temperature: 0.7,
         max_output_tokens: 2000,
         stream: false,
@@ -463,26 +458,41 @@ serve(async (req) => {
     }
 
     const data = await response.json();
+    
+    console.log('=== OPENAI API RESPONSE DEBUG ===');
+    console.log('Response status:', response.status);
+    console.log('Response data structure:', JSON.stringify(data, null, 2));
+    console.log('Data keys:', Object.keys(data));
+    console.log('Has output:', !!data.output);
+    console.log('Output length:', data.output?.length || 0);
 
     // Handle Responses API format correctly
     let content = '';
     let generatedImages: string[] = [];
 
     if (data.output && data.output.length > 0) {
+      console.log('Processing output items...');
       // Extract text content from output messages
       for (const outputItem of data.output) {
+        console.log('Output item type:', outputItem.type);
         if (outputItem.type === 'message' && outputItem.content) {
+          console.log('Processing message content, parts:', outputItem.content.length);
           for (const contentPart of outputItem.content) {
+            console.log('Content part type:', contentPart.type);
             if (contentPart.type === 'output_text') {
               content += contentPart.text;
+              console.log('Added text, total length now:', content.length);
             }
           }
         }
       }
     } else {
-      console.error('Unexpected response format:', data);
+      console.error('Unexpected response format - full data:', JSON.stringify(data, null, 2));
       throw new Error('No output received from OpenAI API');
     }
+    
+    console.log('Final extracted content length:', content.length);
+    console.log('Final content preview:', content.substring(0, 300));
 
     // Web search results would be available in tool call outputs if any
     if (data.output) {
