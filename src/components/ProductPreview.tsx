@@ -11,12 +11,6 @@ interface ProductPreviewProps {
 const ProductPreview = ({ brief, productName }: ProductPreviewProps) => {
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="border-b bg-background p-4 flex-shrink-0">
-        <h2 className="text-xl font-semibold text-foreground">Product Generator View</h2>
-        <p className="text-sm text-muted-foreground">Generated specifications and visual previews</p>
-      </div>
-
       {/* Main Content Layout */}
       <div className="flex-1 p-6 bg-muted/30">
         <div className="h-full flex gap-6">
