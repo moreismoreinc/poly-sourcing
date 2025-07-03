@@ -18,9 +18,6 @@ const ProductPreview = ({ brief, productName }: ProductPreviewProps) => {
           <div className="flex-1">
             <Card className="h-full bg-card shadow-lg rounded-2xl overflow-hidden">
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-semibold text-foreground">
-                  Spec Sheet
-                </CardTitle>
               </CardHeader>
               <CardContent className="overflow-y-auto h-[calc(100%-80px)]">
                 <ProductBriefDisplay brief={brief} productName={productName} />
