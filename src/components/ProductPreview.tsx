@@ -20,7 +20,7 @@ const ProductPreview = ({ brief, productName }: ProductPreviewProps) => {
               <CardHeader className="pb-3">
               </CardHeader>
               <CardContent className="overflow-y-auto h-[calc(100%-80px)]">
-                <ProductBriefDisplay brief={brief} productName={productName} />
+                <ProductBriefDisplay productName={productName} />
               </CardContent>
             </Card>
           </div>
