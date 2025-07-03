@@ -21,7 +21,6 @@ const ProductPreview = ({ brief, productName }: ProductPreviewProps) => {
                 <CardTitle className="text-lg font-semibold text-foreground">
                   Spec Sheet
                 </CardTitle>
-                <p className="text-sm text-muted-foreground">(output, editable)</p>
               </CardHeader>
               <CardContent className="overflow-y-auto h-[calc(100%-80px)]">
                 <ProductBriefDisplay brief={brief} productName={productName} />
@@ -34,10 +33,6 @@ const ProductPreview = ({ brief, productName }: ProductPreviewProps) => {
             {/* Product Mockup */}
             <Card className="flex-1 bg-card shadow-lg rounded-2xl">
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-semibold text-foreground">
-                  Product Mockup
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">(output only)</p>
               </CardHeader>
               <CardContent className="h-[calc(100%-80px)]">
                 <div className="h-full bg-gradient-to-br from-muted to-muted/60 rounded-xl flex items-center justify-center">
@@ -53,10 +48,6 @@ const ProductPreview = ({ brief, productName }: ProductPreviewProps) => {
             {/* Technical Drawing */}
             <Card className="flex-1 bg-card shadow-lg rounded-2xl">
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-semibold text-foreground">
-                  Technical Drawing
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">(output only)</p>
               </CardHeader>
               <CardContent className="h-[calc(100%-80px)]">
                 <div className="h-full bg-gradient-to-br from-muted to-muted/60 rounded-xl flex items-center justify-center">
