@@ -208,7 +208,7 @@ async function saveProjectWithVersion(userId: string, productBrief: any, rawAiOu
       .from('projects')
       .insert({
         user_id: userId,
-        product_name: productBrief.product_name,
+        product_name: productBrief.product_name || 'Untitled Product',
         product_brief: productBrief,
         raw_ai_output: rawAiOutput,
         version: version,
