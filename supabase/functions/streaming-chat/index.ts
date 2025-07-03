@@ -382,22 +382,36 @@ function inferPositioning(aesthetic: string): 'budget' | 'mid-range' | 'premium'
 function buildPrompt(productName: string, useCase: string, aesthetic: string): string {
   const category = detectCategory(productName, useCase);
   const positioning = inferPositioning(aesthetic);
+  
+  console.log('=== PROMPT BUILDING DEBUG ===');
+  console.log('Detected category:', category);
+  console.log('Inferred positioning:', positioning);
+  console.log('Available templates:', Object.keys(TEMPLATES));
+  
   const template = TEMPLATES[category] || TEMPLATES.wellness;
+  console.log('Using template for category:', category, 'exists:', !!TEMPLATES[category]);
   
   // Get price range for this category and positioning
-  const priceRange = PRICE_RANGES[positioning][category] || PRICE_RANGES[positioning].wellness;
+  const priceRange = PRICE_RANGES[positioning]?.[category] || PRICE_RANGES[positioning]?.wellness || [25, 50];
   const priceRangeText = `$${priceRange[0]}-${priceRange[1]}`;
+  
+  console.log('Price range:', priceRangeText);
   
   // Generate product ID
   const productId = productName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
   
-  return template
+  const finalPrompt = template
     .replace(/{product_name}/g, productName)
     .replace(/{product_id}/g, productId)
     .replace(/{use_case}/g, useCase)
     .replace(/{aesthetic}/g, aesthetic)
     .replace(/{positioning}/g, positioning)
     .replace(/{price_range}/g, priceRangeText);
+    
+  console.log('Final prompt length:', finalPrompt.length);
+  console.log('Replacements done - preview:', finalPrompt.substring(0, 200));
+  
+  return finalPrompt;
 }
 
 const GENERATING_PROMPT_BASE = `You are an expert industrial designer and product strategist. CRITICAL INSTRUCTION: You MUST output ONLY a product brief JSON wrapped in <BRIEF>...</BRIEF> tags. NO conversation. NO explanations. ONLY JSON.
@@ -626,13 +640,22 @@ serve(async (req) => {
       const useCase = userMessages[0]?.content || 'general use';
       const aesthetic = userMessages[1]?.content || 'modern';
       
+      console.log('=== GENERATING PHASE DEBUG ===');
+      console.log('Product name:', extractedProductName);
+      console.log('Use case:', useCase);
+      console.log('Aesthetic:', aesthetic);
+      
       // Build enhanced prompt using category-specific template
       const enhancedTemplate = buildPrompt(extractedProductName, useCase, aesthetic);
-      console.log('Enhanced prompt built for category:', detectCategory(extractedProductName, useCase));
+      console.log('Enhanced template built, length:', enhancedTemplate.length);
+      console.log('First 300 chars of template:', enhancedTemplate.substring(0, 300));
       
       systemPrompt = GENERATING_PROMPT_BASE
         .replace('{{CONVERSATION_HISTORY}}', conversationHistory)
         .replace('{{ENHANCED_TEMPLATE}}', enhancedTemplate);
+        
+      console.log('Final system prompt length:', systemPrompt.length);
+      console.log('Final system prompt preview:', systemPrompt.substring(0, 500));
     }
 
     console.log('=== SYSTEM PROMPT ===');
