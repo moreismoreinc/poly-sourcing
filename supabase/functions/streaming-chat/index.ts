@@ -229,7 +229,7 @@ Product brief schema (adapt based on product type):
       content: systemPrompt
     };
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
@@ -238,9 +238,25 @@ Product brief schema (adapt based on product type):
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [systemMessage, ...messages],
+        tools: [
+          {
+            type: 'web_search',
+            web_search: {
+              max_results: 5
+            }
+          },
+          {
+            type: 'image_generation',
+            image_generation: {
+              model: 'dall-e-3',
+              quality: 'standard',
+              size: '1024x1024'
+            }
+          }
+        ],
         temperature: 0.7,
-        max_tokens: 1500,
-        stream: false, // Changed to false for simpler response
+        max_completion_tokens: 1500,
+        stream: false,
       }),
     });
 
@@ -249,7 +265,25 @@ Product brief schema (adapt based on product type):
     }
 
     const data = await response.json();
-    const content = data.choices[0].message.content;
+    
+    // Handle Responses API format
+    let content = '';
+    let generatedImages: string[] = [];
+    
+    if (data.choices && data.choices[0]) {
+      content = data.choices[0].message.content || '';
+      
+      // Extract tool outputs if any
+      if (data.choices[0].message.tool_calls) {
+        for (const toolCall of data.choices[0].message.tool_calls) {
+          if (toolCall.type === 'image_generation' && toolCall.image_generation) {
+            if (toolCall.image_generation.url) {
+              generatedImages.push(toolCall.image_generation.url);
+            }
+          }
+        }
+      }
+    }
 
     // Extract product brief if present
     let savedProject = null;
@@ -280,7 +314,8 @@ Product brief schema (adapt based on product type):
     return new Response(JSON.stringify({ 
       content,
       conversationState: updatedState,
-      savedProject: savedProject
+      savedProject: savedProject,
+      generatedImages: generatedImages
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

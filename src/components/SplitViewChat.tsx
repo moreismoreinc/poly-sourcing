@@ -11,6 +11,7 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  images?: string[];
 }
 
 interface ConversationState {
@@ -155,13 +156,25 @@ const SplitViewChat = ({
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map((message) => (
                 <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] p-3 rounded-lg text-sm ${
-                    message.role === 'user' 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'bg-muted text-foreground'
-                  }`}>
-                    <div className="whitespace-pre-wrap">{message.content}</div>
-                  </div>
+                   <div className={`max-w-[85%] p-3 rounded-lg text-sm ${
+                     message.role === 'user' 
+                       ? 'bg-primary text-primary-foreground' 
+                       : 'bg-muted text-foreground'
+                   }`}>
+                     <div className="whitespace-pre-wrap">{message.content}</div>
+                     {message.images && message.images.length > 0 && (
+                       <div className="mt-3 space-y-2">
+                         {message.images.map((imageUrl, index) => (
+                           <img 
+                             key={index}
+                             src={imageUrl} 
+                             alt={`Generated image ${index + 1}`}
+                             className="max-w-full h-auto rounded-lg border border-border"
+                           />
+                         ))}
+                       </div>
+                     )}
+                   </div>
                 </div>
               ))}
               
