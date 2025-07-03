@@ -302,21 +302,35 @@ Product brief schema (adapt based on product type):
 
     // Extract product brief if present
     let savedProject = null;
+    console.log('=== DEBUG: Checking for product brief ===');
+    console.log('Content length:', content.length);
+    console.log('Has userId:', !!userId);
+    console.log('Content preview:', content.substring(0, 500));
+    
     const briefMatch = content.match(/<BRIEF>(.*?)<\/BRIEF>/s);
+    console.log('Brief match found:', !!briefMatch);
+    
     if (briefMatch && userId) {
       try {
+        console.log('Matched brief content:', briefMatch[1].substring(0, 200));
         const productBrief = JSON.parse(briefMatch[1]);
+        console.log('Successfully parsed product brief:', productBrief.product_name);
         
         // Save or update project with version control
         const parentProjectId = existingBrief?.id || null;
+        console.log('Saving with parentProjectId:', parentProjectId);
         savedProject = await saveProjectWithVersion(userId, productBrief, content, parentProjectId);
         
         if (savedProject) {
-          console.log(`Project saved with version ${savedProject.version}`);
+          console.log(`Project saved with version ${savedProject.version}, ID: ${savedProject.id}`);
+        } else {
+          console.log('saveProjectWithVersion returned null');
         }
       } catch (error) {
         console.error('Error processing product brief:', error);
       }
+    } else {
+      console.log('No brief match or userId missing - briefMatch:', !!briefMatch, 'userId:', !!userId);
     }
 
     // Update conversation state
