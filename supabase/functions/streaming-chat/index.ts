@@ -229,6 +229,12 @@ Product brief schema (adapt based on product type):
       content: systemPrompt
     };
 
+    // Convert messages to input format for Responses API
+    let inputContent = '';
+    messages.forEach(msg => {
+      inputContent += `${msg.role}: ${msg.content}\n`;
+    });
+
     const response = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
       headers: {
@@ -236,8 +242,9 @@ Product brief schema (adapt based on product type):
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
-        messages: [systemMessage, ...messages],
+        model: 'gpt-4.1',
+        instructions: systemPrompt,
+        input: inputContent,
         tools: [
           {
             type: 'web_search',
@@ -255,7 +262,7 @@ Product brief schema (adapt based on product type):
           }
         ],
         temperature: 0.7,
-        max_completion_tokens: 1500,
+        max_output_tokens: 1500,
         stream: false,
       }),
     });
@@ -270,15 +277,23 @@ Product brief schema (adapt based on product type):
     let content = '';
     let generatedImages: string[] = [];
     
-    if (data.choices && data.choices[0]) {
-      content = data.choices[0].message.content || '';
-      
-      // Extract tool outputs if any
-      if (data.choices[0].message.tool_calls) {
-        for (const toolCall of data.choices[0].message.tool_calls) {
-          if (toolCall.type === 'image_generation' && toolCall.image_generation) {
-            if (toolCall.image_generation.url) {
-              generatedImages.push(toolCall.image_generation.url);
+    // Parse the new Responses API format
+    if (data.output && data.output.length > 0) {
+      // Extract text content from output messages
+      for (const outputItem of data.output) {
+        if (outputItem.type === 'message' && outputItem.content) {
+          for (const contentPart of outputItem.content) {
+            if (contentPart.type === 'output_text') {
+              content += contentPart.text;
+            }
+          }
+        }
+        
+        // Extract tool call results if any
+        if (outputItem.type === 'tool_call') {
+          if (outputItem.tool_type === 'image_generation' && outputItem.result) {
+            if (outputItem.result.url) {
+              generatedImages.push(outputItem.result.url);
             }
           }
         }
