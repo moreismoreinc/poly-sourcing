@@ -101,7 +101,7 @@ function analyzeConversationState(messages: any[], existingBrief: any): Conversa
   const userMessages = messages.filter(m => m.role === 'user');
   currentQuestion = Math.min(userMessages.length - 1, QUESTIONS.length - 1);
   
-  const questionsCompleted = userMessages.length > QUESTIONS.length;
+  const questionsCompleted = userMessages.length >= QUESTIONS.length;
   
   return {
     phase: questionsCompleted ? 'GENERATING' : 'QUESTIONING',
@@ -185,20 +185,20 @@ serve(async (req) => {
         .replace('{{STATE}}', JSON.stringify(state, null, 2))
         .replace('{{CURRENT_QUESTION}}', currentQ ? currentQ.text : 'All questions completed');
     } else if (state.phase === 'GENERATING') {
-      systemPrompt = OVERALL_SYSTEM_PROMPT + '\n' + `You are a product development expert with 15+ years of experience. Based on the conversation about their product concept and reference inspirations, generate a comprehensive and detailed product brief.
+      systemPrompt = OVERALL_SYSTEM_PROMPT + '\n' + `You are a product development expert. Based on the conversation, create a comprehensive product brief with realistic specifications.
 
 CONVERSATION HISTORY: ${messages.map(m => `${m.role}: ${m.content}`).join('\n')}
 
-Using the product concept and reference brand/product mentioned, create a complete product brief with realistic specifications. Analyze the reference to infer quality level, market positioning, aesthetic style, and pricing tier. End with JSON wrapped in <BRIEF>...</BRIEF> tags, then ask what they'd like to edit or improve.
+CRITICAL: Output ONLY the JSON product brief wrapped in <BRIEF>...</BRIEF> tags. Do not include any additional text, explanations, or questions.
 
 RULES:
-1. Use only manufacturable materials with reliable supply chains
+1. Use manufacturable materials with reliable supply chains
 2. Realistic dimensions for use case and market positioning  
 3. Price according to positioning tier and material costs
-4. Include only relevant certifications for the product category
+4. Include relevant certifications for the product category
 5. Ensure material and finish compatibility
 
-Product brief schema (adapt based on product type):
+Required JSON schema:
 {
   "product_name": "string",
   "product_id": "string", 
