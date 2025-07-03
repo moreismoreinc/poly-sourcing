@@ -35,7 +35,7 @@ const ProductBriefDisplay: React.FC<ProductBriefDisplayProps> = ({ brief, produc
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
       {/* Header Card */}
-      <Card className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-0">
+      <Card className="bg-primary text-primary-foreground border-0 shadow-none rounded-lg">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -55,7 +55,7 @@ const ProductBriefDisplay: React.FC<ProductBriefDisplayProps> = ({ brief, produc
 
       {/* Dynamic Content Display */}
       {briefEntries.length > 0 ? (
-        <Card className="bg-card shadow-lg">
+        <Card className="bg-card shadow-none rounded-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Info className="h-5 w-5 text-primary" />
@@ -85,7 +85,7 @@ const ProductBriefDisplay: React.FC<ProductBriefDisplayProps> = ({ brief, produc
           </CardContent>
         </Card>
       ) : (
-        <Card className="bg-card shadow-lg">
+        <Card className="bg-card shadow-none rounded-lg">
           <CardContent className="py-12">
             <div className="text-center text-muted-foreground">
               <File className="h-12 w-12 mx-auto mb-4 opacity-50" />
