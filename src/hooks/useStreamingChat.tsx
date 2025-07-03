@@ -10,7 +10,7 @@ interface Message {
   images?: string[];
 }
 
-type ConversationPhase = 'QUESTIONING' | 'GENERATING' | 'EDITING';
+type ConversationPhase = 'PROJECT_NAMING' | 'QUESTIONING' | 'GENERATING' | 'EDITING';
 
 interface ConversationState {
   phase: ConversationPhase;
@@ -21,17 +21,18 @@ interface ConversationState {
 
 interface UseStreamingChatProps {
   onBriefUpdate?: (brief: Record<string, any> | null, productName?: string) => void;
+  onProjectNameGenerated?: (projectName: string) => void;
   existingBrief?: Record<string, any> | null;
   onConversationStart?: () => void;
 }
 
-export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationStart }: UseStreamingChatProps = {}) => {
+export const useStreamingChat = ({ onBriefUpdate, onProjectNameGenerated, existingBrief, onConversationStart }: UseStreamingChatProps = {}) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentResponse, setCurrentResponse] = useState('');
   const [conversationStarted, setConversationStarted] = useState(false);
   const [conversationState, setConversationState] = useState<ConversationState>({
-    phase: existingBrief ? 'EDITING' : 'QUESTIONING',
+    phase: existingBrief ? 'EDITING' : 'PROJECT_NAMING',
     currentQuestion: 0,
     answers: {},
     questionsCompleted: !!existingBrief
@@ -121,6 +122,11 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
           onBriefUpdate(extractedBrief, data.productName);
         }
 
+        // Handle project name generation for PROJECT_NAMING phase
+        if (conversationState.phase === 'PROJECT_NAMING' && onProjectNameGenerated) {
+          onProjectNameGenerated(accumulatedResponse.trim());
+        }
+
         // Update conversation state
         if (data.conversationState) {
           setConversationState(data.conversationState);
@@ -154,7 +160,7 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
       setIsLoading(false);
       abortControllerRef.current = null;
     }
-  }, [messages, isLoading, existingBrief, onBriefUpdate, extractBriefFromResponse, conversationStarted, onConversationStart]);
+  }, [messages, isLoading, existingBrief, onBriefUpdate, onProjectNameGenerated, extractBriefFromResponse, conversationStarted, onConversationStart, conversationState.phase]);
 
   const resetChat = useCallback(() => {
     if (abortControllerRef.current) {
@@ -164,7 +170,7 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
     setConversationStarted(false);
     setIsLoading(false);
     setConversationState({
-      phase: existingBrief ? 'EDITING' : 'QUESTIONING',
+      phase: existingBrief ? 'EDITING' : 'PROJECT_NAMING',
       currentQuestion: 0,
       answers: {},
       questionsCompleted: !!existingBrief

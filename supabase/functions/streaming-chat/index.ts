@@ -11,7 +11,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-type ConversationPhase = 'QUESTIONING' | 'GENERATING' | 'EDITING';
+type ConversationPhase = 'PROJECT_NAMING' | 'QUESTIONING' | 'GENERATING' | 'EDITING';
 
 interface ConversationState {
   phase: ConversationPhase;
@@ -34,13 +34,33 @@ const QUESTIONS = [
 const OVERALL_SYSTEM_PROMPT = `
 You are Geneering, an AI product development expert. Your goal is to help users design manufacturing-ready products by guiding them through a friendly, iterative conversation.
 
-You operate in three phases:
-1. Questioning — gather initial product concept and reference brand.
-2. Generating — create a detailed product brief as JSON.
-3. Editing — help refine and finalize the product brief to ensure it is manufacturable and meets user needs.
+You operate in four phases:
+1. Project Naming — generate a creative project name based on the user's product idea
+2. Questioning — gather initial product concept and reference brand.
+3. Generating — create a detailed product brief as JSON.
+4. Editing — help refine and finalize the product brief to ensure it is manufacturable and meets user needs.
 
 Adapt your responses based on the current phase and always aim to be clear, helpful, and precise.
 `;
+
+const PROJECT_NAMING_PROMPT = `You are generating a creative, tongue-in-cheek project name for a product development project.
+
+USER INPUT: {{USER_INPUT}}
+
+Generate a fun, memorable project name that:
+- Is inspired by the product mentioned in the user input
+- Has a playful, slightly humorous tone
+- Sounds like a legitimate project codename
+- Is 2-4 words long
+- Uses wordplay, alliteration, or clever references when possible
+
+Examples of good project names:
+- For a fitness tracker: "Project Pulse Pursuit"
+- For a coffee maker: "Operation Caffeine Catalyst" 
+- For a smartphone app: "Mission Tap Genius"
+- For a water bottle: "Project Hydro Hero"
+
+Output format: Just the project name, nothing else.`;
 
 const QUESTIONING_PROMPT = `You are a product development expert conducting a streamlined interview to create a comprehensive product brief. 
 
@@ -138,10 +158,10 @@ function analyzeConversationState(messages: any[], existingBrief: any): Conversa
     };
   }
 
-  // If no messages, start questioning
+  // If no messages, start with project naming
   if (messages.length === 0) {
     return {
-      phase: 'QUESTIONING',
+      phase: 'PROJECT_NAMING',
       currentQuestion: 0,
       answers: {},
       questionsCompleted: false
@@ -158,15 +178,23 @@ function analyzeConversationState(messages: any[], existingBrief: any): Conversa
 
   // Determine phase based on user message count
   if (userMessageCount === 1) {
-    // After first user message, ask second question
+    // After first user message (project naming), start questioning
+    return {
+      phase: 'QUESTIONING',
+      currentQuestion: 0,
+      answers: {},
+      questionsCompleted: false
+    };
+  } else if (userMessageCount === 2) {
+    // After second user message, ask second question
     return {
       phase: 'QUESTIONING',
       currentQuestion: 1,
       answers: {},
       questionsCompleted: false
     };
-  } else if (userMessageCount >= 2) {
-    // After second user message, generate brief
+  } else if (userMessageCount >= 3) {
+    // After third user message, generate brief
     return {
       phase: 'GENERATING',
       currentQuestion: 0,
@@ -174,9 +202,9 @@ function analyzeConversationState(messages: any[], existingBrief: any): Conversa
       questionsCompleted: true
     };
   } else {
-    // Initial state - ask first question
+    // Initial state - project naming
     return {
-      phase: 'QUESTIONING',
+      phase: 'PROJECT_NAMING',
       currentQuestion: 0,
       answers: {},
       questionsCompleted: false
@@ -309,6 +337,10 @@ serve(async (req) => {
     
     if (state.phase === 'EDITING' && existingBrief) {
       systemPrompt = OVERALL_SYSTEM_PROMPT + '\n' + EDITING_PROMPT.replace('{{BRIEF}}', JSON.stringify(existingBrief, null, 2));
+    } else if (state.phase === 'PROJECT_NAMING') {
+      const firstUserMessage = messages.find(m => m.role === 'user');
+      const userInput = firstUserMessage ? firstUserMessage.content : '';
+      systemPrompt = OVERALL_SYSTEM_PROMPT + '\n' + PROJECT_NAMING_PROMPT.replace('{{USER_INPUT}}', userInput);
     } else if (state.phase === 'QUESTIONING') {
       const currentQ = QUESTIONS[state.currentQuestion];
       systemPrompt = OVERALL_SYSTEM_PROMPT + '\n' + QUESTIONING_PROMPT
@@ -463,6 +495,13 @@ serve(async (req) => {
       updatedState = {
         ...state,
         currentQuestion: 1
+      };
+    } else if (state.phase === 'PROJECT_NAMING') {
+      // Project named, move to questioning
+      updatedState = {
+        ...state,
+        phase: 'QUESTIONING' as ConversationPhase,
+        currentQuestion: 0
       };
     } else {
       // Default: keep current state

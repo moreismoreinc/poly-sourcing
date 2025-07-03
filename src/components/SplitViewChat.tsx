@@ -15,7 +15,7 @@ interface Message {
 }
 
 interface ConversationState {
-  phase: 'QUESTIONING' | 'GENERATING' | 'EDITING';
+  phase: 'PROJECT_NAMING' | 'QUESTIONING' | 'GENERATING' | 'EDITING';
   currentQuestion: number;
   answers: Record<string, string>;
   questionsCompleted: boolean;
