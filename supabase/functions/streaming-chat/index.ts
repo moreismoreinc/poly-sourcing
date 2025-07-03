@@ -451,23 +451,20 @@ serve(async (req) => {
       content: m.content
     }));
 
-    const response = await fetch('https://api.openai.com/v1/responses', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1',
-        instructions: systemPrompt,
-        input: userMessages,
-        tools: [
-          {
-            type: 'web_search'
-          }
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...userMessages
         ],
         temperature: 0.7,
-        max_output_tokens: 2000,
+        max_tokens: 2000,
         stream: false,
       }),
     });
@@ -480,33 +477,15 @@ serve(async (req) => {
 
     const data = await response.json();
 
-    // Handle Responses API format correctly
+    // Handle Chat Completions API format
     let content = '';
     let generatedImages: string[] = [];
 
-    if (data.output && data.output.length > 0) {
-      // Extract text content from output messages
-      for (const outputItem of data.output) {
-        if (outputItem.type === 'message' && outputItem.content) {
-          for (const contentPart of outputItem.content) {
-            if (contentPart.type === 'output_text') {
-              content += contentPart.text;
-            }
-          }
-        }
-      }
+    if (data.choices && data.choices.length > 0) {
+      content = data.choices[0].message?.content || '';
     } else {
       console.error('Unexpected response format:', data);
-      throw new Error('No output received from OpenAI API');
-    }
-
-    // Web search results would be available in tool call outputs if any
-    if (data.output) {
-      for (const outputItem of data.output) {
-        if (outputItem.type === 'tool_call' && outputItem.tool_type === 'web_search') {
-          console.log('Web search results:', outputItem.result);
-        }
-      }
+      throw new Error('No content received from OpenAI API');
     }
 
     // Extract product brief if present with fallback parsing
