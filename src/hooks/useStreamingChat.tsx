@@ -10,7 +10,7 @@ interface Message {
   images?: string[];
 }
 
-type ConversationPhase = 'PROJECT_NAMING' | 'QUESTIONING' | 'GENERATING' | 'EDITING';
+type ConversationPhase = 'QUESTIONING' | 'GENERATING' | 'EDITING';
 
 interface ConversationState {
   phase: ConversationPhase;
@@ -32,7 +32,7 @@ export const useStreamingChat = ({ onBriefUpdate, onProjectNameGenerated, existi
   const [currentResponse, setCurrentResponse] = useState('');
   const [conversationStarted, setConversationStarted] = useState(false);
   const [conversationState, setConversationState] = useState<ConversationState>({
-    phase: existingBrief ? 'EDITING' : 'PROJECT_NAMING',
+    phase: existingBrief ? 'EDITING' : 'QUESTIONING',
     currentQuestion: 0,
     answers: {},
     questionsCompleted: !!existingBrief
@@ -122,9 +122,9 @@ export const useStreamingChat = ({ onBriefUpdate, onProjectNameGenerated, existi
           onBriefUpdate(extractedBrief, data.productName);
         }
 
-        // Handle project name generation for PROJECT_NAMING phase
-        if (conversationState.phase === 'PROJECT_NAMING' && onProjectNameGenerated) {
-          onProjectNameGenerated(accumulatedResponse.trim());
+        // Handle project name generation - generate from first user input
+        if (conversationState.phase === 'QUESTIONING' && conversationState.currentQuestion === 0 && data.productName && onProjectNameGenerated) {
+          onProjectNameGenerated(data.productName);
         }
 
         // Update conversation state
@@ -170,7 +170,7 @@ export const useStreamingChat = ({ onBriefUpdate, onProjectNameGenerated, existi
     setConversationStarted(false);
     setIsLoading(false);
     setConversationState({
-      phase: existingBrief ? 'EDITING' : 'PROJECT_NAMING',
+      phase: existingBrief ? 'EDITING' : 'QUESTIONING',
       currentQuestion: 0,
       answers: {},
       questionsCompleted: !!existingBrief

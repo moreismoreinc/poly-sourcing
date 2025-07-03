@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, RotateCcw, ArrowLeft, Download, User, LogOut } from 'lucide-react';
+import { Send, RotateCcw, ArrowLeft, Download, User, LogOut, Edit2, Check, X } from 'lucide-react';
 // Removed ProductBrief import as we're now using dynamic JSON data
 import ProductPreview from '@/components/ProductPreview';
 import { useAuth } from '@/hooks/useAuth';
@@ -15,7 +15,7 @@ interface Message {
 }
 
 interface ConversationState {
-  phase: 'PROJECT_NAMING' | 'QUESTIONING' | 'GENERATING' | 'EDITING';
+  phase: 'QUESTIONING' | 'GENERATING' | 'EDITING';
   currentQuestion: number;
   answers: Record<string, string>;
   questionsCompleted: boolean;
@@ -32,6 +32,7 @@ interface SplitViewChatProps {
   onResetChat: () => void;
   onStartOver: () => void;
   onDownload: () => void;
+  onProjectNameUpdate: (name: string) => void;
 }
 
 // Streaming text display component
@@ -71,10 +72,13 @@ const SplitViewChat = ({
   onSendMessage, 
   onResetChat,
   onStartOver,
-  onDownload
+  onDownload,
+  onProjectNameUpdate
 }: SplitViewChatProps) => {
   const { user, signOut } = useAuth();
   const [input, setInput] = useState('');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState(productName);
 
   const handleSendMessage = () => {
     if (!input.trim() || isLoading) return;
@@ -89,6 +93,29 @@ const SplitViewChat = ({
     }
   };
 
+  const handleEditName = () => {
+    setEditedName(productName);
+    setIsEditingName(true);
+  };
+
+  const handleSaveName = () => {
+    onProjectNameUpdate(editedName);
+    setIsEditingName(false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditedName(productName);
+    setIsEditingName(false);
+  };
+
+  const handleNameKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSaveName();
+    } else if (e.key === 'Escape') {
+      handleCancelEdit();
+    }
+  };
+
   return (
     <div className="h-screen flex flex-col bg-background">
       {/* Header */}
@@ -100,9 +127,43 @@ const SplitViewChat = ({
                 geneering
               </h1>
               {productName && (
-                <span className="text-sm text-muted-foreground">
-                  {productName}
-                </span>
+                <div className="flex items-center gap-2">
+                  {isEditingName ? (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={editedName}
+                        onChange={(e) => setEditedName(e.target.value)}
+                        onKeyPress={handleNameKeyPress}
+                        className="text-sm h-8 min-w-32"
+                        autoFocus
+                      />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleSaveName}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCancelEdit}
+                        className="h-8 w-8 p-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={handleEditName}
+                      className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
+                    >
+                      <span>{productName}</span>
+                      <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </button>
+                  )}
+                </div>
               )}
             </div>
             
