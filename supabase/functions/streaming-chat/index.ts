@@ -391,11 +391,31 @@ serve(async (req) => {
     }
 
     // Update conversation state for next interaction
-    const updatedState = {
-      ...state,
-      phase: state.phase === 'GENERATING' ? 'EDITING' : state.phase,
-      currentQuestion: state.currentQuestion
-    };
+    let updatedState;
+    if (state.phase === 'GENERATING' && savedProject) {
+      // Successfully generated brief, move to editing
+      updatedState = {
+        ...state,
+        phase: 'EDITING' as ConversationPhase,
+        questionsCompleted: true
+      };
+    } else if (state.phase === 'QUESTIONING' && state.currentQuestion === 1) {
+      // Completed second question, move to generating
+      updatedState = {
+        ...state,
+        phase: 'GENERATING' as ConversationPhase,
+        questionsCompleted: true
+      };
+    } else if (state.phase === 'QUESTIONING' && state.currentQuestion === 0) {
+      // First question answered, move to second question
+      updatedState = {
+        ...state,
+        currentQuestion: 1
+      };
+    } else {
+      // Default: keep current state
+      updatedState = state;
+    }
 
     console.log('=== UPDATED STATE ===');
     console.log('Updated phase:', updatedState.phase);
