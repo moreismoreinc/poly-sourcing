@@ -64,25 +64,26 @@ On completion of this phase, automatically start the Generating phase.
 
 `;
 
-const GENERATING_PROMPT = `CRITICAL INSTRUCTION: You MUST generate a product brief JSON immediately based on the conversation history.
+const GENERATING_PROMPT = `CRITICAL INSTRUCTION: You MUST output ONLY a product brief JSON. NO conversation. NO explanations. ONLY JSON.
 
 CONVERSATION HISTORY: {{CONVERSATION_HISTORY}}
 
-Do the following in order:
-1. Generate a comprehensive product brief JSON wrapped in <BRIEF>...</BRIEF> tags
-2. After the brief, add a short message saying "I've created your product brief based on our conversation!"
-3. Then add: "Let me know if you'd like to make any edits or changes to any part of it."
+OUTPUT REQUIREMENTS:
+- ONLY output JSON wrapped in <BRIEF>...</BRIEF> tags
+- NO other text before or after the tags
+- NO conversational messages
+- NO explanations or confirmations
 
-Example format for the brief:
+MANDATORY FORMAT:
 <BRIEF>
 {
-  "product_name": "Clarity Mind Gummies",
-  "product_id": "clarity-mind-gummies",
-  "category": "supplement",
-  "positioning": "premium",
-  "intended_use": "Daily cognitive enhancement and mental clarity support",
-  "form_factor": "Chewable gummy supplement",
-  "target_aesthetic": "Clean, modern, sophisticated wellness brand",
+  "product_name": "Product Name Here",
+  "product_id": "product-name-here",
+  "category": "category here",
+  "positioning": "positioning here",
+  "intended_use": "use case description",
+  "form_factor": "physical form description",
+  "target_aesthetic": "aesthetic description",
   "dimensions": {
     "height_mm": 85,
     "diameter_mm": 65,
@@ -90,28 +91,28 @@ Example format for the brief:
     "depth_mm": 65
   },
   "materials": {
-    "primary": "Food-grade HDPE plastic",
-    "secondary": "Tamper-evident aluminum seal",
-    "tertiary": "Premium matte paper label"
+    "primary": "primary material",
+    "secondary": "secondary material",
+    "tertiary": "tertiary material"
   },
   "finishes": {
-    "primary": "Matte black container",
-    "secondary": "Glossy aluminum foil seal",
-    "tertiary": "Soft-touch label with UV spot coating"
+    "primary": "primary finish",
+    "secondary": "secondary finish",
+    "tertiary": "tertiary finish"
   },
   "color_scheme": {
-    "base": "#1a1a1a",
-    "accents": ["#ffffff", "#f8f9fa"]
+    "base": "#hexcolor",
+    "accents": ["#hexcolor1", "#hexcolor2"]
   },
   "natural_imperfections": null,
   "target_price_usd": 45,
-  "certifications": ["FDA Facility", "cGMP", "Third-party tested"],
-  "variants": ["30-count", "60-count"],
-  "notes": "Premium positioning with clean, minimalist design targeting health-conscious professionals"
+  "certifications": ["cert1", "cert2"],
+  "variants": ["variant1", "variant2"],
+  "notes": "additional notes"
 }
 </BRIEF>
 
-Generate the brief now, then confirm it's created and ask about edits.`;
+GENERATE THE JSON NOW. NOTHING ELSE.`;
 
 const EDITING_PROMPT = `You are a product development expert helping to refine an existing product brief through conversation.
 
@@ -339,16 +340,27 @@ serve(async (req) => {
       }
     }
 
-    // Extract product brief if present
+    // Extract product brief if present with fallback parsing
     let savedProject = null;
+    let finalContent = content;
     console.log('=== DEBUG: Checking for product brief ===');
     console.log('Content length:', content.length);
     console.log('Has userId:', !!userId);
     console.log('Content preview:', content.substring(0, 200));
     console.log('Looking for <BRIEF> tags...');
     
-    const briefMatch = content.match(/<BRIEF>(.*?)<\/BRIEF>/s);
+    let briefMatch = content.match(/<BRIEF>(.*?)<\/BRIEF>/s);
     console.log('Brief match found:', !!briefMatch);
+    
+    // Fallback: try parsing markdown code blocks if no BRIEF tags found
+    if (!briefMatch) {
+      console.log('No BRIEF tags found, trying markdown fallback...');
+      const markdownMatch = content.match(/```json\s*(.*?)\s*```/s);
+      if (markdownMatch) {
+        console.log('Found markdown JSON block, converting to BRIEF format');
+        briefMatch = [markdownMatch[0], markdownMatch[1]];
+      }
+    }
     
     if (briefMatch && userId) {
       try {
@@ -363,6 +375,11 @@ serve(async (req) => {
         
         if (savedProject) {
           console.log(`Project saved with version ${savedProject.version}, ID: ${savedProject.id}`);
+          
+          // If this was the GENERATING phase, add welcome message for EDITING phase
+          if (state.phase === 'GENERATING') {
+            finalContent = `Perfect! I've generated your product brief for "${productBrief.product_name}". You can now review it in the preview panel and tell me what you'd like to edit or improve. What changes would you like to make?`;
+          }
         } else {
           console.log('saveProjectWithVersion returned null');
         }
@@ -385,7 +402,7 @@ serve(async (req) => {
     console.log('Updated currentQuestion:', updatedState.currentQuestion);
 
     return new Response(JSON.stringify({ 
-      content,
+      content: finalContent,
       conversationState: updatedState,
       savedProject: savedProject,
       generatedImages: generatedImages
