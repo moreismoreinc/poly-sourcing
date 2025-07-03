@@ -3,226 +3,97 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ProductBrief } from '@/types/ProductBrief';
-import { Package, Ruler, Palette, DollarSign, Shield, Layers } from 'lucide-react';
+import { File, Info } from 'lucide-react';
 
 interface ProductBriefDisplayProps {
-  brief: ProductBrief;
+  brief: Record<string, any>;
+  productName?: string;
 }
 
-const ProductBriefDisplay: React.FC<ProductBriefDisplayProps> = ({ brief }) => {
+// Helper function to format variable names for display
+const formatVariableName = (key: string): string => {
+  return key
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, str => str.toUpperCase())
+    .trim();
+};
+
+// Helper function to format values for display
+const formatValue = (value: any): string => {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return value.toString();
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+  if (Array.isArray(value)) return value.join(', ');
+  if (typeof value === 'object' && value !== null) return JSON.stringify(value, null, 2);
+  return String(value);
+};
+
+const ProductBriefDisplay: React.FC<ProductBriefDisplayProps> = ({ brief, productName }) => {
+  // Get all the key-value pairs from the brief
+  const briefEntries = Object.entries(brief || {});
+
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
       {/* Header Card */}
-      <Card className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-0">
+      <Card className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-0">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-3xl font-bold">{brief.product_name}</CardTitle>
-              <CardDescription className="text-blue-100 text-lg mt-2">
-                {brief.form_factor}
+              <CardTitle className="text-3xl font-bold">
+                {productName || 'Product Brief'}
+              </CardTitle>
+              <CardDescription className="text-primary-foreground/80 text-lg mt-2">
+                Generated Product Specifications
               </CardDescription>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold">${brief.target_price_usd}</div>
-              <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-                {brief.positioning}
-              </Badge>
+              <File className="h-8 w-8 text-primary-foreground/80" />
             </div>
           </div>
         </CardHeader>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-        {/* Product Details */}
-        <Card className="bg-white shadow-lg">
+      {/* Dynamic Content Display */}
+      {briefEntries.length > 0 ? (
+        <Card className="bg-card shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5 text-blue-600" />
+              <Info className="h-5 w-5 text-primary" />
               Product Details
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <div className="text-sm font-medium text-slate-600">Category</div>
-              <div className="text-lg">{brief.category}</div>
-            </div>
-            <div>
-              <div className="text-sm font-medium text-slate-600">Product ID</div>
-              <div className="text-lg font-mono bg-slate-100 px-2 py-1 rounded">
-                {brief.product_id}
+            {briefEntries.map(([key, value], index) => (
+              <div key={key} className="space-y-2">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                  <div className="text-sm font-medium text-muted-foreground min-w-0 sm:w-1/3">
+                    {formatVariableName(key)}
+                  </div>
+                  <div className="text-base text-foreground sm:w-2/3 break-words">
+                    {typeof value === 'object' && value !== null ? (
+                      <pre className="bg-muted p-3 rounded-lg text-sm whitespace-pre-wrap font-mono overflow-x-auto">
+                        {JSON.stringify(value, null, 2)}
+                      </pre>
+                    ) : (
+                      <span className="font-medium">{formatValue(value)}</span>
+                    )}
+                  </div>
+                </div>
+                {index < briefEntries.length - 1 && <Separator />}
               </div>
-            </div>
-            <div>
-              <div className="text-sm font-medium text-slate-600">Intended Use</div>
-              <div className="text-lg">{brief.intended_use}</div>
-            </div>
-            <div>
-              <div className="text-sm font-medium text-slate-600">Target Aesthetic</div>
-              <div className="text-lg">{brief.target_aesthetic}</div>
+            ))}
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="bg-card shadow-lg">
+          <CardContent className="py-12">
+            <div className="text-center text-muted-foreground">
+              <File className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No product brief data available</p>
             </div>
           </CardContent>
         </Card>
-
-        {/* Dimensions */}
-        <Card className="bg-white shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Ruler className="h-5 w-5 text-blue-600" />
-              Dimensions
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="text-sm font-medium text-slate-600">Height</div>
-                <div className="text-xl font-bold">{brief.dimensions.height_mm}mm</div>
-              </div>
-              <div>
-                <div className="text-sm font-medium text-slate-600">Diameter</div>
-                <div className="text-xl font-bold">{brief.dimensions.diameter_mm}mm</div>
-              </div>
-              {brief.dimensions.width_mm && (
-                <div>
-                  <div className="text-sm font-medium text-slate-600">Width</div>
-                  <div className="text-xl font-bold">{brief.dimensions.width_mm}mm</div>
-                </div>
-              )}
-              {brief.dimensions.depth_mm && (
-                <div>
-                  <div className="text-sm font-medium text-slate-600">Depth</div>
-                  <div className="text-xl font-bold">{brief.dimensions.depth_mm}mm</div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Materials & Finishes */}
-        <Card className="bg-white shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Layers className="h-5 w-5 text-blue-600" />
-              Materials & Finishes
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <div className="text-sm font-medium text-slate-600 mb-2">Materials</div>
-              <div className="grid grid-cols-1 gap-2">
-                <div className="flex justify-between">
-                  <span>Jar:</span>
-                  <span className="font-medium">{brief.materials.jar}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Cap:</span>
-                  <span className="font-medium">{brief.materials.cap}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Label:</span>
-                  <span className="font-medium">{brief.materials.label}</span>
-                </div>
-              </div>
-            </div>
-            <Separator />
-            <div>
-              <div className="text-sm font-medium text-slate-600 mb-2">Finishes</div>
-              <div className="grid grid-cols-1 gap-2">
-                <div className="flex justify-between">
-                  <span>Jar:</span>
-                  <span className="font-medium">{brief.finishes.jar}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Cap:</span>
-                  <span className="font-medium">{brief.finishes.cap}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Label:</span>
-                  <span className="font-medium">{brief.finishes.label}</span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Colors & Variants */}
-        <Card className="bg-white shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Palette className="h-5 w-5 text-blue-600" />
-              Colors & Variants
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <div className="text-sm font-medium text-slate-600 mb-2">Color Scheme</div>
-              <div className="flex items-center gap-2 mb-2">
-                <div 
-                  className="w-6 h-6 rounded-full border-2 border-slate-300"
-                  style={{ backgroundColor: brief.color_scheme.base }}
-                  title={brief.color_scheme.base}
-                />
-                <span className="font-medium">{brief.color_scheme.base}</span>
-              </div>
-              {brief.color_scheme.accents.length > 0 && (
-                <div className="flex items-center gap-2">
-                  {brief.color_scheme.accents.map((color, index) => (
-                    <div key={index} className="flex items-center gap-1">
-                      <div 
-                        className="w-4 h-4 rounded-full border border-slate-300"
-                        style={{ backgroundColor: color }}
-                        title={color}
-                      />
-                      <span className="text-sm">{color}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            <Separator />
-            <div>
-              <div className="text-sm font-medium text-slate-600 mb-2">Variants</div>
-              <div className="flex flex-wrap gap-2">
-                {brief.variants.map((variant, index) => (
-                  <Badge key={index} variant="outline" className="bg-slate-50">
-                    {variant}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Certifications & Notes */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="bg-white shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-blue-600" />
-              Certifications
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {brief.certifications.map((cert, index) => (
-                <Badge key={index} className="bg-green-100 text-green-800 border-green-200">
-                  {cert}
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white shadow-lg">
-          <CardHeader>
-            <CardTitle>Notes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-slate-700 leading-relaxed">{brief.notes}</p>
-          </CardContent>
-        </Card>
-      </div>
+      )}
     </div>
   );
 };

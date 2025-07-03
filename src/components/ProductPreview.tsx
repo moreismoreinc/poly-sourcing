@@ -1,14 +1,14 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ProductBrief } from '@/types/ProductBrief';
 import ProductBriefDisplay from './ProductBriefDisplay';
 
 interface ProductPreviewProps {
-  brief: ProductBrief;
+  brief: Record<string, any>;
+  productName?: string;
 }
 
-const ProductPreview = ({ brief }: ProductPreviewProps) => {
+const ProductPreview = ({ brief, productName }: ProductPreviewProps) => {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
@@ -54,7 +54,7 @@ const ProductPreview = ({ brief }: ProductPreviewProps) => {
         
         {/* Product Brief below mockups */}
         <div className="p-4">
-          <ProductBriefDisplay brief={brief} />
+          <ProductBriefDisplay brief={brief} productName={productName} />
         </div>
       </div>
     </div>

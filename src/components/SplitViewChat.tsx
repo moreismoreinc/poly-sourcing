@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, RotateCcw, ArrowLeft, Download, User, LogOut } from 'lucide-react';
-import { ProductBrief } from '@/types/ProductBrief';
+// Removed ProductBrief import as we're now using dynamic JSON data
 import ProductPreview from '@/components/ProductPreview';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -26,7 +26,8 @@ interface SplitViewChatProps {
   currentResponse: string;
   isLoading: boolean;
   conversationState: ConversationState;
-  productBrief: ProductBrief | null;
+  productBrief: Record<string, any> | null;
+  productName?: string;
   onSendMessage: (message: string) => void;
   onResetChat: () => void;
   onStartOver: () => void;
@@ -65,7 +66,8 @@ const SplitViewChat = ({
   currentResponse, 
   isLoading, 
   conversationState,
-  productBrief, 
+  productBrief,
+  productName, 
   onSendMessage, 
   onResetChat,
   onStartOver,
@@ -97,9 +99,9 @@ const SplitViewChat = ({
               <h1 className="text-xl font-bold text-foreground tracking-tight">
                 geneering
               </h1>
-              {productBrief && (
+              {productName && (
                 <span className="text-sm text-muted-foreground">
-                  {productBrief.product_name}
+                  {productName}
                 </span>
               )}
             </div>
@@ -247,7 +249,7 @@ const SplitViewChat = ({
         {/* Results Panel - 2/3 width */}
         <div className="w-2/3 bg-muted/30">
           {productBrief ? (
-            <ProductPreview brief={productBrief} />
+            <ProductPreview brief={productBrief} productName={productName} />
           ) : (
             <div className="h-full flex items-center justify-center">
               <div className="text-center text-muted-foreground">

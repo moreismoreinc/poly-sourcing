@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ProductBrief } from '@/types/ProductBrief';
+// Removed ProductBrief import - using dynamic JSON data from database
 import { useAuth } from '@/hooks/useAuth';
 import { useStreamingChat } from '@/hooks/useStreamingChat';
 import SingleInputStart from '@/components/SingleInputStart';
@@ -12,13 +12,14 @@ import { saveProject } from '@/services/projectService';
 const Index = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [productBrief, setProductBrief] = useState<ProductBrief | null>(null);
+  const [productBrief, setProductBrief] = useState<Record<string, any> | null>(null);
+  const [productName, setProductName] = useState<string>('');
   const [showSplitView, setShowSplitView] = useState(false);
 
-  const handleBriefUpdate = async (brief: ProductBrief | null) => {
+  const handleBriefUpdate = async (brief: Record<string, any> | null, name?: string) => {
     if (brief) {
       setProductBrief(brief);
-      // Project is now automatically saved in the streaming-chat function
+      if (name) setProductName(name);
     }
   };
 
@@ -88,6 +89,7 @@ const Index = () => {
       isLoading={isLoading}
       conversationState={conversationState}
       productBrief={productBrief}
+      productName={productName}
       onSendMessage={sendMessage}
       onResetChat={resetChat}
       onStartOver={handleStartOver}
