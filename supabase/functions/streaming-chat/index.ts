@@ -239,7 +239,7 @@ Product brief schema (adapt based on product type):
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o', // Valid model name
+        model: 'gpt-4.1', // Valid model name for Responses API
         instructions: systemPrompt,
         input: inputMessages, // Use the messages array format
         tools: [
