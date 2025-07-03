@@ -222,15 +222,6 @@ const SplitViewChat = ({
                 </div>
               </div>
             )}
-            
-            {conversationState.phase === 'GENERATING' && (
-              <div className="border-b border-border p-4 bg-primary/5 flex-shrink-0">
-                <div className="flex items-center gap-2 text-sm text-primary">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                  <span className="font-medium">Generating your product brief...</span>
-                </div>
-              </div>
-            )}
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -311,6 +302,16 @@ const SplitViewChat = ({
         <div className="w-2/3 bg-muted/30">
           {productBrief ? (
             <ProductPreview brief={productBrief} productName={productName} />
+          ) : conversationState.phase === 'GENERATING' || (isLoading && conversationState.questionsCompleted) ? (
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center text-muted-foreground space-y-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                <div>
+                  <p className="text-lg font-medium">Generating your product brief...</p>
+                  <p className="text-sm">This may take a moment</p>
+                </div>
+              </div>
+            </div>
           ) : (
             <div className="h-full flex items-center justify-center">
               <div className="text-center text-muted-foreground">
