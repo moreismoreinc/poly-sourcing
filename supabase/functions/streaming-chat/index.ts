@@ -31,6 +31,17 @@ const QUESTIONS = [
   }
 ];
 
+const OVERALL_SYSTEM_PROMPT = `
+You are Geneering, an AI product development expert. Your goal is to help users design manufacturing-ready products by guiding them through a friendly, iterative conversation.
+
+You operate in three phases:
+1. Questioning — gather initial product concept and reference brand.
+2. Generating — create a detailed product brief as JSON.
+3. Editing — help refine and finalize the product brief to ensure it is manufacturable and meets user needs.
+
+Adapt your responses based on the current phase and always aim to be clear, helpful, and precise.
+`;
+
 const QUESTIONING_PROMPT = `You are a product development expert conducting a streamlined interview to create a comprehensive product brief. 
 
 CURRENT CONVERSATION STATE: {{STATE}}
@@ -167,14 +178,14 @@ serve(async (req) => {
     let systemPrompt = '';
     
     if (state.phase === 'EDITING' && existingBrief) {
-      systemPrompt = EDITING_PROMPT.replace('{{BRIEF}}', JSON.stringify(existingBrief, null, 2));
+      systemPrompt = OVERALL_SYSTEM_PROMPT + '\n' + EDITING_PROMPT.replace('{{BRIEF}}', JSON.stringify(existingBrief, null, 2));
     } else if (state.phase === 'QUESTIONING') {
       const currentQ = QUESTIONS[state.currentQuestion];
-      systemPrompt = QUESTIONING_PROMPT
+      systemPrompt = OVERALL_SYSTEM_PROMPT + '\n' + QUESTIONING_PROMPT
         .replace('{{STATE}}', JSON.stringify(state, null, 2))
         .replace('{{CURRENT_QUESTION}}', currentQ ? currentQ.text : 'All questions completed');
     } else if (state.phase === 'GENERATING') {
-      systemPrompt = `You are a product development expert with 15+ years of experience. Based on the conversation about their product concept and reference inspirations, generate a comprehensive and detailed product brief.
+      systemPrompt = OVERALL_SYSTEM_PROMPT + '\n' + `You are a product development expert with 15+ years of experience. Based on the conversation about their product concept and reference inspirations, generate a comprehensive and detailed product brief.
 
 CONVERSATION HISTORY: ${messages.map(m => `${m.role}: ${m.content}`).join('\n')}
 
@@ -238,16 +249,16 @@ Product brief schema (adapt based on product type):
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1', // Valid model name for Responses API
+        model: 'gpt-4.1',
         instructions: systemPrompt,
-        input: userMessages, // Only user messages, not system message
+        input: userMessages,
         tools: [
           {
             type: 'web_search'
           }
         ],
         temperature: 0.7,
-        max_output_tokens: 1500, // Correct parameter name
+        max_output_tokens: 1500,
         stream: false,
       }),
     });
@@ -281,11 +292,9 @@ Product brief schema (adapt based on product type):
     }
 
     // Web search results would be available in tool call outputs if any
-    // Check for tool calls in the response
     if (data.output) {
       for (const outputItem of data.output) {
         if (outputItem.type === 'tool_call' && outputItem.tool_type === 'web_search') {
-          // Tool call results would be in outputItem.result
           console.log('Web search results:', outputItem.result);
         }
       }
