@@ -74,24 +74,33 @@ const ProductBriefDisplay: React.FC<ProductBriefDisplayProps> = ({ brief }) => {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="text-sm font-medium text-slate-600">Height</div>
-                <div className="text-xl font-bold">{brief.dimensions.height_mm}mm</div>
-              </div>
-              <div>
-                <div className="text-sm font-medium text-slate-600">Diameter</div>
-                <div className="text-xl font-bold">{brief.dimensions.diameter_mm}mm</div>
-              </div>
-              {brief.dimensions.width_mm && (
+              {brief.dimensions?.height_mm && (
+                <div>
+                  <div className="text-sm font-medium text-slate-600">Height</div>
+                  <div className="text-xl font-bold">{brief.dimensions.height_mm}mm</div>
+                </div>
+              )}
+              {brief.dimensions?.diameter_mm && (
+                <div>
+                  <div className="text-sm font-medium text-slate-600">Diameter</div>
+                  <div className="text-xl font-bold">{brief.dimensions.diameter_mm}mm</div>
+                </div>
+              )}
+              {brief.dimensions?.width_mm && (
                 <div>
                   <div className="text-sm font-medium text-slate-600">Width</div>
                   <div className="text-xl font-bold">{brief.dimensions.width_mm}mm</div>
                 </div>
               )}
-              {brief.dimensions.depth_mm && (
+              {brief.dimensions?.depth_mm && (
                 <div>
                   <div className="text-sm font-medium text-slate-600">Depth</div>
                   <div className="text-xl font-bold">{brief.dimensions.depth_mm}mm</div>
+                </div>
+              )}
+              {!brief.dimensions && (
+                <div className="col-span-2 text-sm text-slate-500">
+                  No dimensions available
                 </div>
               )}
             </div>
@@ -107,49 +116,57 @@ const ProductBriefDisplay: React.FC<ProductBriefDisplayProps> = ({ brief }) => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <div className="text-sm font-medium text-slate-600 mb-2">Materials</div>
-              <div className="grid grid-cols-1 gap-2">
-                <div className="flex justify-between">
-                  <span>Primary:</span>
-                  <span className="font-medium">{brief.materials.primary}</span>
+            {brief.materials && (
+              <div>
+                <div className="text-sm font-medium text-slate-600 mb-2">Materials</div>
+                <div className="grid grid-cols-1 gap-2">
+                  {brief.materials.primary && (
+                    <div className="flex justify-between">
+                      <span>Primary:</span>
+                      <span className="font-medium">{brief.materials.primary}</span>
+                    </div>
+                  )}
+                  {brief.materials.secondary && (
+                    <div className="flex justify-between">
+                      <span>Secondary:</span>
+                      <span className="font-medium">{brief.materials.secondary}</span>
+                    </div>
+                  )}
+                  {brief.materials.tertiary && (
+                    <div className="flex justify-between">
+                      <span>Tertiary:</span>
+                      <span className="font-medium">{brief.materials.tertiary}</span>
+                    </div>
+                  )}
                 </div>
-                {brief.materials.secondary && (
-                  <div className="flex justify-between">
-                    <span>Secondary:</span>
-                    <span className="font-medium">{brief.materials.secondary}</span>
-                  </div>
-                )}
-                {brief.materials.tertiary && (
-                  <div className="flex justify-between">
-                    <span>Tertiary:</span>
-                    <span className="font-medium">{brief.materials.tertiary}</span>
-                  </div>
-                )}
               </div>
-            </div>
+            )}
             <Separator />
-            <div>
-              <div className="text-sm font-medium text-slate-600 mb-2">Finishes</div>
-              <div className="grid grid-cols-1 gap-2">
-                <div className="flex justify-between">
-                  <span>Primary:</span>
-                  <span className="font-medium">{brief.finishes.primary}</span>
+            {brief.finishes && (
+              <div>
+                <div className="text-sm font-medium text-slate-600 mb-2">Finishes</div>
+                <div className="grid grid-cols-1 gap-2">
+                  {brief.finishes.primary && (
+                    <div className="flex justify-between">
+                      <span>Primary:</span>
+                      <span className="font-medium">{brief.finishes.primary}</span>
+                    </div>
+                  )}
+                  {brief.finishes.secondary && (
+                    <div className="flex justify-between">
+                      <span>Secondary:</span>
+                      <span className="font-medium">{brief.finishes.secondary}</span>
+                    </div>
+                  )}
+                  {brief.finishes.tertiary && (
+                    <div className="flex justify-between">
+                      <span>Tertiary:</span>
+                      <span className="font-medium">{brief.finishes.tertiary}</span>
+                    </div>
+                  )}
                 </div>
-                {brief.finishes.secondary && (
-                  <div className="flex justify-between">
-                    <span>Secondary:</span>
-                    <span className="font-medium">{brief.finishes.secondary}</span>
-                  </div>
-                )}
-                {brief.finishes.tertiary && (
-                  <div className="flex justify-between">
-                    <span>Tertiary:</span>
-                    <span className="font-medium">{brief.finishes.tertiary}</span>
-                  </div>
-                )}
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
 
@@ -162,40 +179,48 @@ const ProductBriefDisplay: React.FC<ProductBriefDisplayProps> = ({ brief }) => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <div className="text-sm font-medium text-slate-600 mb-2">Color Scheme</div>
-              <div className="flex items-center gap-2 mb-2">
-                <div 
-                  className="w-6 h-6 rounded-full border-2 border-slate-300"
-                  style={{ backgroundColor: brief.color_scheme.base }}
-                  title={brief.color_scheme.base}
-                />
-                <span className="font-medium">{brief.color_scheme.base}</span>
+            {brief.color_scheme && (
+              <div>
+                <div className="text-sm font-medium text-slate-600 mb-2">Color Scheme</div>
+                {brief.color_scheme.base && (
+                  <div className="flex items-center gap-2 mb-2">
+                    <div 
+                      className="w-6 h-6 rounded-full border-2 border-slate-300"
+                      style={{ backgroundColor: brief.color_scheme.base }}
+                      title={brief.color_scheme.base}
+                    />
+                    <span className="font-medium">{brief.color_scheme.base}</span>
+                  </div>
+                )}
+                {brief.color_scheme.accents && brief.color_scheme.accents.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    {brief.color_scheme.accents.map((color, index) => (
+                      <div key={index} className="flex items-center gap-1">
+                        <div 
+                          className="w-4 h-4 rounded-full border border-slate-300"
+                          style={{ backgroundColor: color }}
+                          title={color}
+                        />
+                        <span className="text-sm">{color}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              {brief.color_scheme.accents.length > 0 && (
-                <div className="flex items-center gap-2">
-                  {brief.color_scheme.accents.map((color, index) => (
-                    <div key={index} className="flex items-center gap-1">
-                      <div 
-                        className="w-4 h-4 rounded-full border border-slate-300"
-                        style={{ backgroundColor: color }}
-                        title={color}
-                      />
-                      <span className="text-sm">{color}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            )}
             <Separator />
             <div>
               <div className="text-sm font-medium text-slate-600 mb-2">Variants</div>
               <div className="flex flex-wrap gap-2">
-                {brief.variants.map((variant, index) => (
-                  <Badge key={index} variant="outline" className="bg-slate-50">
-                    {variant}
-                  </Badge>
-                ))}
+                {brief.variants && brief.variants.length > 0 ? (
+                  brief.variants.map((variant, index) => (
+                    <Badge key={index} variant="outline" className="bg-slate-50">
+                      {variant}
+                    </Badge>
+                  ))
+                ) : (
+                  <span className="text-sm text-slate-500">No variants specified</span>
+                )}
               </div>
             </div>
           </CardContent>
@@ -213,11 +238,15 @@ const ProductBriefDisplay: React.FC<ProductBriefDisplayProps> = ({ brief }) => {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {brief.certifications.map((cert, index) => (
-                <Badge key={index} className="bg-green-100 text-green-800 border-green-200">
-                  {cert}
-                </Badge>
-              ))}
+              {brief.certifications && brief.certifications.length > 0 ? (
+                brief.certifications.map((cert, index) => (
+                  <Badge key={index} className="bg-green-100 text-green-800 border-green-200">
+                    {cert}
+                  </Badge>
+                ))
+              ) : (
+                <span className="text-sm text-slate-500">No certifications specified</span>
+              )}
             </div>
           </CardContent>
         </Card>
