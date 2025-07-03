@@ -17,7 +17,6 @@ const Index = () => {
   const [productName, setProductName] = useState<string>('');
   const [showSplitView, setShowSplitView] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
-  const [hasLoadedInitialProject, setHasLoadedInitialProject] = useState(false);
 
   const handleBriefUpdate = async (brief: Record<string, any> | null, name?: string, projectId?: string) => {
     if (brief) {
@@ -32,23 +31,6 @@ const Index = () => {
     onConversationStart: () => setShowSplitView(true),
   });
 
-  // Load most recent project on initial mount only
-  useEffect(() => {
-    const loadRecentProject = async () => {
-      if (user && !hasLoadedInitialProject && !conversationStarted && !showSplitView) {
-        const project = await getMostRecentProject();
-        if (project) {
-          setProductBrief(project.product_brief as Record<string, any>);
-          setProductName(project.product_name);
-          setCurrentProjectId(project.id);
-          setShowSplitView(true);
-        }
-        setHasLoadedInitialProject(true);
-      }
-    };
-    
-    loadRecentProject();
-  }, [user, hasLoadedInitialProject, conversationStarted, showSplitView]);
 
   const handleStartConversation = async (message: string) => {
     if (!user) {
