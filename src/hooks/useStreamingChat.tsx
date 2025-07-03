@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { ProductBrief } from '@/types/ProductBrief';
+// Removed ProductBrief import - using dynamic JSON data
 
 interface Message {
   id: string;
@@ -20,8 +20,8 @@ interface ConversationState {
 }
 
 interface UseStreamingChatProps {
-  onBriefUpdate?: (brief: ProductBrief | null) => void;
-  existingBrief?: ProductBrief | null;
+  onBriefUpdate?: (brief: Record<string, any> | null, productName?: string) => void;
+  existingBrief?: Record<string, any> | null;
   onConversationStart?: () => void;
 }
 
@@ -38,7 +38,7 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
   });
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const extractBriefFromResponse = useCallback((text: string): ProductBrief | null => {
+  const extractBriefFromResponse = useCallback((text: string): Record<string, any> | null => {
     const briefMatch = text.match(/<BRIEF>(.*?)<\/BRIEF>/s);
     if (briefMatch) {
       try {
@@ -118,7 +118,7 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
         // Extract and update brief
         const extractedBrief = extractBriefFromResponse(accumulatedResponse);
         if (extractedBrief && onBriefUpdate) {
-          onBriefUpdate(extractedBrief);
+          onBriefUpdate(extractedBrief, data.productName);
         }
 
         // Update conversation state
@@ -132,7 +132,7 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
             const transitionMessage: Message = {
               id: (Date.now() + 2).toString(),
               role: 'assistant',
-              content: `Perfect! I've generated your product brief for "${extractedBrief.product_name}". You can now review it in the preview panel and tell me what you'd like to edit or improve. What changes would you like to make?`,
+              content: `Perfect! I've generated your product brief for "${data.productName || 'your product'}". You can now review it in the preview panel and tell me what you'd like to edit or improve. What changes would you like to make?`,
               timestamp: new Date(),
             };
             setMessages(prev => [...prev, transitionMessage]);

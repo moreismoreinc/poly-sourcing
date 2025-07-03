@@ -7,7 +7,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useStreamingChat } from '@/hooks/useStreamingChat';
 import SingleInputStart from '@/components/SingleInputStart';
 import SplitViewChat from '@/components/SplitViewChat';
-import { saveProject } from '@/services/projectService';
+import { getMostRecentProject } from '@/services/projectService';
+import { useEffect } from 'react';
 
 const Index = () => {
   const { user, loading: authLoading } = useAuth();
@@ -27,6 +28,22 @@ const Index = () => {
     onBriefUpdate: handleBriefUpdate,
     onConversationStart: () => setShowSplitView(true),
   });
+
+  // Load most recent project on mount
+  useEffect(() => {
+    const loadRecentProject = async () => {
+      if (user) {
+        const project = await getMostRecentProject();
+        if (project) {
+          setProductBrief(project.product_brief as Record<string, any>);
+          setProductName(project.product_name);
+          setShowSplitView(true);
+        }
+      }
+    };
+    
+    loadRecentProject();
+  }, [user]);
 
   const handleStartConversation = async (message: string) => {
     if (!user) {
@@ -50,7 +67,7 @@ const Index = () => {
     const dataStr = JSON.stringify(productBrief, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
     
-    const exportFileDefaultName = `${productBrief.product_id}-brief.json`;
+    const exportFileDefaultName = `product-brief-${Date.now()}.json`;
     
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
