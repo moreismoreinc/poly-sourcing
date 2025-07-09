@@ -320,7 +320,9 @@ CONVERSATION HISTORY: {{CONVERSATION_HISTORY}}
 
 Your task is to take the user's input from the conversation history and create a detailed product brief using the enhanced template provided below.
 
-OUTPUT REQUIREMENTS:
+CRITICAL REQUIREMENTS:
+- MUST include a "product_name" field with a clear, marketable product name
+- The product_name should be derived from the user's description but refined for commercial use
 - ONLY output valid JSON object
 - NO other text before or after the JSON
 - NO conversational messages
@@ -329,7 +331,7 @@ OUTPUT REQUIREMENTS:
 
 {{ENHANCED_TEMPLATE}}
 
-GENERATE THE JSON NOW. NOTHING ELSE.`;
+GENERATE THE JSON NOW. NOTHING ELSE. ENSURE THE product_name FIELD IS ALWAYS INCLUDED.`;
 
 const EDITING_PROMPT = `You are a product development expert helping to refine an existing product brief through conversation.
 
