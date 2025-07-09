@@ -253,29 +253,104 @@ Lighting: Soft, directional with subtle gloss and shadow
 Output Format
 Return ONLY a valid JSON object that starts with { and ends with }. Do not include any text before or after the JSON.
 
-Required Fields
-Describe only what would be visible in a real studio image:
-"category" — general product type (e.g., "skincare", "apparel", "hardware")
-"form" — physical shape and subcomponents (e.g., "ergonomic handle with curved blade")
-"materials" — list of surface-level visible materials with texture hints
-"finish" — surface finish per component (e.g., "glossy enamel", "matte grip")
-"color" — base tone + accent colors visible under directional lighting
-"dimensions" — measurable parts in mm (only include what applies to this object)
+Required Fields Structure
+Follow this exact JSON structure and level of detail:
 
-Realism Fields (required for believability)
-"natural_imperfections" — minor physical flaws (e.g., scuff, dust, subtle misalignment)
-"environmental_interaction" — how the object physically interacts with light and surface (e.g., shadow pooling, reflection, refraction)
-"manufacturing_artifacts" — signs of production (e.g., seam lines, mold marks, slight parting lines)
-"branding" — always: "status": "unbranded"
+{
+  "category": "specific product type (e.g., skincare, apparel, hardware, food)",
+  "form": "detailed physical description with shape and subcomponents",
+  "materials": [
+    "specific material with texture details (e.g., clear borosilicate glass body)",
+    "additional materials as separate array items"
+  ],
+  "finish": {
+    "component_name": "detailed surface finish description",
+    "other_component": "specific finish with tactile qualities"
+  },
+  "color": {
+    "base": "primary color with specific tones and transparency details",
+    "accents": "secondary colors with undertones and lighting effects"
+  },
+  "dimensions": {
+    "height": "measurement in cm",
+    "width_or_diameter": "measurement in cm",
+    "additional_measurements": "component-specific dimensions in cm"
+  },
+  "natural_imperfections": [
+    "specific minor flaw with location",
+    "realistic imperfection visible in studio lighting"
+  ],
+  "environmental_interaction": {
+    "surface_contact": "shadow description with edge qualities",
+    "reflection": "highlight placement and intensity",
+    "refraction": "light distortion effects if applicable"
+  },
+  "manufacturing_artifacts": [
+    "production marks with specific locations",
+    "alignment or surface variations from manufacturing"
+  ],
+  "branding": {
+    "status": "unbranded"
+  }
+}
 
-Style & Constraints
-Use grounded, tactile, material-specific language (e.g., "frosted PET", "milled aluminum", "polished nylon")
-Describe only what would be observable in a real studio photograph — omit marketing, usage, or speculative content
-Do not invent features not stated or visible
-Do not include lighting, backdrop, or any non-object elements
-Return valid, copy-pasteable JSON only
+Example Output (for reference):
+{
+  "category": "skincare",
+  "form": "short cylindrical glass dropper bottle",
+  "materials": [
+    "clear borosilicate glass body",
+    "matte plastic dropper collar",
+    "soft rubber pipette bulb",
+    "glass pipette stem",
+    "matte paper label"
+  ],
+  "finish": {
+    "body": "smooth gloss with faint inner refraction from liquid content",
+    "dropper": "matte molded texture with soft ridging on collar",
+    "label": "uncoated paper with slight grain visible under light"
+  },
+  "color": {
+    "base": "transparent with subtle rose tint from liquid",
+    "accents": "neutral white dropper and label with slight warm undertone"
+  },
+  "dimensions": {
+    "height": "10.5 cm",
+    "diameter": "4.2 cm",
+    "dropper_bulb_height": "2.2 cm",
+    "pipette_visible_length": "4.0 cm",
+    "label_height": "3.5 cm"
+  },
+  "natural_imperfections": [
+    "tiny air bubble in liquid near bottom of bottle",
+    "slight fingerprint on glass shoulder",
+    "micro dust speck on label edge"
+  ],
+  "environmental_interaction": {
+    "surface_contact": "short soft-edged shadow beneath base",
+    "reflection": "subtle vertical highlight on front curvature",
+    "refraction": "slight distortion line where glass thickness varies"
+  },
+  "manufacturing_artifacts": [
+    "mold seam line faintly visible on dropper collar",
+    "slight misalignment of label edge along rear",
+    "small glass ripple at base from cooling process"
+  ],
+  "branding": {
+    "status": "unbranded"
+  }
+}
 
-Product Details:
+Style Guidelines
+- Use specific, tactile material descriptions (e.g., "frosted PET", "milled aluminum", "brushed steel")
+- Include realistic dimensions in centimeters
+- Describe only observable details in studio photography
+- Create believable imperfections and manufacturing marks
+- Structure finish descriptions by component
+- Provide multiple environmental interaction types
+- Be specific about material textures and surface qualities
+
+Product Details to Analyze:
 ${JSON.stringify(productBrief, null, 2)}`;
 
   try {
