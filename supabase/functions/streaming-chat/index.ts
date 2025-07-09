@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.2/+esm';
-import { ENHANCED_SYSTEM_PROMPT, TEMPLATES, PRICE_RANGES } from './constants.ts';
+import { ENHANCED_SYSTEM_PROMPT, TEMPLATES, PRICE_RANGES, AVAILABLE_CATEGORIES, type ProductCategory } from './constants.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -31,8 +31,6 @@ const QUESTIONS = [
     text: 'What\'s a good reference brand or product that inspires the aesthetic, quality level, or market positioning you\'re aiming for?'
   }
 ];
-
-// Constants imported from local constants.ts file
 
 const OVERALL_SYSTEM_PROMPT = `
 You are Geneering, an AI product development expert. Your goal is to help users design manufacturing-ready products by guiding them through a friendly, iterative conversation.
@@ -69,8 +67,74 @@ On completion of this phase, you MUST immediately do 2 things in sequence:
 
 `;
 
-// Helper function to detect product category
-function detectCategory(productName: string, useCase: string): string {
+// AI-powered category detection
+async function detectCategoryWithAI(productName: string, useCase: string, openAIApiKey: string): Promise<ProductCategory> {
+  const categorizationPrompt = `You are a product categorization expert. Based on the product name and use case provided, determine which category best fits this product.
+
+Available categories: ${AVAILABLE_CATEGORIES.join(', ')}
+
+Product Name: ${productName}
+Use Case: ${useCase}
+
+Rules:
+1. Choose ONLY from the available categories listed above
+2. Consider the primary function, target market, and manufacturing requirements
+3. If uncertain between categories, pick the most specific one that fits
+4. Respond with ONLY the category name, no explanation
+
+Category:`;
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini', // Using a faster, cheaper model for categorization
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a product categorization expert. Respond with only the category name, no additional text.'
+          },
+          {
+            role: 'user',
+            content: categorizationPrompt
+          }
+        ],
+        temperature: 0.1, // Low temperature for consistent categorization
+        max_tokens: 20 // We only need a short response
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('OpenAI categorization API error:', response.status);
+      return 'wellness'; // Fallback to default
+    }
+
+    const data = await response.json();
+    const suggestedCategory = data.choices[0]?.message?.content?.trim().toLowerCase();
+    
+    console.log('AI suggested category:', suggestedCategory);
+    
+    // Validate the AI's response against available categories
+    if (AVAILABLE_CATEGORIES.includes(suggestedCategory as ProductCategory)) {
+      return suggestedCategory as ProductCategory;
+    } else {
+      console.log('AI suggested invalid category, falling back to wellness');
+      return 'wellness';
+    }
+    
+  } catch (error) {
+    console.error('Error in AI categorization:', error);
+    // Fallback to original keyword-based detection
+    return detectCategoryFallback(productName, useCase);
+  }
+}
+
+// Keep the original function as a fallback
+function detectCategoryFallback(productName: string, useCase: string): ProductCategory {
   const name = productName.toLowerCase();
   const use = useCase.toLowerCase();
   
@@ -78,57 +142,123 @@ function detectCategory(productName: string, useCase: string): string {
   if (name.includes('gummies') || name.includes('supplement') || name.includes('vitamin') || 
       name.includes('protein') || name.includes('capsule') || name.includes('pill') ||
       use.includes('vitamin') || use.includes('supplement') || use.includes('nutrition')) {
-    return 'supplement';
+    return AVAILABLE_CATEGORIES.includes('supplement') ? 'supplement' : 'wellness';
   }
   
   // Skincare detection
   if (name.includes('cream') || name.includes('serum') || name.includes('lotion') || 
       name.includes('cleanser') || name.includes('moisturizer') || name.includes('sunscreen') ||
       use.includes('skin') || use.includes('face') || use.includes('anti-aging')) {
-    return 'skincare';
+    return AVAILABLE_CATEGORIES.includes('skincare') ? 'skincare' : 'wellness';
   }
   
   // Food detection
   if (name.includes('snack') || name.includes('bar') || name.includes('drink') || 
       name.includes('sauce') || name.includes('tea') || name.includes('coffee') ||
       use.includes('eat') || use.includes('drink') || use.includes('snack')) {
-    return 'food';
+    return AVAILABLE_CATEGORIES.includes('food') ? 'food' : 'wellness';
   }
   
   // Wearable detection
   if (name.includes('band') || name.includes('watch') || name.includes('tracker') || 
       name.includes('ring') || name.includes('glasses') || name.includes('headband') ||
       use.includes('wear') || use.includes('track') || use.includes('monitor')) {
-    return 'wearable';
+    return AVAILABLE_CATEGORIES.includes('wearable') ? 'wearable' : 'wellness';
   }
   
   // Beauty detection
   if (name.includes('lipstick') || name.includes('mascara') || name.includes('foundation') || 
       name.includes('eyeshadow') || name.includes('brush') || name.includes('makeup') ||
       use.includes('makeup') || use.includes('beauty') || use.includes('cosmetic')) {
-    return 'beauty';
+    return AVAILABLE_CATEGORIES.includes('beauty') ? 'beauty' : 'wellness';
   }
   
   // Clothing detection
   if (name.includes('shirt') || name.includes('dress') || name.includes('pants') || 
       name.includes('jacket') || name.includes('shoes') || name.includes('hat') ||
       use.includes('wear') || use.includes('clothing') || use.includes('fashion')) {
-    return 'clothing';
+    return AVAILABLE_CATEGORIES.includes('clothing') ? 'clothing' : 'wellness';
   }
   
   // Tools detection
   if (name.includes('tool') || name.includes('device') || name.includes('gadget') || 
       name.includes('opener') || name.includes('cutter') || name.includes('screwdriver') ||
       use.includes('tool') || use.includes('fix') || use.includes('build')) {
-    return 'tools';
+    return AVAILABLE_CATEGORIES.includes('tools') ? 'tools' : 'wellness';
   }
   
   // Default to wellness for health, fitness, therapy, etc.
   return 'wellness';
 }
 
-// Helper function to infer positioning from aesthetic
-function inferPositioning(aesthetic: string): 'budget' | 'mid-range' | 'premium' {
+// Smart positioning detection with AI
+async function inferPositioningWithAI(aesthetic: string, productName: string, openAIApiKey: string): Promise<'budget' | 'mid-range' | 'premium'> {
+  const positioningPrompt = `You are a brand positioning expert. Based on the aesthetic description and product name, determine the market positioning.
+
+Available positions: budget, mid-range, premium
+
+Product Name: ${productName}
+Aesthetic Description: ${aesthetic}
+
+Consider:
+- Language used (luxury, premium, high-end vs affordable, basic, simple)
+- Target market indicators
+- Quality expectations
+- Price point implications
+
+Respond with ONLY one of: budget, mid-range, premium
+
+Position:`;
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a brand positioning expert. Respond with only the position level, no additional text.'
+          },
+          {
+            role: 'user',
+            content: positioningPrompt
+          }
+        ],
+        temperature: 0.1,
+        max_tokens: 10
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('OpenAI positioning API error:', response.status);
+      return inferPositioningFallback(aesthetic);
+    }
+
+    const data = await response.json();
+    const suggestedPosition = data.choices[0]?.message?.content?.trim().toLowerCase();
+    
+    console.log('AI suggested positioning:', suggestedPosition);
+    
+    // Validate response
+    if (['budget', 'mid-range', 'premium'].includes(suggestedPosition)) {
+      return suggestedPosition as 'budget' | 'mid-range' | 'premium';
+    } else {
+      return inferPositioningFallback(aesthetic);
+    }
+    
+  } catch (error) {
+    console.error('Error in AI positioning:', error);
+    return inferPositioningFallback(aesthetic);
+  }
+}
+
+// Keep original positioning logic as fallback
+function inferPositioningFallback(aesthetic: string): 'budget' | 'mid-range' | 'premium' {
   const aes = aesthetic.toLowerCase();
   
   if (aes.includes('luxury') || aes.includes('premium') || aes.includes('high-end') || 
@@ -144,14 +274,18 @@ function inferPositioning(aesthetic: string): 'budget' | 'mid-range' | 'premium'
   return 'mid-range';
 }
 
-// Helper function to build enhanced prompt
-function buildPrompt(productName: string, useCase: string, aesthetic: string): string {
-  const category = detectCategory(productName, useCase);
-  const positioning = inferPositioning(aesthetic);
+// Updated buildPrompt function with AI-powered detection
+async function buildPromptWithAI(productName: string, useCase: string, aesthetic: string, openAIApiKey: string): Promise<string> {
+  console.log('=== AI-POWERED PROMPT BUILDING ===');
   
-  console.log('=== PROMPT BUILDING DEBUG ===');
-  console.log('Detected category:', category);
-  console.log('Inferred positioning:', positioning);
+  // Use AI to determine category and positioning
+  const [category, positioning] = await Promise.all([
+    detectCategoryWithAI(productName, useCase, openAIApiKey),
+    inferPositioningWithAI(aesthetic, productName, openAIApiKey)
+  ]);
+  
+  console.log('AI-determined category:', category);
+  console.log('AI-determined positioning:', positioning);
   console.log('Available templates:', Object.keys(TEMPLATES));
   
   const template = TEMPLATES[category] || TEMPLATES.wellness;
@@ -437,8 +571,8 @@ serve(async (req) => {
       console.log('Use case:', useCase);
       console.log('Aesthetic:', aesthetic);
       
-      // Build enhanced prompt using category-specific template
-      const enhancedTemplate = buildPrompt(extractedProductName, useCase, aesthetic);
+      // Build enhanced prompt using AI-powered category detection
+      const enhancedTemplate = await buildPromptWithAI(extractedProductName, useCase, aesthetic, openAIApiKey);
       console.log('Enhanced template built, length:', enhancedTemplate.length);
       console.log('First 300 chars of template:', enhancedTemplate.substring(0, 300));
       
