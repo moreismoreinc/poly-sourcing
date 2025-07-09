@@ -16,11 +16,9 @@ const ProductPreview = ({ brief, productName }: ProductPreviewProps) => {
         <div className="h-full flex gap-6">
           {/* Center: Spec Sheet (editable output) */}
           <div className="flex-1">
-            <Card className="h-full bg-card shadow-none rounded-lg overflow-hidden">
-              <CardHeader className="pb-3">
-              </CardHeader>
-              <CardContent className="overflow-y-auto h-[calc(100%-80px)] pr-4">
-                <div className="max-h-full">
+            <Card className="h-full bg-card shadow-none rounded-lg overflow-hidden flex flex-col">
+              <CardContent className="flex-1 p-6 overflow-y-auto">
+                <div className="h-full">
                   <ProductBriefDisplay brief={brief} productName={productName} />
                 </div>
               </CardContent>
