@@ -194,11 +194,11 @@ const ProductBriefDisplay: React.FC<ProductBriefDisplayProps> = ({ brief, produc
     );
   }
 
-  // Separate fields into categories for better organization (excluding product_id)  
+  // More inclusive field categorization to ensure all fields are displayed
   const basicFields = ['product_name', 'category', 'positioning', 'intended_use', 'target_aesthetic', 'form_factor'];
-  const specFields = ['dimensions', 'materials', 'finishes', 'color_scheme', 'natural_imperfections'];
-  const businessFields = ['target_price_usd', 'certifications', 'variants'];
-  const complexFields = ['recipe', 'quality_control', 'manufacturing_notes', 'regulatory_compliance'];
+  const specFields = ['dimensions', 'materials', 'finishes', 'color_scheme', 'natural_imperfections', 'size', 'weight', 'texture'];
+  const businessFields = ['target_price_usd', 'price', 'cost', 'certifications', 'variants', 'market', 'brand'];
+  const complexFields = ['recipe', 'quality_control', 'manufacturing_notes', 'regulatory_compliance', 'ingredients', 'instructions', 'specifications'];
   
   const categorizeFields = () => {
     const categories = {
@@ -209,15 +209,31 @@ const ProductBriefDisplay: React.FC<ProductBriefDisplayProps> = ({ brief, produc
       other: [] as [string, any][]
     };
     
-    Object.entries(brief).forEach(([key, value]) => {
-      // Skip product_id field
-      if (key === 'product_id') return;
-      
-      if (basicFields.includes(key)) categories.basic.push([key, value]);
-      else if (specFields.includes(key)) categories.specifications.push([key, value]);
-      else if (businessFields.includes(key)) categories.business.push([key, value]);
-      else if (complexFields.includes(key)) categories.complex.push([key, value]);
-      else categories.other.push([key, value]);
+    const allFields = Object.entries(brief).filter(([key]) => key !== 'product_id');
+    
+    allFields.forEach(([key, value]) => {
+      if (basicFields.includes(key)) {
+        categories.basic.push([key, value]);
+      } else if (specFields.includes(key)) {
+        categories.specifications.push([key, value]);
+      } else if (businessFields.includes(key)) {
+        categories.business.push([key, value]);
+      } else if (complexFields.includes(key) || isCollapsibleField(value)) {
+        categories.complex.push([key, value]);
+      } else {
+        categories.other.push([key, value]);
+      }
+    });
+    
+    // Debug: Log all categories to ensure nothing is missing
+    console.log('Displaying product brief fields:', {
+      totalAvailableFields: allFields.length,
+      basic: categories.basic.map(([k]) => k),
+      specifications: categories.specifications.map(([k]) => k),
+      business: categories.business.map(([k]) => k),
+      complex: categories.complex.map(([k]) => k),
+      other: categories.other.map(([k]) => k),
+      totalDisplayedFields: categories.basic.length + categories.specifications.length + categories.business.length + categories.complex.length + categories.other.length
     });
     
     return categories;
