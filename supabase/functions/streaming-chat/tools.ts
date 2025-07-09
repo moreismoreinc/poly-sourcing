@@ -175,8 +175,7 @@ export async function executeProductMockup(
         prompt: prompt,
         n: 1,
         size: '1024x1024',
-        quality: 'high',
-        response_format: 'url'
+        quality: 'high'
       }),
     });
 
@@ -187,16 +186,16 @@ export async function executeProductMockup(
     }
 
     const data = await response.json();
-    const imageUrl = data.data[0]?.url;
+    const imageData = data.data[0];
 
-    if (!imageUrl) {
-      throw new Error('No image URL returned from OpenAI');
+    if (!imageData) {
+      throw new Error('No image data returned from OpenAI');
     }
 
-    console.log(`Generated image URL: ${imageUrl}`);
+    console.log(`Generated image data received`);
 
     return {
-      image_url: imageUrl,
+      image_url: imageData.url || `data:image/png;base64,${imageData.b64_json}`,
       prompt: prompt,
       mockup_type: mockupType,
       product_name: productName,
