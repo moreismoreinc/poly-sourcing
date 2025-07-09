@@ -136,49 +136,42 @@ const FIXED_IMAGE_SETTING = {
 
 // Generate detailed prompt from complete JSON structure
 function generateAdvancedPromptFromJSON(completeJSON: any, mockupType: string): string {
-  const subject = completeJSON.subject;
-  const settings = completeJSON;
+  // Create structured JSON with fixed settings first, then subject
+  const structuredJSON = {
+    asset_type: completeJSON.asset_type,
+    format: completeJSON.format,
+    dimensions: completeJSON.dimensions,
+    composition: completeJSON.composition,
+    lighting: completeJSON.lighting,
+    background: completeJSON.background,
+    style_tags: completeJSON.style_tags,
+    status: completeJSON.status,
+    subject: completeJSON.subject
+  };
   
-  let basePrompt = `Professional ${mockupType} photography of a ${subject.category}. `;
+  const promptPrefix = `Act as a studio product photography expert with no prior context or memory. Generate a photorealistic image based strictly on the following structured JSON.
+
+You must adhere precisely to the following visual rules:
+
+• DO NOT add, omit, or reinterpret any scene elements not described in the JSON.
+• DO NOT alter the camera angle, perspective, background, lighting, or rendering style.
+• DO NOT introduce props, text, gradients, flares, or abstract render effects.
+
+Photographic style guidelines:
+- Composition: top-down flat lay or upright portrait, centered with tight crop and soft margin
+- Lighting: directional sunlight simulation with bounce fill and highlight bloom
+- Shadows: crisp drop shadows with slight halo and soft edge split
+- Background: clean white or tonal backdrop with slight grain and vignetting
+- Finish: show gloss, texture, refraction, and surface realism faithfully
+- Detail: show imperfections, reflections, mold lines, dust, and seam artifacts
+
+The result must appear as a high-resolution product photograph in a studio lighting environment with **editorial realism and physical believability**.
+
+Render the image using the following JSON as the sole visual definition:
+
+${JSON.stringify(structuredJSON, null, 2)}`;
   
-  // Add form and materials description
-  basePrompt += `${subject.form} made from ${subject.materials.join(', ')}. `;
-  
-  // Add color and finish details
-  if (subject.color && subject.finish) {
-    basePrompt += `Color: ${subject.color.base}${subject.color.accents ? ` with ${subject.color.accents}` : ''}. `;
-    basePrompt += `Finish: ${typeof subject.finish === 'object' ? Object.values(subject.finish).join(', ') : subject.finish}. `;
-  }
-  
-  // Add composition and style from settings
-  basePrompt += `Shot in ${settings.composition.orientation} style, ${settings.composition.alignment}, `;
-  basePrompt += `${settings.composition.style}. `;
-  
-  // Add lighting specifications
-  basePrompt += `Lighting: ${settings.lighting.type}, ${settings.lighting.source}, `;
-  basePrompt += `${settings.lighting.intensity}, ${settings.lighting.shadows}. `;
-  
-  // Add background specifications
-  basePrompt += `Background: ${settings.background.type}, ${settings.background.color}, `;
-  basePrompt += `${settings.background.texture}. `;
-  
-  // Add natural imperfections for realism
-  if (subject.natural_imperfections && subject.natural_imperfections.length > 0) {
-    basePrompt += `Realistic details: ${subject.natural_imperfections.join(', ')}. `;
-  }
-  
-  // Add environmental interaction
-  if (subject.environmental_interaction) {
-    basePrompt += `Environmental effects: ${Object.values(subject.environmental_interaction).join(', ')}. `;
-  }
-  
-  // Add style tags
-  basePrompt += `Style: ${settings.style_tags.join(', ')}. `;
-  
-  // Add quality specifications
-  basePrompt += `Ultra high resolution, professional studio quality, photorealistic, detailed textures.`;
-  
-  return basePrompt;
+  return promptPrefix;
 }
 
 // Fallback prompt generation for when JSON generation fails
