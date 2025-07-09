@@ -628,8 +628,10 @@ serve(async (req) => {
         ];
         const workingMessage = workingMessages[Math.floor(Math.random() * workingMessages.length)];
         
-        // Combine both messages
+        // Combine both messages and return immediately
         const combinedMessage = `${acknowledgmentMessage}\n\n${workingMessage}`;
+        
+        console.log('Returning acknowledgment message, generation will happen on next call');
         
         return new Response(JSON.stringify({
           content: combinedMessage,
@@ -642,8 +644,7 @@ serve(async (req) => {
         });
       }
       
-      // If we have sent the initial messages, proceed with generation
-      console.log('Generation messages already sent, proceeding with generation');
+      console.log('Generation messages already sent, proceeding with actual generation');
       
       // Build enhanced prompt using AI-powered category detection
       const enhancedTemplate = await buildPromptWithAI(extractedProductName, useCase, aesthetic, openAIApiKey);
