@@ -18,45 +18,57 @@ export type Database = {
         Row: {
           aesthetic_style: string | null
           background_style: string | null
+          complete_prompt_json: Json | null
           created_at: string
           file_path: string
           filename: string
           id: string
+          image_height: number | null
           image_type: string
+          image_width: number | null
           mockup_type: string
           project_id: string
           prompt: string
           public_url: string
+          subject_json: Json | null
           updated_at: string
           user_id: string
         }
         Insert: {
           aesthetic_style?: string | null
           background_style?: string | null
+          complete_prompt_json?: Json | null
           created_at?: string
           file_path: string
           filename: string
           id?: string
+          image_height?: number | null
           image_type: string
+          image_width?: number | null
           mockup_type: string
           project_id: string
           prompt: string
           public_url: string
+          subject_json?: Json | null
           updated_at?: string
           user_id: string
         }
         Update: {
           aesthetic_style?: string | null
           background_style?: string | null
+          complete_prompt_json?: Json | null
           created_at?: string
           file_path?: string
           filename?: string
           id?: string
+          image_height?: number | null
           image_type?: string
+          image_width?: number | null
           mockup_type?: string
           project_id?: string
           prompt?: string
           public_url?: string
+          subject_json?: Json | null
           updated_at?: string
           user_id?: string
         }

@@ -542,7 +542,7 @@ async function generateProductImagesForProject(
     const productDescription = `${productBrief.category || ''} ${productBrief.intended_use || ''} made of ${materialsText} with ${productBrief.target_aesthetic || 'modern'} aesthetic`;
     const aestheticStyle = productBrief.target_aesthetic || 'modern minimalist';
     
-    // Generate product mockup
+    // Generate product mockup with advanced JSON system
     const mockupResult = await executeProductMockup(
       productName,
       productDescription,
@@ -550,7 +550,8 @@ async function generateProductImagesForProject(
       aestheticStyle,
       'white_background',
       project.id,
-      userId
+      userId,
+      productBrief  // Pass the complete product brief for JSON generation
     );
     
     if (mockupResult.success && mockupResult.image_url) {

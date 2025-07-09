@@ -93,46 +93,102 @@ export const TOOLS = [
   }
 ];
 
-// Tool execution functions
-export async function executeWebSearch(query: string, focus?: string): Promise<any> {
-  console.log(`Executing web search: ${query} (focus: ${focus})`);
+// Fixed Part 1 JSON - Image & Setting Configuration
+const FIXED_IMAGE_SETTING = {
+  "asset_type": "apparel_flatlay",
+  "format": "image/jpeg",
+  "dimensions": {
+    "width": 768,
+    "height": 960,
+    "aspect_ratio": "4:5"
+  },
+  "composition": {
+    "orientation": "top-down flat lay",
+    "alignment": "centered",
+    "cropping": "tight with soft margins",
+    "style": "clinical minimalism with editorial shadow play and natural imperfection",
+    "focus": {
+      "sharp_area": "entire product body with micro surface detail visible",
+      "depth_of_field": "deep focus with lens edge softness (simulated)"
+    }
+  },
+  "lighting": {
+    "type": "directional sunlight simulation with micro-bounce fill",
+    "source": "upper right hard light, secondary fill from left low",
+    "intensity": "high, with controlled highlight bloom on glossy elements",
+    "shadows": "crisp drop shadows with slight double-edge halo and soft scatter"
+  },
+  "background": {
+    "type": "flat backdrop",
+    "color": "pure white with tonal variance toward corners",
+    "texture": "smooth matte with slight grain under raking light",
+    "lighting_blend": "strong highlight over midtone with natural gradient vignetting"
+  },
+  "style_tags": [
+    "grainy realism",
+    "micro imperfection detail",
+    "highlight bloom",
+    "editorial minimalism",
+    "photographic authenticity"
+  ],
+  "status": "unbranded"
+};
+
+// Generate detailed prompt from complete JSON structure
+function generateAdvancedPromptFromJSON(completeJSON: any, mockupType: string): string {
+  const subject = completeJSON.subject;
+  const settings = completeJSON;
   
-  // This would integrate with a real search API
-  // For now, return mock data that would be useful for product development
-  return {
-    query,
-    focus,
-    results: [
-      {
-        title: "Market Research Results",
-        snippet: "Relevant market data and competitor analysis",
-        url: "https://example.com/market-research"
-      }
-    ],
-    summary: "Mock search results for product development research"
-  };
+  let basePrompt = `Professional ${mockupType} photography of a ${subject.category}. `;
+  
+  // Add form and materials description
+  basePrompt += `${subject.form} made from ${subject.materials.join(', ')}. `;
+  
+  // Add color and finish details
+  if (subject.color && subject.finish) {
+    basePrompt += `Color: ${subject.color.base}${subject.color.accents ? ` with ${subject.color.accents}` : ''}. `;
+    basePrompt += `Finish: ${typeof subject.finish === 'object' ? Object.values(subject.finish).join(', ') : subject.finish}. `;
+  }
+  
+  // Add composition and style from settings
+  basePrompt += `Shot in ${settings.composition.orientation} style, ${settings.composition.alignment}, `;
+  basePrompt += `${settings.composition.style}. `;
+  
+  // Add lighting specifications
+  basePrompt += `Lighting: ${settings.lighting.type}, ${settings.lighting.source}, `;
+  basePrompt += `${settings.lighting.intensity}, ${settings.lighting.shadows}. `;
+  
+  // Add background specifications
+  basePrompt += `Background: ${settings.background.type}, ${settings.background.color}, `;
+  basePrompt += `${settings.background.texture}. `;
+  
+  // Add natural imperfections for realism
+  if (subject.natural_imperfections && subject.natural_imperfections.length > 0) {
+    basePrompt += `Realistic details: ${subject.natural_imperfections.join(', ')}. `;
+  }
+  
+  // Add environmental interaction
+  if (subject.environmental_interaction) {
+    basePrompt += `Environmental effects: ${Object.values(subject.environmental_interaction).join(', ')}. `;
+  }
+  
+  // Add style tags
+  basePrompt += `Style: ${settings.style_tags.join(', ')}. `;
+  
+  // Add quality specifications
+  basePrompt += `Ultra high resolution, professional studio quality, photorealistic, detailed textures.`;
+  
+  return basePrompt;
 }
 
-export async function executeProductMockup(
-  productName: string,
-  productDescription: string,
-  mockupType: string,
-  aestheticStyle?: string,
-  backgroundStyle?: string,
-  projectId?: string,
-  userId?: string
-): Promise<any> {
-  console.log(`Generating mockup for: ${productName} (type: ${mockupType})`);
-  
-  const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-  const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  
-  if (!openAIApiKey) {
-    throw new Error('OpenAI API key not configured');
-  }
-
-  // Build detailed prompt for image generation
+// Fallback prompt generation for when JSON generation fails
+function generateFallbackPrompt(
+  productName: string, 
+  productDescription: string, 
+  mockupType: string, 
+  aestheticStyle?: string, 
+  backgroundStyle?: string
+): string {
   let prompt = "";
   
   switch (mockupType) {
@@ -165,11 +221,187 @@ export async function executeProductMockup(
 
   // Add quality and resolution specifications
   prompt += " Ultra high resolution, professional quality, detailed and realistic.";
+  
+  return prompt;
+}
 
-  console.log(`Generated image prompt: ${prompt}`);
+// Generate subject JSON from product brief
+async function generateSubjectJSON(productBrief: any, openAIApiKey: string): Promise<any> {
+  const subjectPrompt = `You are a photography expert and JSON-generating assistant. Your task is to produce the "subject" block for a photorealistic product mockup, describing a single physical item in a fixed studio style.
+
+Scene Context (fixed)
+Image Type: Studio portrait
+Backdrop: White-to-gray gradient
+Framing: Centered, upright, medium-close crop
+Lighting: Soft, directional with subtle gloss and shadow
+
+Output Format
+Return a valid JSON block inside:
+"subject": {
+// your output here
+}
+
+Required Fields
+Describe only what would be visible in a real studio image:
+"category" — general product type (e.g., "skincare", "apparel", "hardware")
+"form" — physical shape and subcomponents (e.g., "ergonomic handle with curved blade")
+"materials" — list of surface-level visible materials with texture hints
+"finish" — surface finish per component (e.g., "glossy enamel", "matte grip")
+"color" — base tone + accent colors visible under directional lighting
+"dimensions" — measurable parts in mm (only include what applies to this object)
+
+Realism Fields (required for believability)
+"natural_imperfections" — minor physical flaws (e.g., scuff, dust, subtle misalignment)
+"environmental_interaction" — how the object physically interacts with light and surface (e.g., shadow pooling, reflection, refraction)
+"manufacturing_artifacts" — signs of production (e.g., seam lines, mold marks, slight parting lines)
+"branding" — always: "status": "unbranded"
+
+Style & Constraints
+Use grounded, tactile, material-specific language (e.g., "frosted PET", "milled aluminum", "polished nylon")
+Describe only what would be observable in a real studio photograph — omit marketing, usage, or speculative content
+Do not invent features not stated or visible
+Do not include lighting, backdrop, or any non-object elements
+Return valid, copy-pasteable JSON only
+
+Product Details:
+${JSON.stringify(productBrief, null, 2)}`;
 
   try {
-    // Generate image with DALL-E
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: 'You are a photography expert who generates precise JSON descriptions for product photography. Always return valid JSON only.' },
+          { role: 'user', content: subjectPrompt }
+        ],
+        temperature: 0.3,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices[0]?.message?.content || '';
+    
+    // Extract JSON from response - improved regex for nested objects
+    const jsonMatch = content.match(/"subject":\s*(\{[\s\S]*?\})\s*$/m) || content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const jsonStr = jsonMatch[1] || jsonMatch[0];
+      return JSON.parse(jsonStr);
+    }
+    
+    // Try parsing full response as JSON
+    try {
+      const parsed = JSON.parse(content);
+      return parsed.subject || parsed;
+    } catch {
+      // If all parsing fails, extract any JSON-like structure
+      const fallbackMatch = content.match(/\{[\s\S]*\}/);
+      if (fallbackMatch) {
+        return JSON.parse(fallbackMatch[0]);
+      }
+      throw new Error('No valid JSON found in response');
+    }
+  } catch (error) {
+    console.error('Error generating subject JSON:', error);
+    // Return fallback subject JSON
+    return {
+      "category": "product",
+      "form": "basic product form",
+      "materials": ["unknown material"],
+      "finish": { "base": "standard finish" },
+      "color": { "base": "neutral tone" },
+      "dimensions": { "height": "standard size" },
+      "natural_imperfections": ["minor surface variations"],
+      "environmental_interaction": { "surface_contact": "standard shadow" },
+      "manufacturing_artifacts": ["standard production marks"],
+      "branding": { "status": "unbranded" }
+    };
+  }
+}
+
+// Tool execution functions
+export async function executeWebSearch(query: string, focus?: string): Promise<any> {
+  console.log(`Executing web search: ${query} (focus: ${focus})`);
+  
+  // This would integrate with a real search API
+  // For now, return mock data that would be useful for product development
+  return {
+    query,
+    focus,
+    results: [
+      {
+        title: "Market Research Results",
+        snippet: "Relevant market data and competitor analysis",
+        url: "https://example.com/market-research"
+      }
+    ],
+    summary: "Mock search results for product development research"
+  };
+}
+
+export async function executeProductMockup(
+  productName: string,
+  productDescription: string,
+  mockupType: string,
+  aestheticStyle?: string,
+  backgroundStyle?: string,
+  projectId?: string,
+  userId?: string,
+  productBrief?: any
+): Promise<any> {
+  console.log(`Generating advanced JSON-based mockup for: ${productName} (type: ${mockupType})`);
+  
+  const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  
+  if (!openAIApiKey) {
+    throw new Error('OpenAI API key not configured');
+  }
+
+  let subjectJSON = null;
+  let completeJSON = null;
+  let prompt = "";
+
+  try {
+    // Step 1: Generate subject JSON from product brief if available
+    if (productBrief) {
+      console.log('Generating subject JSON from product brief...');
+      subjectJSON = await generateSubjectJSON(productBrief, openAIApiKey);
+      console.log('Generated subject JSON:', JSON.stringify(subjectJSON, null, 2));
+      
+      // Step 2: Combine with fixed image settings
+      completeJSON = {
+        ...FIXED_IMAGE_SETTING,
+        subject: subjectJSON
+      };
+      
+      // Step 3: Generate detailed prompt from JSON
+      prompt = generateAdvancedPromptFromJSON(completeJSON, mockupType);
+    } else {
+      // Fallback to original prompt generation
+      prompt = generateFallbackPrompt(productName, productDescription, mockupType, aestheticStyle, backgroundStyle);
+    }
+  } catch (error) {
+    console.error('Error in JSON generation, falling back to simple prompt:', error);
+    prompt = generateFallbackPrompt(productName, productDescription, mockupType, aestheticStyle, backgroundStyle);
+  }
+
+  console.log(`Final generated prompt: ${prompt}`);
+
+  try {
+    // Generate image with DALL-E using optimized dimensions
+    const imageWidth = completeJSON?.dimensions?.width || 768;
+    const imageHeight = completeJSON?.dimensions?.height || 960;
+    
     const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
@@ -180,7 +412,7 @@ export async function executeProductMockup(
         model: 'dall-e-3',
         prompt: prompt,
         n: 1,
-        size: '1024x1024',
+        size: imageWidth === imageHeight ? '1024x1024' : '1024x1792',
         quality: 'hd',
         response_format: 'url'
       }),
@@ -266,7 +498,11 @@ export async function executeProductMockup(
                 prompt: prompt,
                 public_url: permanentUrl,
                 file_path: filePath,
-                filename: filename
+                filename: filename,
+                subject_json: subjectJSON,
+                complete_prompt_json: completeJSON,
+                image_width: imageWidth,
+                image_height: imageHeight
               })
               .select()
               .single();
@@ -364,7 +600,8 @@ export async function executeTool(toolName: string, parameters: any): Promise<an
         parameters.aesthetic_style,
         parameters.background_style,
         parameters.project_id,
-        parameters.user_id
+        parameters.user_id,
+        parameters.product_brief
       );
     
     case "research_manufacturing_data":
