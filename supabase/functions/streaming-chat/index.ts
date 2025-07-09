@@ -315,49 +315,30 @@ async function buildPromptWithAI(productName: string, useCase: string, aesthetic
   return finalPrompt;
 }
 
-const GENERATING_PROMPT_BASE = `You are an expert industrial designer and product strategist. CRITICAL INSTRUCTION: You MUST output ONLY a valid JSON object. NO conversation. NO explanations. NO markdown formatting. ONLY JSON.
+const GENERATING_PROMPT_BASE = `You are an expert industrial designer and product strategist. 
 
 CONVERSATION HISTORY: {{CONVERSATION_HISTORY}}
 
 Your task is to take the user's input from the conversation history and create a detailed product brief using the enhanced template provided below.
 
-CRITICAL REQUIREMENTS:
+MANDATORY REQUIREMENTS:
 - MUST include a "product_name" field with a creative, marketable product name
-- The product_name should be derived from the user's description and what you deduce about the positioning from the brand inpsiration but MUST NOT include the specific brand name from the brand inspiration 
-- ONLY output valid JSON object
-- NO other text before or after the JSON
-- NO conversational messages
-- NO explanations or confirmations
-- NO markdown code blocks or formatting
+- The product_name should be derived from the user's description and what you deduce about the positioning from the brand inspiration but MUST NOT include the specific brand name from the brand inspiration 
+- MUST call the generate_product_mockup function to create a product image
+- You MUST use the available tools - this is not optional
 
-AVAILABLE TOOLS:
-You have access to powerful tools to enhance your product brief generation:
-
-1. generate_product_mockup: Create professional product mockups automatically
-   - Use this to generate realistic product images that match your specifications
-   - Available types: product_photography, technical_drawing, lifestyle_context, packaging_design
-   - Always generate at least one product_photography mockup for visualizing the product
-
-2. web_search: Research current market data and competitor analysis
-   - Use this to validate market positioning and pricing
-   - Research similar products and manufacturing processes
-   - Get current industry trends and regulations
-
-3. research_manufacturing_data: Get manufacturing feasibility and cost data
-   - Use this to ensure your specifications are manufacturable
-   - Research material costs and production processes
-   - Validate certifications and compliance requirements
-
-USAGE GUIDELINES:
-- ALWAYS generate at least one product mockup for visualization
-- Use web search to validate market positioning and competitive landscape
-- Use manufacturing research to ensure feasibility and accurate costing
-- Tools should enhance the quality and accuracy of your product brief
-- Generate the JSON first, then use tools to enhance specific aspects
+WORKFLOW:
+1. First, respond with the complete JSON product brief using the template below
+2. Then IMMEDIATELY call the generate_product_mockup function with these parameters:
+   - product_name: Use the exact product name from your JSON brief
+   - product_description: Detailed description including materials, form factor, and aesthetic elements
+   - mockup_type: "product_photography" 
+   - aesthetic_style: Based on the target_aesthetic from your brief
+   - background_style: "white_background"
 
 {{ENHANCED_TEMPLATE}}
 
-GENERATE THE JSON NOW. NOTHING ELSE. ENSURE THE product_name FIELD IS ALWAYS INCLUDED.`;
+Remember: You must both provide the JSON product brief AND call the generate_product_mockup function. Both are required.`;
 
 const EDITING_PROMPT = `You are a product development expert helping to refine an existing product brief through conversation.
 
@@ -638,6 +619,8 @@ serve(async (req) => {
           },
           ...userMessages
         ],
+        tools: TOOLS,
+        tool_choice: "auto",
         temperature: 0.7,
         max_tokens: 2000,
         stream: false,
@@ -673,9 +656,35 @@ serve(async (req) => {
       console.log('Extracted content length:', content.length);
       console.log('Content preview:', content.substring(0, 300));
       
-      // For now, since we're using Chat Completions without function calling,
-      // we won't generate images automatically. The JSON response should contain
-      // the product brief which we'll parse and save.
+      // Check if there are tool calls to execute
+      if (choice.message?.tool_calls && choice.message.tool_calls.length > 0) {
+        console.log('Found tool calls:', choice.message.tool_calls.length);
+        
+        // Execute tool calls
+        for (const toolCall of choice.message.tool_calls) {
+          console.log('Executing tool call:', toolCall.function.name);
+          
+          try {
+            const toolResult = await executeTool(toolCall.function.name, JSON.parse(toolCall.function.arguments));
+            console.log('Tool execution result:', toolResult);
+            
+            // Handle different tool types
+            if (toolCall.function.name === 'generate_product_mockup' && toolResult.success) {
+              generatedImages.push(toolResult.image_url);
+              console.log('Added generated image to results');
+            } else if (toolCall.function.name === 'web_search') {
+              console.log('Web search results:', toolResult);
+              // Web search results can be used to enhance content
+            } else if (toolCall.function.name === 'research_manufacturing_data') {
+              console.log('Manufacturing research results:', toolResult);
+              // Manufacturing data can be used to enhance product brief
+            }
+          } catch (error) {
+            console.error('Error executing tool:', toolCall.function.name, error);
+            // Continue processing other tools even if one fails
+          }
+        }
+      }
       
     } else {
       console.error('Unexpected response format - full data:', JSON.stringify(data, null, 2));

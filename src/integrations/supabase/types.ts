@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      generated_images: {
+        Row: {
+          aesthetic_style: string | null
+          background_style: string | null
+          created_at: string
+          file_path: string
+          filename: string
+          id: string
+          image_type: string
+          mockup_type: string
+          project_id: string
+          prompt: string
+          public_url: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          aesthetic_style?: string | null
+          background_style?: string | null
+          created_at?: string
+          file_path: string
+          filename: string
+          id?: string
+          image_type: string
+          mockup_type: string
+          project_id: string
+          prompt: string
+          public_url: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          aesthetic_style?: string | null
+          background_style?: string | null
+          created_at?: string
+          file_path?: string
+          filename?: string
+          id?: string
+          image_type?: string
+          mockup_type?: string
+          project_id?: string
+          prompt?: string
+          public_url?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -42,6 +90,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          image_urls: string[] | null
           openai_request_details: Json | null
           parent_project_id: string | null
           product_brief: Json
@@ -54,6 +103,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          image_urls?: string[] | null
           openai_request_details?: Json | null
           parent_project_id?: string | null
           product_brief: Json
@@ -66,6 +116,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          image_urls?: string[] | null
           openai_request_details?: Json | null
           parent_project_id?: string | null
           product_brief?: Json

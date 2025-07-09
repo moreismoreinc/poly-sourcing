@@ -123,6 +123,9 @@ export async function executeProductMockup(
   console.log(`Generating mockup for: ${productName} (type: ${mockupType})`);
   
   const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  
   if (!openAIApiKey) {
     throw new Error('OpenAI API key not configured');
   }
@@ -164,6 +167,7 @@ export async function executeProductMockup(
   console.log(`Generated image prompt: ${prompt}`);
 
   try {
+    // Generate image with DALL-E
     const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
@@ -195,13 +199,89 @@ export async function executeProductMockup(
 
     console.log(`Generated image URL: ${imageUrl}`);
 
-    return {
-      image_url: imageUrl,
-      prompt: prompt,
-      mockup_type: mockupType,
-      product_name: productName,
-      success: true
-    };
+    // Download and save image to Supabase Storage
+    try {
+      if (supabaseUrl && supabaseServiceKey) {
+        // Import Supabase client
+        const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.2/+esm');
+        const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+        // Download image from OpenAI
+        const imageResponse = await fetch(imageUrl);
+        if (!imageResponse.ok) {
+          throw new Error(`Failed to download image: ${imageResponse.status}`);
+        }
+
+        const imageBlob = await imageResponse.blob();
+        const imageBuffer = await imageBlob.arrayBuffer();
+
+        // Generate filename
+        const timestamp = Date.now();
+        const filename = `${productName.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${mockupType}-${timestamp}.png`;
+        const filePath = `generated/${filename}`;
+
+        // Upload to Supabase Storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(filePath, imageBuffer, {
+            contentType: 'image/png',
+            upsert: false
+          });
+
+        if (uploadError) {
+          console.error('Supabase upload error:', uploadError);
+          // Return temporary URL as fallback
+          return {
+            image_url: imageUrl,
+            prompt: prompt,
+            mockup_type: mockupType,
+            product_name: productName,
+            success: true,
+            temporary: true
+          };
+        }
+
+        // Get public URL
+        const { data: publicUrlData } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(filePath);
+
+        const permanentUrl = publicUrlData.publicUrl;
+        console.log(`Image saved to Supabase Storage: ${permanentUrl}`);
+
+        return {
+          image_url: permanentUrl,
+          prompt: prompt,
+          mockup_type: mockupType,
+          product_name: productName,
+          success: true,
+          temporary: false,
+          storage_path: filePath
+        };
+
+      } else {
+        console.log('Supabase not configured, returning temporary URL');
+        return {
+          image_url: imageUrl,
+          prompt: prompt,
+          mockup_type: mockupType,
+          product_name: productName,
+          success: true,
+          temporary: true
+        };
+      }
+    } catch (storageError) {
+      console.error('Error saving to storage:', storageError);
+      // Return temporary URL as fallback
+      return {
+        image_url: imageUrl,
+        prompt: prompt,
+        mockup_type: mockupType,
+        product_name: productName,
+        success: true,
+        temporary: true
+      };
+    }
 
   } catch (error) {
     console.error('Error generating product mockup:', error);
