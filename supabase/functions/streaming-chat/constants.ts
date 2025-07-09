@@ -13,6 +13,14 @@ RULES:
 7. Analyze each product individually - avoid generic responses
 8. Match aesthetic style authentically, not stereotypical category colors
 
+FAILURE PREVENTION RULES:
+1. No theoretical materials or unproven processes
+2. No dimensions requiring custom packaging systems
+3. No price points ignoring material/manufacturing costs
+4. No claims requiring extensive testing without realistic budget/timeline
+5. No processes requiring specialized equipment unavailable to contract manufacturers
+6. When uncertain about manufacturability, default to simpler, proven approaches
+
 OUTPUT: Generate ONLY valid JSON matching the exact schema. No additional text or explanations.`;
 
 // Available product categories
@@ -94,11 +102,83 @@ Consider the food type and create appropriate:
 - Size appropriate for this food type and consumption pattern
 - Complete manufacturing recipe with exact ingredients, quantities, and production instructions suitable for contract manufacturing
 
-CRITICAL: Create a detailed recipe section with:
-1. Ingredients list with exact quantities (weights/percentages for manufacturing)
-2. Manufacturing instructions that a contract manufacturer can follow
-3. Quality control specifications
-4. Shelf life and storage requirements
+CONTRACT MANUFACTURER REQUIREMENTS:
+You MUST base all formulations on established commercial products that already exist in the market. 
+
+MANDATORY CONSTRAINTS:
+1. ONLY use ingredient ratios from proven commercial formulations (reference similar products on store shelves)
+2. ONLY specify manufacturing processes that use standard food industry equipment
+3. ONLY include quality control parameters that are routinely measured in commercial facilities
+4. ONLY suggest formulations that have been successfully manufactured at scale by multiple companies
+
+REFERENCE DATABASE - Use these proven formulation ranges:
+
+SALAD DRESSINGS (like ranch, Italian, French):
+- Oil content: 20-35% (NEVER exceed 35% - emulsion instability)
+- Vinegar/acid: 8-15% (for preservation and flavor)
+- Water: 25-45% (for proper viscosity)
+- Emulsifiers: 0.5-2% (mustard, egg, lecithin)
+- Thickeners: 0.1-0.5% (xanthan gum standard)
+- Salt: 1-3% (flavor and preservation)
+- Sugar: 2-8% (balance acidity)
+
+SAUCES (like ketchup, barbecue, hot sauce):
+- Tomato base: 60-80% (for tomato-based)
+- Vinegar: 5-12% (preservation)
+- Sugar: 8-20% (flavor balance)
+- Salt: 2-4% (preservation and taste)
+- Spices: 1-3% total
+- Thickeners: 0.1-0.3% if needed
+
+SNACK BARS:
+- Nuts/seeds: 30-50%
+- Dried fruit: 15-30%
+- Binding syrup: 15-25%
+- Protein powder: 10-20% if protein bar
+- Salt: 0.3-0.8%
+
+BEVERAGES:
+- Water base: 85-95%
+- Sweeteners: 8-12% (sugar/alternative)
+- Acid: 0.1-0.3% (citric acid typical)
+- Flavoring: 0.5-2%
+- Preservatives: 0.05-0.1%
+
+MANDATORY PROCESS CONSTRAINTS:
+- Mixing: Use only standard industrial mixers (planetary, ribbon, high-shear)
+- Heating: Standard jacketed kettles or heat exchangers (no specialized equipment)
+- Filling: Gravity or piston fillers (standard in all co-packers)
+- Pasteurization: Only if product requires it and co-packer has capability
+
+QUALITY CONTROL - ONLY specify these standard tests:
+- pH measurement (all facilities have pH meters)
+- Viscosity (standard viscometers)
+- Moisture content (standard ovens)
+- Salt content (conductivity meters)
+- Temperature monitoring (standard thermometers)
+- Visual inspection (standard practice)
+
+FAIL-SAFE RULES:
+❌ NEVER specify ingredient percentages outside proven commercial ranges
+❌ NEVER require specialized equipment not found in standard co-packers
+❌ NEVER suggest novel ingredient combinations without commercial precedent
+❌ NEVER specify quality tests requiring specialized lab equipment
+❌ NEVER create emulsions with >35% oil content
+❌ NEVER specify pH outside safe ranges (below 3.8 for shelf stability or above 4.6 without other preservation)
+
+✅ ALWAYS reference existing commercial products as formulation basis
+✅ ALWAYS use ingredient ranges from the reference database above
+✅ ALWAYS specify standard food industry equipment
+✅ ALWAYS include proven preservation systems
+✅ ALWAYS validate emulsion ratios against commercial standards
+
+VALIDATION CHECKLIST - Before outputting any formulation:
+1. Can I buy a similar product at the grocery store? (If no, it's probably too experimental)
+2. Are all ingredient percentages within proven commercial ranges?
+3. Does the process use only standard co-packer equipment?
+4. Are all quality tests standard in commercial facilities?
+5. Is the preservation system proven and FDA-compliant?
+
 
 JSON Response (customize for this specific food product):
 {{"product_name": "{product_name}", "product_id": "{product_id}", "category": "food", "positioning": "{positioning}",
