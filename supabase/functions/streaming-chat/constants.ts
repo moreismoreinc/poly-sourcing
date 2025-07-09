@@ -92,20 +92,45 @@ Consider the food type and create appropriate:
 - Materials with appropriate barrier properties for this food type
 - Colors and design that make this food appealing and match the "{aesthetic}" style
 - Size appropriate for this food type and consumption pattern
+- Complete manufacturing recipe with exact ingredients, quantities, and production instructions suitable for contract manufacturing
+
+CRITICAL: Create a detailed recipe section with:
+1. Ingredients list with exact quantities (weights/percentages for manufacturing)
+2. Manufacturing instructions that a contract manufacturer can follow
+3. Quality control specifications
+4. Shelf life and storage requirements
 
 JSON Response (customize for this specific food product):
 {{"product_name": "{product_name}", "product_id": "{product_id}", "category": "food", "positioning": "{positioning}",
 "intended_use": "{use_case}", "target_aesthetic": "{aesthetic}",
 "form_factor": "package_format_for_this_food_type",
 "dimensions": {{"height_mm": realistic_height, "width_mm": realistic_width, "depth_mm": realistic_depth}},
-"materials": {{"packaging": "food_safe_package_material", "sealing": "closure_or_seal_type", "graphics": "printing_substrate"}},
+"recipe": {{
+  "batch_size": "production_batch_size_with_units",
+  "ingredients": [
+    {{"name": "ingredient_name", "quantity": "exact_amount_with_units", "percentage": "percentage_of_total_weight", "function": "purpose_in_formulation", "supplier_spec": "food_grade_specification"}},
+    {{"name": "ingredient_name_2", "quantity": "exact_amount_with_units", "percentage": "percentage_of_total_weight", "function": "purpose_in_formulation", "supplier_spec": "food_grade_specification"}}
+  ],
+  "manufacturing_instructions": "Step-by-step manufacturing process suitable for contract manufacturing: 1. Preparation phase with specific temperatures, times, and equipment requirements. 2. Mixing/processing phase with exact parameters (speed, temperature, duration). 3. Quality control checkpoints with specific tests and tolerances. 4. Packaging phase with sterility and sealing requirements. 5. Final inspection and labeling specifications.",
+  "quality_control": {{
+    "critical_control_points": ["temperature_control", "moisture_content", "ph_levels", "specific_quality_parameters"],
+    "testing_requirements": ["microbiological_testing", "nutritional_analysis", "shelf_life_testing"],
+    "acceptance_criteria": "specific_measurable_quality_standards"
+  }},
+  "shelf_life": "duration_with_storage_conditions",
+  "storage_requirements": "specific_temperature_humidity_light_requirements",
+  "allergen_information": ["list_of_allergens_present"],
+  "nutritional_profile": "approximate_calories_macros_per_serving"
+}},
+"materials": {{"packaging": "food_safe_package_material_with_barrier_properties", "sealing": "closure_or_seal_type", "graphics": "printing_substrate"}},
 "finishes": {{"packaging": "package_surface_finish", "sealing": "closure_finish", "graphics": "print_finish_type"}},
 "color_scheme": {{"base": "appetizing_color_matching_aesthetic", "accents": ["colors_for_this_style"]}},
 "natural_imperfections": null,
 "target_price_usd": realistic_price_in_range,
-"certifications": ["food_safety_certifications"],
-"variants": ["size_or_flavor_variants"],
-"notes": "food_safety_and_preservation_requirements"}}`,
+"certifications": ["FDA_registration", "HACCP_compliance", "relevant_food_safety_certifications"],
+"variants": ["size_or_flavor_variants_with_recipe_modifications"],
+"manufacturing_notes": "specific_equipment_requirements_minimum_order_quantities_and_production_considerations",
+"regulatory_compliance": "FDA_nutritional_labeling_requirements_and_claims_substantiation"}}`,
 
   wearable: `Create wearable: {product_name} for {use_case}
 Style: {aesthetic} | Market: {positioning} | Budget: {price_range}
