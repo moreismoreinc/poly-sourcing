@@ -149,27 +149,9 @@ function generateAdvancedPromptFromJSON(completeJSON: any, mockupType: string): 
     subject: completeJSON.subject
   };
   
-  const promptPrefix = `Act as a studio product photography expert with no prior context or memory. Generate a photorealistic image based strictly on the following structured JSON.
+  const promptPrefix = `Studio product photography expert: Generate photorealistic image from this JSON. Rules: Follow JSON exactly, no additions. Style: ${completeJSON.composition?.orientation || 'centered'}, ${completeJSON.lighting?.type || 'directional lighting'}, ${completeJSON.background?.type || 'white background'}, editorial realism with imperfections.
 
-You must adhere precisely to the following visual rules:
-
-• DO NOT add, omit, or reinterpret any scene elements not described in the JSON.
-• DO NOT alter the camera angle, perspective, background, lighting, or rendering style.
-• DO NOT introduce props, text, gradients, flares, or abstract render effects.
-
-Photographic style guidelines:
-- Composition: top-down flat lay or upright portrait, centered with tight crop and soft margin
-- Lighting: directional sunlight simulation with bounce fill and highlight bloom
-- Shadows: crisp drop shadows with slight halo and soft edge split
-- Background: clean white or tonal backdrop with slight grain and vignetting
-- Finish: show gloss, texture, refraction, and surface realism faithfully
-- Detail: show imperfections, reflections, mold lines, dust, and seam artifacts
-
-The result must appear as a high-resolution product photograph in a studio lighting environment with **editorial realism and physical believability**.
-
-Render the image using the following JSON as the sole visual definition:
-
-${JSON.stringify(structuredJSON, null, 2)}`;
+JSON: ${JSON.stringify(structuredJSON, null, 1)}`;
   
   return promptPrefix;
 }
