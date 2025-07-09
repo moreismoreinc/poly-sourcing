@@ -73,6 +73,16 @@ const isCollapsibleField = (value: any): boolean => {
   return false;
 };
 
+// Helper function to convert text to sentence case
+const toSentenceCase = (text: string): string => {
+  if (!text || typeof text !== 'string') return text;
+  
+  return text
+    .toLowerCase()
+    .replace(/^\w/, (c) => c.toUpperCase())
+    .replace(/\.\s+\w/g, (match) => match.toUpperCase());
+};
+
 // Render simple field value
 const renderSimpleValue = (value: any): React.ReactNode => {
   if (value === null || value === undefined) return <span className="text-muted-foreground">Not specified</span>;
@@ -90,20 +100,20 @@ const renderSimpleValue = (value: any): React.ReactNode => {
     if (value.startsWith('http')) {
       return <a href={value} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{value}</a>;
     }
-    return <span className="font-medium">{value}</span>;
+    return <span className="font-medium">{toSentenceCase(value)}</span>;
   }
   
   if (Array.isArray(value) && value.length <= 3) {
     return (
       <div className="flex flex-wrap gap-1">
         {value.map((item, idx) => (
-          <Badge key={idx} variant="outline">{String(item)}</Badge>
+          <Badge key={idx} variant="outline">{toSentenceCase(String(item))}</Badge>
         ))}
       </div>
     );
   }
   
-  return <span className="font-medium">{String(value)}</span>;
+  return <span className="font-medium">{toSentenceCase(String(value))}</span>;
 };
 
 // Render complex object content
@@ -125,7 +135,7 @@ const renderComplexContent = (obj: any): React.ReactNode => {
                 ))}
               </div>
             ) : (
-              <Badge variant="outline">{String(item)}</Badge>
+              <Badge variant="outline">{toSentenceCase(String(item))}</Badge>
             )}
           </div>
         ))}
@@ -184,8 +194,8 @@ const ProductBriefDisplay: React.FC<ProductBriefDisplayProps> = ({ brief, produc
     );
   }
 
-  // Separate fields into categories for better organization
-  const basicFields = ['product_name', 'product_id', 'category', 'positioning', 'intended_use', 'target_aesthetic', 'form_factor'];
+  // Separate fields into categories for better organization (excluding product_id)  
+  const basicFields = ['product_name', 'category', 'positioning', 'intended_use', 'target_aesthetic', 'form_factor'];
   const specFields = ['dimensions', 'materials', 'finishes', 'color_scheme', 'natural_imperfections'];
   const businessFields = ['target_price_usd', 'certifications', 'variants'];
   const complexFields = ['recipe', 'quality_control', 'manufacturing_notes', 'regulatory_compliance'];
@@ -200,6 +210,9 @@ const ProductBriefDisplay: React.FC<ProductBriefDisplayProps> = ({ brief, produc
     };
     
     Object.entries(brief).forEach(([key, value]) => {
+      // Skip product_id field
+      if (key === 'product_id') return;
+      
       if (basicFields.includes(key)) categories.basic.push([key, value]);
       else if (specFields.includes(key)) categories.specifications.push([key, value]);
       else if (businessFields.includes(key)) categories.business.push([key, value]);

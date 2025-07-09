@@ -19,8 +19,10 @@ const ProductPreview = ({ brief, productName }: ProductPreviewProps) => {
             <Card className="h-full bg-card shadow-none rounded-lg overflow-hidden">
               <CardHeader className="pb-3">
               </CardHeader>
-              <CardContent className="overflow-y-auto h-[calc(100%-80px)]">
-                <ProductBriefDisplay brief={brief} productName={productName} />
+              <CardContent className="overflow-y-auto h-[calc(100%-80px)] pr-4">
+                <div className="max-h-full">
+                  <ProductBriefDisplay brief={brief} productName={productName} />
+                </div>
               </CardContent>
             </Card>
           </div>
