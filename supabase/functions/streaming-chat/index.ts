@@ -604,7 +604,9 @@ serve(async (req) => {
         msg.content.includes('Understood!') || msg.content.includes('Cool!') ||
         msg.content.includes('Awesome!') || msg.content.includes('I\'ll start cooking') || 
         msg.content.includes('Hold my beer') || msg.content.includes('Let me work my magic') || 
-        msg.content.includes('Time to create') || msg.content.includes('Rolling up my sleeves')
+        msg.content.includes('Time to create') || msg.content.includes('Rolling up my sleeves') ||
+        msg.content.includes('🧑‍🍳') || msg.content.includes('🍺') || msg.content.includes('✨') ||
+        msg.content.includes('🚀') || msg.content.includes('💪')
       );
       
       console.log('Has generation messages:', hasGenerationMessages);
@@ -641,7 +643,7 @@ serve(async (req) => {
       }
       
       // If we have sent the initial messages, proceed with generation
-      console.log('Initial messages sent, proceeding with generation');
+      console.log('Generation messages already sent, proceeding with generation');
       
       // Build enhanced prompt using AI-powered category detection
       const enhancedTemplate = await buildPromptWithAI(extractedProductName, useCase, aesthetic, openAIApiKey);
