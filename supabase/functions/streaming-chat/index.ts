@@ -2,7 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.2/+esm';
 import { ENHANCED_SYSTEM_PROMPT, TEMPLATES, PRICE_RANGES, AVAILABLE_CATEGORIES, type ProductCategory } from './constants.ts';
-import { TOOLS, executeTool } from './tools.ts';
+import { TOOLS, executeTool, executeProductMockup } from './tools.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
