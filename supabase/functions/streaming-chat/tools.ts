@@ -118,7 +118,9 @@ export async function executeProductMockup(
   productDescription: string,
   mockupType: string,
   aestheticStyle?: string,
-  backgroundStyle?: string
+  backgroundStyle?: string,
+  projectId?: string,
+  userId?: string
 ): Promise<any> {
   console.log(`Generating mockup for: ${productName} (type: ${mockupType})`);
   
@@ -249,6 +251,36 @@ export async function executeProductMockup(
         const permanentUrl = publicUrlData.publicUrl;
         console.log(`Image saved to Supabase Storage: ${permanentUrl}`);
 
+        // Save metadata to generated_images table if projectId and userId are provided
+        if (projectId && userId) {
+          try {
+            const { data: imageData, error: dbError } = await supabase
+              .from('generated_images')
+              .insert({
+                project_id: projectId,
+                user_id: userId,
+                image_type: 'product_mockup',
+                mockup_type: mockupType,
+                aesthetic_style: aestheticStyle || 'modern',
+                background_style: backgroundStyle || 'white_background',
+                prompt: prompt,
+                public_url: permanentUrl,
+                file_path: filePath,
+                filename: filename
+              })
+              .select()
+              .single();
+
+            if (dbError) {
+              console.error('Error saving image metadata to database:', dbError);
+            } else {
+              console.log('Image metadata saved to database:', imageData?.id);
+            }
+          } catch (dbError) {
+            console.error('Error inserting image metadata:', dbError);
+          }
+        }
+
         return {
           image_url: permanentUrl,
           prompt: prompt,
@@ -330,7 +362,9 @@ export async function executeTool(toolName: string, parameters: any): Promise<an
         parameters.product_description,
         parameters.mockup_type,
         parameters.aesthetic_style,
-        parameters.background_style
+        parameters.background_style,
+        parameters.project_id,
+        parameters.user_id
       );
     
     case "research_manufacturing_data":

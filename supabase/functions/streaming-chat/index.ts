@@ -324,21 +324,17 @@ Your task is to take the user's input from the conversation history and create a
 MANDATORY REQUIREMENTS:
 - MUST include a "product_name" field with a creative, marketable product name
 - The product_name should be derived from the user's description and what you deduce about the positioning from the brand inspiration but MUST NOT include the specific brand name from the brand inspiration 
-- MUST call the generate_product_mockup function to create a product image
-- You MUST use the available tools - this is not optional
+- Respond ONLY with the JSON product brief - do not call any tools or generate images
+- Focus on creating a comprehensive, manufacturing-ready product specification
 
 WORKFLOW:
-1. First, respond with the complete JSON product brief using the template below
-2. Then IMMEDIATELY call the generate_product_mockup function with these parameters:
-   - product_name: Use the exact product name from your JSON brief
-   - product_description: Detailed description including materials, form factor, and aesthetic elements
-   - mockup_type: "product_photography" 
-   - aesthetic_style: Based on the target_aesthetic from your brief
-   - background_style: "white_background"
+1. Create a complete JSON product brief using the template below
+2. Return ONLY the JSON object, no additional text or markdown formatting
+3. Do not call any tools - image generation will be handled separately
 
 {{ENHANCED_TEMPLATE}}
 
-Remember: You must both provide the JSON product brief AND call the generate_product_mockup function. Both are required.`;
+Remember: Respond with ONLY the JSON product brief. No tools, no images, just the structured product data.`;
 
 const EDITING_PROMPT = `You are a product development expert helping to refine an existing product brief through conversation.
 
@@ -518,6 +514,51 @@ async function saveProjectWithVersion(userId: string, productBrief: any, rawAiOu
   }
 }
 
+// Background function to generate images for a project
+async function generateProductImagesForProject(
+  project: any, 
+  productBrief: any, 
+  openAIApiKey: string, 
+  userId: string
+) {
+  try {
+    console.log('Generating images for project:', project.id);
+    
+    const productName = productBrief.product_name || 'Product';
+    const productDescription = `${productBrief.category || ''} ${productBrief.intended_use || ''} made of ${productBrief.materials?.join(', ') || 'premium materials'} with ${productBrief.target_aesthetic || 'modern'} aesthetic`;
+    const aestheticStyle = productBrief.target_aesthetic || 'modern minimalist';
+    
+    // Generate product mockup
+    const mockupResult = await executeProductMockup(
+      productName,
+      productDescription,
+      'product_photography',
+      aestheticStyle,
+      'white_background',
+      project.id,
+      userId
+    );
+    
+    if (mockupResult.success && mockupResult.image_url) {
+      console.log('Successfully generated product mockup:', mockupResult.image_url);
+      
+      // Update project with image URL
+      await supabase
+        .from('projects')
+        .update({
+          image_urls: [mockupResult.image_url]
+        })
+        .eq('id', project.id);
+        
+      console.log('Project updated with image URL');
+    } else {
+      console.error('Failed to generate product mockup:', mockupResult.error);
+    }
+  } catch (error) {
+    console.error('Error in background image generation:', error);
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -610,21 +651,21 @@ serve(async (req) => {
         'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          ...userMessages
-        ],
-        tools: TOOLS,
-        tool_choice: "auto",
-        temperature: 0.7,
-        max_tokens: 2000,
-        stream: false,
-      }),
+        body: JSON.stringify({
+          model: 'gpt-4.1-2025-04-14',
+          messages: [
+            {
+              role: 'system',
+              content: systemPrompt
+            },
+            ...userMessages
+          ],
+          // Only include tools for non-generating phases to get immediate JSON response
+          ...(state.phase !== 'GENERATING' ? { tools: TOOLS, tool_choice: "auto" } : {}),
+          temperature: 0.7,
+          max_tokens: 2000,
+          stream: false,
+        }),
     });
 
     if (!response.ok) {
@@ -755,6 +796,10 @@ serve(async (req) => {
           
           // Update content for EDITING phase
           finalContent = `Perfect! I've generated your product brief for "${productBrief.product_name}". You can now review it in the preview panel and tell me what you'd like to edit or improve. What changes would you like to make?`;
+          
+          // Generate images in background after saving the project
+          console.log('Starting background image generation...');
+          await generateProductImagesForProject(savedProject, productBrief, openAIApiKey, userId);
         } else {
           console.log('saveProjectWithVersion returned null');
         }
