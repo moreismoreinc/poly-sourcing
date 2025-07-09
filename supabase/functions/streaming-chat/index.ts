@@ -623,7 +623,7 @@ serve(async (req) => {
       content: m.content
     }));
 
-    const response = await fetch('https://api.openai.com/v1/responses', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
@@ -631,11 +631,15 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'gpt-4.1-2025-04-14',
-        instructions: systemPrompt,
-        input: userMessages.filter(m => m.role === 'user'),
-        tools: TOOLS,
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt
+          },
+          ...userMessages
+        ],
         temperature: 0.7,
-        max_output_tokens: 2000,
+        max_tokens: 2000,
         stream: false,
       }),
     });
@@ -652,57 +656,30 @@ serve(async (req) => {
     console.log('Response status:', response.status);
     console.log('Response data structure:', JSON.stringify(data, null, 2));
     console.log('Data keys:', Object.keys(data));
-    console.log('Has output:', !!data.output);
-    console.log('Output length:', data.output?.length || 0);
+    console.log('Has choices:', !!data.choices);
+    console.log('Choices length:', data.choices?.length || 0);
 
-    // Handle Responses API format correctly
+    // Handle standard Chat Completions API format
     let content = '';
     let generatedImages: string[] = [];
 
-    if (data.output && data.output.length > 0) {
-      console.log('Processing output items...');
+    if (data.choices && data.choices.length > 0) {
+      console.log('Processing chat completion response...');
       
-      // Process all output items (messages and tool calls)
-      for (const outputItem of data.output) {
-        console.log('Output item type:', outputItem.type);
-        
-        if (outputItem.type === 'message' && outputItem.content) {
-          console.log('Processing message content, parts:', outputItem.content.length);
-          for (const contentPart of outputItem.content) {
-            console.log('Content part type:', contentPart.type);
-            if (contentPart.type === 'output_text') {
-              content += contentPart.text;
-              console.log('Added text, total length now:', content.length);
-            }
-          }
-        } else if (outputItem.type === 'tool_call') {
-          console.log('Processing tool call:', outputItem.tool_type);
-          
-          try {
-            // Execute the tool call
-            const toolResult = await executeTool(outputItem.tool_type, outputItem.parameters);
-            console.log('Tool execution result:', toolResult);
-            
-            // Handle different tool types
-            if (outputItem.tool_type === 'generate_product_mockup' && toolResult.success) {
-              generatedImages.push(toolResult.image_url);
-              console.log('Added generated image to results');
-            } else if (outputItem.tool_type === 'web_search') {
-              console.log('Web search results:', toolResult);
-              // Web search results can be used to enhance content
-            } else if (outputItem.tool_type === 'research_manufacturing_data') {
-              console.log('Manufacturing research results:', toolResult);
-              // Manufacturing data can be used to enhance product brief
-            }
-          } catch (error) {
-            console.error('Error executing tool:', outputItem.tool_type, error);
-            // Continue processing other items even if a tool fails
-          }
-        }
-      }
+      // Extract content from the first choice
+      const choice = data.choices[0];
+      content = choice.message?.content || '';
+      
+      console.log('Extracted content length:', content.length);
+      console.log('Content preview:', content.substring(0, 300));
+      
+      // For now, since we're using Chat Completions without function calling,
+      // we won't generate images automatically. The JSON response should contain
+      // the product brief which we'll parse and save.
+      
     } else {
       console.error('Unexpected response format - full data:', JSON.stringify(data, null, 2));
-      throw new Error('No output received from OpenAI API');
+      throw new Error('No choices received from OpenAI API');
     }
     
     console.log('Final extracted content length:', content.length);
