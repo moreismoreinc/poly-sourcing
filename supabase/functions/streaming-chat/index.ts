@@ -321,8 +321,8 @@ CONVERSATION HISTORY: {{CONVERSATION_HISTORY}}
 Your task is to take the user's input from the conversation history and create a detailed product brief using the enhanced template provided below.
 
 CRITICAL REQUIREMENTS:
-- MUST include a "product_name" field with a clear, marketable product name
-- The product_name should be derived from the user's description but refined for commercial use
+- MUST include a "product_name" field with a creative, marketable product name
+- The product_name should be derived from the user's description and what you deduce about the positioning from the brand inpsiration but MUST NOT include the specific brand name from the brand inspiration 
 - ONLY output valid JSON object
 - NO other text before or after the JSON
 - NO conversational messages
