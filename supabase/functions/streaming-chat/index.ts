@@ -613,12 +613,136 @@ serve(async (req) => {
       
       // If this is the first time and we haven't sent the combined messages yet
       if (!hasGenerationMessages) {
-        console.log('First time in GENERATING phase, sending combined acknowledgment and working messages');
+        console.log('First time in GENERATING phase, generating first then sending acknowledgment');
         
-        // Send acknowledgment message
+        // Build enhanced prompt using AI-powered category detection
+        const enhancedTemplate = await buildPromptWithAI(extractedProductName, useCase, aesthetic, openAIApiKey);
+        console.log('Enhanced template built, length:', enhancedTemplate.length);
+        
+        const generatingSystemPrompt = GENERATING_PROMPT_BASE
+          .replace('{{CONVERSATION_HISTORY}}', conversationHistory)
+          .replace('{{ENHANCED_TEMPLATE}}', enhancedTemplate);
+          
+        console.log('System prompt length:', generatingSystemPrompt.length);
+
+        // Convert messages to the proper format for OpenAI API
+        const userMessages = messages.map(m => ({
+          role: m.role,
+          content: m.content
+        }));
+
+        const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4.1-2025-04-14',
+            messages: [
+              {
+                role: 'system',
+                content: generatingSystemPrompt
+              },
+              ...userMessages
+            ],
+            tools: TOOLS,
+            tool_choice: "auto",
+            temperature: 0.7,
+            max_tokens: 2000,
+            stream: false,
+          }),
+        });
+
+        if (!openAIResponse.ok) {
+          const errorText = await openAIResponse.text();
+          console.error('OpenAI API Error:', errorText);
+          throw new Error(`OpenAI API error: ${openAIResponse.status} ${openAIResponse.statusText} - ${errorText}`);
+        }
+
+        const openAIData = await openAIResponse.json();
+        console.log('Generation completed, processing response...');
+
+        // Extract content from the response
+        let generatedContent = '';
+        let generatedImages: string[] = [];
+
+        if (openAIData.choices && openAIData.choices.length > 0) {
+          const choice = openAIData.choices[0];
+          generatedContent = choice.message?.content || '';
+          
+          // Handle tool calls for image generation
+          if (choice.message?.tool_calls && choice.message.tool_calls.length > 0) {
+            for (const toolCall of choice.message.tool_calls) {
+              try {
+                const toolResult = await executeTool(toolCall.function.name, JSON.parse(toolCall.function.arguments));
+                if (toolCall.function.name === 'generate_product_mockup' && toolResult.success) {
+                  generatedImages.push(toolResult.image_url);
+                }
+              } catch (error) {
+                console.error('Error executing tool:', toolCall.function.name, error);
+              }
+            }
+          }
+        }
+
+        // Try to save the product brief to database
+        let savedProject = null;
+        if (userId && generatedContent) {
+          let productBrief = null;
+          
+          // Try to extract JSON from the generated content
+          try {
+            productBrief = JSON.parse(generatedContent.trim());
+          } catch (e) {
+            // Try markdown JSON block
+            const markdownMatch = generatedContent.match(/```json\s*(.*?)\s*```/s);
+            if (markdownMatch) {
+              try {
+                productBrief = JSON.parse(markdownMatch[1]);
+              } catch (e) {
+                // Try simple JSON object pattern
+                const jsonMatch = generatedContent.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                  try {
+                    productBrief = JSON.parse(jsonMatch[0]);
+                  } catch (e) {
+                    console.log('Could not parse product brief from generated content');
+                  }
+                }
+              }
+            }
+          }
+
+          if (productBrief) {
+            try {
+              const { data: projectData, error: saveError } = await supabase
+                .from('projects')
+                .insert({
+                  user_id: userId,
+                  product_name: productBrief.productName || extractedProductName || 'Untitled Product',
+                  product_brief: productBrief,
+                  image_urls: generatedImages,
+                  raw_ai_output: generatedContent
+                })
+                .select()
+                .single();
+
+              if (saveError) {
+                console.error('Error saving project:', saveError);
+              } else {
+                savedProject = projectData;
+                console.log('Project saved with ID:', projectData.id);
+              }
+            } catch (saveError) {
+              console.error('Error saving project:', saveError);
+            }
+          }
+        }
+        
+        // Now send acknowledgment message with the generated content
         const acknowledgmentMessage = generateAcknowledgmentMessage(messages, aesthetic, useCase);
         
-        // Send working message
         const workingMessages = [
           "I'll start cooking! 🧑‍🍳",
           "Hold my beer... 🍺", 
@@ -628,17 +752,20 @@ serve(async (req) => {
         ];
         const workingMessage = workingMessages[Math.floor(Math.random() * workingMessages.length)];
         
-        // Combine both messages and return immediately
-        const combinedMessage = `${acknowledgmentMessage}\n\n${workingMessage}`;
+        // Combine acknowledgment, working message, and generated content
+        const combinedMessage = `${acknowledgmentMessage}\n\n${workingMessage}\n\n${generatedContent}`;
         
-        console.log('Returning acknowledgment message, generation will happen on next call');
+        console.log('Returning complete response with generated brief');
         
         return new Response(JSON.stringify({
           content: combinedMessage,
           conversationState: {
             ...state,
-            phase: 'GENERATING'
-          }
+            phase: 'EDITING',
+            questionsCompleted: true
+          },
+          savedProject,
+          generatedImages
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
