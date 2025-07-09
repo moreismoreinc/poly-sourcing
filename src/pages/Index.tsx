@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useStreamingChat } from '@/hooks/useStreamingChat';
 import SingleInputStart from '@/components/SingleInputStart';
 import SplitViewChat from '@/components/SplitViewChat';
+import RecentProjects from '@/components/RecentProjects';
 import { getMostRecentProject, getProjectById } from '@/services/projectService';
 import { useEffect } from 'react';
 
@@ -28,8 +29,16 @@ const Index = () => {
 
   const { messages, currentResponse, isLoading, conversationStarted, conversationState, sendMessage, resetChat } = useStreamingChat({
     onBriefUpdate: handleBriefUpdate,
+    existingBrief: productBrief,
     onConversationStart: () => setShowSplitView(true),
   });
+
+  const handleProjectSelect = (brief: Record<string, any>, name: string, projectId: string) => {
+    setProductBrief(brief);
+    setProductName(name);
+    setCurrentProjectId(projectId);
+    setShowSplitView(true);
+  };
 
 
   const handleStartConversation = async (message: string) => {
@@ -82,13 +91,18 @@ const Index = () => {
     );
   }
 
-  // Show single input start screen
+  // Show single input start screen with recent projects below
   if (!showSplitView) {
     return (
-      <SingleInputStart 
-        onStartConversation={handleStartConversation}
-        isLoading={isLoading}
-      />
+      <div className="min-h-screen bg-background">
+        <SingleInputStart 
+          onStartConversation={handleStartConversation}
+          isLoading={isLoading}
+        />
+        <RecentProjects 
+          onProjectSelect={handleProjectSelect}
+        />
+      </div>
     );
   }
 
