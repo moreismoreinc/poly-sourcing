@@ -6,9 +6,10 @@ import ProductBriefDisplay from './ProductBriefDisplay';
 interface ProductPreviewProps {
   brief: Record<string, any>;
   productName?: string;
+  generatedImages?: string[];
 }
 
-const ProductPreview = ({ brief, productName }: ProductPreviewProps) => {
+const ProductPreview = ({ brief, productName, generatedImages = [] }: ProductPreviewProps) => {
   return (
     <div className="flex flex-col h-full">
       {/* Main Content Layout */}
@@ -28,26 +29,46 @@ const ProductPreview = ({ brief, productName }: ProductPreviewProps) => {
             {/* Product Mockup */}
             <Card className="flex-1 bg-card shadow-none rounded-lg overflow-hidden">
               <CardContent className="h-full p-0">
-                <div className="h-full bg-muted rounded-lg flex items-center justify-center">
-                  <div className="text-center text-muted-foreground">
-                    <div className="text-4xl mb-2">📦</div>
-                    <p className="text-sm font-medium">3D Mockup</p>
-                    <p className="text-xs">Coming Soon</p>
+                {generatedImages.length > 0 ? (
+                  <div className="h-full bg-background rounded-lg overflow-hidden">
+                    <img 
+                      src={generatedImages[0]} 
+                      alt={`${productName} mockup`}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                </div>
+                ) : (
+                  <div className="h-full bg-muted rounded-lg flex items-center justify-center">
+                    <div className="text-center text-muted-foreground">
+                      <div className="text-4xl mb-2">📦</div>
+                      <p className="text-sm font-medium">Product Mockup</p>
+                      <p className="text-xs">Generating...</p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
             
             {/* Technical Drawing */}
             <Card className="flex-1 bg-card shadow-none rounded-lg overflow-hidden">
               <CardContent className="h-full p-0">
-                <div className="h-full bg-muted rounded-lg flex items-center justify-center">
-                  <div className="text-center text-muted-foreground">
-                    <div className="text-4xl mb-2">📐</div>
-                    <p className="text-sm font-medium">Technical Specs</p>
-                    <p className="text-xs">Coming Soon</p>
+                {generatedImages.length > 1 ? (
+                  <div className="h-full bg-background rounded-lg overflow-hidden">
+                    <img 
+                      src={generatedImages[1]} 
+                      alt={`${productName} technical drawing`}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                </div>
+                ) : (
+                  <div className="h-full bg-muted rounded-lg flex items-center justify-center">
+                    <div className="text-center text-muted-foreground">
+                      <div className="text-4xl mb-2">📐</div>
+                      <p className="text-sm font-medium">Technical Drawing</p>
+                      <p className="text-xs">Coming Soon</p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

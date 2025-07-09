@@ -28,6 +28,7 @@ interface SplitViewChatProps {
   conversationState: ConversationState;
   productBrief: Record<string, any> | null;
   productName?: string;
+  generatedImages?: string[];
   onSendMessage: (message: string) => void;
   onResetChat: () => void;
   onStartOver: () => void;
@@ -68,6 +69,7 @@ const SplitViewChat = ({
   conversationState,
   productBrief,
   productName, 
+  generatedImages = [],
   onSendMessage, 
   onResetChat,
   onStartOver,
@@ -241,7 +243,7 @@ const SplitViewChat = ({
         {/* Results Panel - 2/3 width */}
         <div className="w-2/3 bg-muted/30">
           {productBrief ? (
-            <ProductPreview brief={productBrief} productName={productName} />
+            <ProductPreview brief={productBrief} productName={productName} generatedImages={generatedImages} />
           ) : conversationState.phase === 'GENERATING' ? (
             <div className="h-full flex items-center justify-center">
               <div className="text-center">

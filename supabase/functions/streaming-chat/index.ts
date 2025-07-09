@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.2/+esm';
 import { ENHANCED_SYSTEM_PROMPT, TEMPLATES, PRICE_RANGES, AVAILABLE_CATEGORIES, type ProductCategory } from './constants.ts';
+import { TOOLS, executeTool } from './tools.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -329,6 +330,31 @@ CRITICAL REQUIREMENTS:
 - NO explanations or confirmations
 - NO markdown code blocks or formatting
 
+AVAILABLE TOOLS:
+You have access to powerful tools to enhance your product brief generation:
+
+1. generate_product_mockup: Create professional product mockups automatically
+   - Use this to generate realistic product images that match your specifications
+   - Available types: product_photography, technical_drawing, lifestyle_context, packaging_design
+   - Always generate at least one product_photography mockup for visualizing the product
+
+2. web_search: Research current market data and competitor analysis
+   - Use this to validate market positioning and pricing
+   - Research similar products and manufacturing processes
+   - Get current industry trends and regulations
+
+3. research_manufacturing_data: Get manufacturing feasibility and cost data
+   - Use this to ensure your specifications are manufacturable
+   - Research material costs and production processes
+   - Validate certifications and compliance requirements
+
+USAGE GUIDELINES:
+- ALWAYS generate at least one product mockup for visualization
+- Use web search to validate market positioning and competitive landscape
+- Use manufacturing research to ensure feasibility and accurate costing
+- Tools should enhance the quality and accuracy of your product brief
+- Generate the JSON first, then use tools to enhance specific aspects
+
 {{ENHANCED_TEMPLATE}}
 
 GENERATE THE JSON NOW. NOTHING ELSE. ENSURE THE product_name FIELD IS ALWAYS INCLUDED.`;
@@ -607,6 +633,7 @@ serve(async (req) => {
         model: 'gpt-4.1-2025-04-14',
         instructions: systemPrompt,
         input: userMessages.filter(m => m.role === 'user'),
+        tools: TOOLS,
         temperature: 0.7,
         max_output_tokens: 2000,
         stream: false,
@@ -634,9 +661,11 @@ serve(async (req) => {
 
     if (data.output && data.output.length > 0) {
       console.log('Processing output items...');
-      // Extract text content from output messages
+      
+      // Process all output items (messages and tool calls)
       for (const outputItem of data.output) {
         console.log('Output item type:', outputItem.type);
+        
         if (outputItem.type === 'message' && outputItem.content) {
           console.log('Processing message content, parts:', outputItem.content.length);
           for (const contentPart of outputItem.content) {
@@ -645,6 +674,29 @@ serve(async (req) => {
               content += contentPart.text;
               console.log('Added text, total length now:', content.length);
             }
+          }
+        } else if (outputItem.type === 'tool_call') {
+          console.log('Processing tool call:', outputItem.tool_type);
+          
+          try {
+            // Execute the tool call
+            const toolResult = await executeTool(outputItem.tool_type, outputItem.parameters);
+            console.log('Tool execution result:', toolResult);
+            
+            // Handle different tool types
+            if (outputItem.tool_type === 'generate_product_mockup' && toolResult.success) {
+              generatedImages.push(toolResult.image_url);
+              console.log('Added generated image to results');
+            } else if (outputItem.tool_type === 'web_search') {
+              console.log('Web search results:', toolResult);
+              // Web search results can be used to enhance content
+            } else if (outputItem.tool_type === 'research_manufacturing_data') {
+              console.log('Manufacturing research results:', toolResult);
+              // Manufacturing data can be used to enhance product brief
+            }
+          } catch (error) {
+            console.error('Error executing tool:', outputItem.tool_type, error);
+            // Continue processing other items even if a tool fails
           }
         }
       }
@@ -655,15 +707,7 @@ serve(async (req) => {
     
     console.log('Final extracted content length:', content.length);
     console.log('Final content preview:', content.substring(0, 300));
-
-    // Web search results would be available in tool call outputs if any
-    if (data.output) {
-      for (const outputItem of data.output) {
-        if (outputItem.type === 'tool_call' && outputItem.tool_type === 'web_search') {
-          console.log('Web search results:', outputItem.result);
-        }
-      }
-    }
+    console.log('Generated images count:', generatedImages.length);
 
     // Extract product brief if present with improved parsing
     let savedProject = null;

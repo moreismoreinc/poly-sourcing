@@ -20,7 +20,7 @@ interface ConversationState {
 }
 
 interface UseStreamingChatProps {
-  onBriefUpdate?: (brief: Record<string, any> | null, productName?: string, projectId?: string) => void;
+  onBriefUpdate?: (brief: Record<string, any> | null, productName?: string, projectId?: string, generatedImages?: string[]) => void;
   existingBrief?: Record<string, any> | null;
   onConversationStart?: () => void;
 }
@@ -117,12 +117,12 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
 
         // Use saved project data if available, otherwise extract from response
         if (data.savedProject && onBriefUpdate) {
-          onBriefUpdate(data.savedProject.product_brief, data.savedProject.product_name, data.savedProject.id);
+          onBriefUpdate(data.savedProject.product_brief, data.savedProject.product_name, data.savedProject.id, data.generatedImages);
         } else {
           // Fallback to extracting from response text
           const extractedBrief = extractBriefFromResponse(accumulatedResponse);
           if (extractedBrief && onBriefUpdate) {
-            onBriefUpdate(extractedBrief, data.productName, data.savedProject?.id);
+            onBriefUpdate(extractedBrief, data.productName, data.savedProject?.id, data.generatedImages);
           }
         }
 
