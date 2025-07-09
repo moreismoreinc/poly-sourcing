@@ -180,17 +180,18 @@ function buildPrompt(productName: string, useCase: string, aesthetic: string): s
   return finalPrompt;
 }
 
-const GENERATING_PROMPT_BASE = `You are an expert industrial designer and product strategist. CRITICAL INSTRUCTION: You MUST output ONLY a product brief JSON wrapped in <BRIEF>...</BRIEF> tags. NO conversation. NO explanations. ONLY JSON.
+const GENERATING_PROMPT_BASE = `You are an expert industrial designer and product strategist. CRITICAL INSTRUCTION: You MUST output ONLY a valid JSON object. NO conversation. NO explanations. NO markdown formatting. ONLY JSON.
 
 CONVERSATION HISTORY: {{CONVERSATION_HISTORY}}
 
 Your task is to take the user's input from the conversation history and create a detailed product brief using the enhanced template provided below.
 
 OUTPUT REQUIREMENTS:
-- ONLY output JSON wrapped in <BRIEF>...</BRIEF> tags
-- NO other text before or after the tags
+- ONLY output valid JSON object
+- NO other text before or after the JSON
 - NO conversational messages
 - NO explanations or confirmations
+- NO markdown code blocks or formatting
 
 {{ENHANCED_TEMPLATE}}
 
@@ -205,7 +206,7 @@ Your role:
 2. Make specific changes based on user requests
 3. Ask clarifying questions when changes need more detail
 4. Reference specific sections when making edits
-5. Always end with updated JSON in <BRIEF>...</BRIEF> tags
+5. When providing an updated brief, return ONLY the JSON object without any formatting or tags
 
 Be conversational and helpful while making precise edits to the brief.`;
 
@@ -503,33 +504,55 @@ serve(async (req) => {
       }
     }
 
-    // Extract product brief if present with fallback parsing
+    // Extract product brief if present with improved parsing
     let savedProject = null;
     let finalContent = content;
     console.log('=== DEBUG: Checking for product brief ===');
     console.log('Content length:', content.length);
     console.log('Has userId:', !!userId);
     console.log('Content preview:', content.substring(0, 200));
-    console.log('Looking for <BRIEF> tags...');
     
-    let briefMatch = content.match(/<BRIEF>(.*?)<\/BRIEF>/s);
-    console.log('Brief match found:', !!briefMatch);
+    let productBrief = null;
     
-    // Fallback: try parsing markdown code blocks if no BRIEF tags found
-    if (!briefMatch) {
-      console.log('No BRIEF tags found, trying markdown fallback...');
-      const markdownMatch = content.match(/```json\s*(.*?)\s*```/s);
-      if (markdownMatch) {
-        console.log('Found markdown JSON block, converting to BRIEF format');
-        briefMatch = [markdownMatch[0], markdownMatch[1]];
-      }
-    }
-    
-    if (briefMatch && userId) {
+    // Try multiple parsing strategies to extract JSON
+    if (state.phase === 'GENERATING' && userId) {
+      console.log('In GENERATING phase, attempting to extract product brief...');
+      
+      // Strategy 1: Try to parse entire content as JSON
       try {
-        console.log('Matched brief content:', briefMatch[1].substring(0, 200));
-        const productBrief = JSON.parse(briefMatch[1]);
-        console.log('Successfully parsed product brief:', productBrief.product_name);
+        productBrief = JSON.parse(content.trim());
+        console.log('Successfully parsed entire content as JSON');
+      } catch (e) {
+        console.log('Content is not pure JSON, trying other strategies...');
+        
+        // Strategy 2: Look for JSON in markdown code blocks
+        const markdownMatch = content.match(/```json\s*(.*?)\s*```/s);
+        if (markdownMatch) {
+          try {
+            productBrief = JSON.parse(markdownMatch[1]);
+            console.log('Successfully parsed JSON from markdown block');
+          } catch (e) {
+            console.log('Failed to parse JSON from markdown block');
+          }
+        }
+        
+        // Strategy 3: Look for JSON object patterns
+        if (!productBrief) {
+          const jsonMatch = content.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            try {
+              productBrief = JSON.parse(jsonMatch[0]);
+              console.log('Successfully parsed JSON object from content');
+            } catch (e) {
+              console.log('Failed to parse JSON object from content');
+            }
+          }
+        }
+      }
+      
+      // If we found a product brief, save it
+      if (productBrief && typeof productBrief === 'object' && productBrief.product_name) {
+        console.log('Successfully extracted product brief:', productBrief.product_name);
         
         // Save or update project with version control
         const parentProjectId = existingBrief?.id || null;
@@ -539,18 +562,16 @@ serve(async (req) => {
         if (savedProject) {
           console.log(`Project saved with version ${savedProject.version}, ID: ${savedProject.id}`);
           
-          // If this was the GENERATING phase, add welcome message for EDITING phase
-          if (state.phase === 'GENERATING') {
-            finalContent = `Perfect! I've generated your product brief for "${productBrief.product_name}". You can now review it in the preview panel and tell me what you'd like to edit or improve. What changes would you like to make?`;
-          }
+          // Update content for EDITING phase
+          finalContent = `Perfect! I've generated your product brief for "${productBrief.product_name}". You can now review it in the preview panel and tell me what you'd like to edit or improve. What changes would you like to make?`;
         } else {
           console.log('saveProjectWithVersion returned null');
         }
-      } catch (error) {
-        console.error('Error processing product brief:', error);
+      } else {
+        console.log('No valid product brief found in content');
       }
     } else {
-      console.log('No brief match or userId missing - briefMatch:', !!briefMatch, 'userId:', !!userId);
+      console.log('Not in GENERATING phase or no userId - phase:', state.phase, 'userId:', !!userId);
     }
 
     // Update conversation state for next interaction
@@ -588,13 +609,8 @@ serve(async (req) => {
     let responseProductName = '';
     if (savedProject && savedProject.product_name) {
       responseProductName = savedProject.product_name;
-    } else if (briefMatch) {
-      try {
-        const productBrief = JSON.parse(briefMatch[1]);
-        responseProductName = productBrief.product_name || '';
-      } catch (error) {
-        console.log('Could not parse brief for product name');
-      }
+    } else if (productBrief && productBrief.product_name) {
+      responseProductName = productBrief.product_name;
     }
 
     return new Response(JSON.stringify({ 
