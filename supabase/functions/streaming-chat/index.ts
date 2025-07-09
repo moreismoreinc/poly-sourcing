@@ -599,53 +599,38 @@ serve(async (req) => {
       
       // Check if this is the first time entering GENERATING phase
       const assistantMessages = messages.filter(m => m.role === 'assistant');
-      const hasAcknowledgment = assistantMessages.some(msg => 
+      const hasGenerationMessages = assistantMessages.some(msg => 
         msg.content.includes('Got it!') || msg.content.includes('Perfect!') || 
         msg.content.includes('Understood!') || msg.content.includes('Cool!') ||
-        msg.content.includes('Awesome!')
-      );
-      const hasWorkingMessage = assistantMessages.some(msg => 
-        msg.content.includes('I\'ll start cooking') || msg.content.includes('Hold my beer') ||
-        msg.content.includes('Let me work my magic') || msg.content.includes('Time to create') ||
-        msg.content.includes('Rolling up my sleeves')
+        msg.content.includes('Awesome!') || msg.content.includes('I\'ll start cooking') || 
+        msg.content.includes('Hold my beer') || msg.content.includes('Let me work my magic') || 
+        msg.content.includes('Time to create') || msg.content.includes('Rolling up my sleeves')
       );
       
-      console.log('Has acknowledgment:', hasAcknowledgment);
-      console.log('Has working message:', hasWorkingMessage);
+      console.log('Has generation messages:', hasGenerationMessages);
       
-      // If this is the first time and we haven't sent acknowledgment messages yet
-      if (!hasAcknowledgment && !hasWorkingMessage) {
-        console.log('First time in GENERATING phase, sending acknowledgment message');
+      // If this is the first time and we haven't sent the combined messages yet
+      if (!hasGenerationMessages) {
+        console.log('First time in GENERATING phase, sending combined acknowledgment and working messages');
         
         // Send acknowledgment message
         const acknowledgmentMessage = generateAcknowledgmentMessage(messages, aesthetic, useCase);
         
-        return new Response(JSON.stringify({
-          content: acknowledgmentMessage,
-          conversationState: {
-            ...state,
-            phase: 'GENERATING'
-          }
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-      
-      // If we have acknowledgment but no working message, send working message
-      if (hasAcknowledgment && !hasWorkingMessage) {
-        console.log('Sending working message');
-        
+        // Send working message
         const workingMessages = [
           "I'll start cooking! 🧑‍🍳",
-          "Hold my beer... 🍺",
+          "Hold my beer... 🍺", 
           "Let me work my magic ✨",
           "Time to create something amazing! 🚀",
           "Rolling up my sleeves... 💪"
         ];
         const workingMessage = workingMessages[Math.floor(Math.random() * workingMessages.length)];
         
+        // Combine both messages
+        const combinedMessage = `${acknowledgmentMessage}\n\n${workingMessage}`;
+        
         return new Response(JSON.stringify({
-          content: workingMessage,
+          content: combinedMessage,
           conversationState: {
             ...state,
             phase: 'GENERATING'
@@ -655,8 +640,8 @@ serve(async (req) => {
         });
       }
       
-      // If we have both acknowledgment and working messages, proceed with generation
-      console.log('Both acknowledgment and working messages sent, proceeding with generation');
+      // If we have sent the initial messages, proceed with generation
+      console.log('Initial messages sent, proceeding with generation');
       
       // Build enhanced prompt using AI-powered category detection
       const enhancedTemplate = await buildPromptWithAI(extractedProductName, useCase, aesthetic, openAIApiKey);
