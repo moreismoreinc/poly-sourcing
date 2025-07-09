@@ -423,6 +423,23 @@ function analyzeConversationState(messages: any[], existingBrief: any): Conversa
 // Initialize Supabase client
 const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
+// Helper function to generate acknowledgment message
+function generateAcknowledgmentMessage(messages: any[], aesthetic: string, useCase: string): string {
+  const userMessages = messages.filter(m => m.role === 'user');
+  const product = userMessages[0]?.content || 'your product';
+  const inspiration = userMessages[1]?.content || aesthetic;
+  
+  const acknowledgments = [
+    `Got it! You want to create ${product.toLowerCase()} inspired by ${inspiration}.`,
+    `Perfect! So we're making ${product.toLowerCase()} with ${inspiration} vibes.`,
+    `Understood! A ${product.toLowerCase()} that captures the essence of ${inspiration}.`,
+    `Cool! ${product} with ${inspiration} styling - I can see it already.`,
+    `Awesome! ${product} channeling ${inspiration} energy.`
+  ];
+  
+  return acknowledgments[Math.floor(Math.random() * acknowledgments.length)];
+}
+
 // Helper function to extract product name from first user message
 function extractProductNameFromConversation(messages: any[]): string {
   const firstUserMessage = messages.find(m => m.role === 'user');
@@ -579,6 +596,67 @@ serve(async (req) => {
       console.log('Product name:', extractedProductName);
       console.log('Use case:', useCase);
       console.log('Aesthetic:', aesthetic);
+      
+      // Check if this is the first time entering GENERATING phase
+      const assistantMessages = messages.filter(m => m.role === 'assistant');
+      const hasAcknowledgment = assistantMessages.some(msg => 
+        msg.content.includes('Got it!') || msg.content.includes('Perfect!') || 
+        msg.content.includes('Understood!') || msg.content.includes('Cool!') ||
+        msg.content.includes('Awesome!')
+      );
+      const hasWorkingMessage = assistantMessages.some(msg => 
+        msg.content.includes('I\'ll start cooking') || msg.content.includes('Hold my beer') ||
+        msg.content.includes('Let me work my magic') || msg.content.includes('Time to create') ||
+        msg.content.includes('Rolling up my sleeves')
+      );
+      
+      console.log('Has acknowledgment:', hasAcknowledgment);
+      console.log('Has working message:', hasWorkingMessage);
+      
+      // If this is the first time and we haven't sent acknowledgment messages yet
+      if (!hasAcknowledgment && !hasWorkingMessage) {
+        console.log('First time in GENERATING phase, sending acknowledgment message');
+        
+        // Send acknowledgment message
+        const acknowledgmentMessage = generateAcknowledgmentMessage(messages, aesthetic, useCase);
+        
+        return new Response(JSON.stringify({
+          content: acknowledgmentMessage,
+          conversationState: {
+            ...state,
+            phase: 'GENERATING'
+          }
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      
+      // If we have acknowledgment but no working message, send working message
+      if (hasAcknowledgment && !hasWorkingMessage) {
+        console.log('Sending working message');
+        
+        const workingMessages = [
+          "I'll start cooking! 🧑‍🍳",
+          "Hold my beer... 🍺",
+          "Let me work my magic ✨",
+          "Time to create something amazing! 🚀",
+          "Rolling up my sleeves... 💪"
+        ];
+        const workingMessage = workingMessages[Math.floor(Math.random() * workingMessages.length)];
+        
+        return new Response(JSON.stringify({
+          content: workingMessage,
+          conversationState: {
+            ...state,
+            phase: 'GENERATING'
+          }
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      
+      // If we have both acknowledgment and working messages, proceed with generation
+      console.log('Both acknowledgment and working messages sent, proceeding with generation');
       
       // Build enhanced prompt using AI-powered category detection
       const enhancedTemplate = await buildPromptWithAI(extractedProductName, useCase, aesthetic, openAIApiKey);
