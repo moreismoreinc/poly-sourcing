@@ -131,18 +131,6 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
           setConversationState(data.conversationState);
         }
 
-        // If a brief was just generated, automatically send a transition message
-        if (data.savedProject) {
-          setTimeout(() => {
-            const transitionMessage: Message = {
-              id: (Date.now() + 2).toString(),
-              role: 'assistant',
-              content: `Perfect! I've generated your product brief for "${data.savedProject.product_name || 'your product'}". You can now review it in the preview panel and tell me what you'd like to edit or improve. What changes would you like to make?`,
-              timestamp: new Date(),
-            };
-            setMessages(prev => [...prev, transitionMessage]);
-          }, 500);
-        }
       }
     } catch (error: any) {
       if (error.name !== 'AbortError') {
