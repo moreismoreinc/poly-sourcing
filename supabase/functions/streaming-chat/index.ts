@@ -233,28 +233,38 @@ function analyzeConversationState(messages: any[], existingBrief: any): Conversa
 
   const userMessages = messages.filter(m => m.role === 'user');
   const userMessageCount = userMessages.length;
+  const assistantMessages = messages.filter(m => m.role === 'assistant');
 
   console.log('=== CONVERSATION ANALYSIS ===');
   console.log('Total messages:', messages.length);
   console.log('User messages:', userMessageCount);
+  console.log('Assistant messages:', assistantMessages.length);
   console.log('User message contents:', userMessages.map(m => m.content.substring(0, 50) + '...'));
 
-  // Determine phase based on user message count
-  if (userMessageCount === 1) {
+  // Check if AI has indicated it's ready to generate
+  const hasTransitionMessage = assistantMessages.some(msg => 
+    msg.content.includes('generating a product brief') || 
+    msg.content.includes('generate a product brief')
+  );
+
+  console.log('Has transition message:', hasTransitionMessage);
+
+  // Determine phase based on user message count and AI responses
+  if (userMessageCount >= 2 || hasTransitionMessage) {
+    // After second user message or AI transition, generate brief
+    return {
+      phase: 'GENERATING',
+      currentQuestion: 0,
+      answers: {},
+      questionsCompleted: true
+    };
+  } else if (userMessageCount === 1) {
     // After first user message, ask second question
     return {
       phase: 'QUESTIONING',
       currentQuestion: 1,
       answers: {},
       questionsCompleted: false
-    };
-  } else if (userMessageCount >= 2) {
-    // After second user message, generate brief
-    return {
-      phase: 'GENERATING',
-      currentQuestion: 0,
-      answers: {},
-      questionsCompleted: true
     };
   } else {
     // Initial state - ask first question
@@ -378,7 +388,22 @@ serve(async (req) => {
     }
 
     // Analyze conversation state
-    const state = conversationState || analyzeConversationState(messages, existingBrief);
+    let state = conversationState || analyzeConversationState(messages, existingBrief);
+    
+    // Check if we need to transition to GENERATING phase
+    // This happens when AI has asked both questions and is ready to generate
+    if (state.phase === 'QUESTIONING' && state.currentQuestion === 1) {
+      const userMessages = messages.filter(m => m.role === 'user');
+      if (userMessages.length >= 2) {
+        // Two questions have been answered, transition to GENERATING
+        console.log('Detected completed questioning phase, transitioning to GENERATING');
+        state = {
+          ...state,
+          phase: 'GENERATING' as ConversationPhase,
+          questionsCompleted: true
+        };
+      }
+    }
     
     console.log('=== CONVERSATION STATE DEBUG ===');
     console.log('Phase:', state.phase);
