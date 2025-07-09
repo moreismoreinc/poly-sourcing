@@ -171,11 +171,12 @@ export async function executeProductMockup(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-image-1',
+        model: 'dall-e-3',
         prompt: prompt,
         n: 1,
         size: '1024x1024',
-        quality: 'high'
+        quality: 'hd',
+        response_format: 'url'
       }),
     });
 
@@ -186,16 +187,16 @@ export async function executeProductMockup(
     }
 
     const data = await response.json();
-    const imageData = data.data[0];
+    const imageUrl = data.data[0]?.url;
 
-    if (!imageData) {
-      throw new Error('No image data returned from OpenAI');
+    if (!imageUrl) {
+      throw new Error('No image URL returned from OpenAI');
     }
 
-    console.log(`Generated image data received`);
+    console.log(`Generated image URL: ${imageUrl}`);
 
     return {
-      image_url: imageData.url || `data:image/png;base64,${imageData.b64_json}`,
+      image_url: imageUrl,
       prompt: prompt,
       mockup_type: mockupType,
       product_name: productName,
