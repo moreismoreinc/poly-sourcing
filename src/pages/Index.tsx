@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 // Removed ProductBrief import - using dynamic JSON data from database
 import { useAuth } from '@/hooks/useAuth';
 import { useStreamingChat } from '@/hooks/useStreamingChat';
+import { useProjectImages } from '@/hooks/useProjectImages';
 import SingleInputStart from '@/components/SingleInputStart';
 import SplitViewChat from '@/components/SplitViewChat';
 import RecentProjects from '@/components/RecentProjects';
@@ -19,6 +20,15 @@ const Index = () => {
   const [showSplitView, setShowSplitView] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
+
+  // Hook to fetch and poll for project images
+  const { images: projectImages } = useProjectImages({ 
+    projectId: currentProjectId,
+    enabled: !!currentProjectId 
+  });
+
+  // Use project images from database when available, fallback to passed images
+  const displayImages = projectImages.length > 0 ? projectImages : generatedImages;
 
   const handleBriefUpdate = async (brief: Record<string, any> | null, name?: string, projectId?: string, images?: string[]) => {
     if (brief) {
@@ -120,7 +130,7 @@ const Index = () => {
       conversationState={conversationState}
       productBrief={productBrief}
       productName={productName}
-      generatedImages={generatedImages}
+      generatedImages={displayImages}
       onSendMessage={sendMessage}
       onResetChat={resetChat}
       onStartOver={handleStartOver}
