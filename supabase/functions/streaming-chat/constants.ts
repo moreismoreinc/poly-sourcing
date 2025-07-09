@@ -15,8 +15,23 @@ RULES:
 
 OUTPUT: Generate ONLY valid JSON matching the exact schema. No additional text or explanations.`;
 
+// Available product categories
+export const AVAILABLE_CATEGORIES = [
+  'supplement',
+  'skincare', 
+  'food',
+  'wearable',
+  'wellness',
+  'beauty',
+  'clothing',
+  'tools'
+] as const;
+
+// Type for available categories
+export type ProductCategory = typeof AVAILABLE_CATEGORIES[number];
+
 // Category-specific templates for enhanced prompting
-export const TEMPLATES = {
+export const TEMPLATES: Record<ProductCategory, string> = {
   supplement: `Create supplement: {product_name} for {use_case}
 Style: {aesthetic} | Market: {positioning} | Budget: {price_range}
 
@@ -219,7 +234,7 @@ JSON Response (customize for this specific tool):
 };
 
 // Enhanced price ranges with more categories
-export const PRICE_RANGES = {
+export const PRICE_RANGES: Record<'budget' | 'mid-range' | 'premium', Record<ProductCategory, [number, number]>> = {
   budget: { 
     supplement: [8, 18], skincare: [5, 15], food: [3, 8], 
     wearable: [15, 40], wellness: [10, 25], beauty: [4, 12],
@@ -235,4 +250,4 @@ export const PRICE_RANGES = {
     wearable: [120, 400], wellness: [65, 200], beauty: [40, 150],
     clothing: [85, 300], tools: [75, 250]
   }
-} as const;
+};
