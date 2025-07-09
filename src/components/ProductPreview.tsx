@@ -12,15 +12,13 @@ const ProductPreview = ({ brief, productName }: ProductPreviewProps) => {
   return (
     <div className="flex flex-col h-full">
       {/* Main Content Layout */}
-      <div className="flex-1 p-6 bg-muted/30">
+      <div className="flex-1 p-6 bg-muted/30 overflow-hidden">
         <div className="h-full flex gap-6">
           {/* Center: Spec Sheet (editable output) */}
-          <div className="flex-1">
-            <Card className="h-full bg-card shadow-none rounded-lg overflow-hidden flex flex-col">
-              <CardContent className="flex-1 p-6 overflow-y-auto">
-                <div className="h-full">
-                  <ProductBriefDisplay brief={brief} productName={productName} />
-                </div>
+          <div className="flex-1 min-h-0">
+            <Card className="h-full bg-card shadow-none rounded-lg flex flex-col">
+              <CardContent className="flex-1 p-6 overflow-y-auto min-h-0">
+                <ProductBriefDisplay brief={brief} productName={productName} />
               </CardContent>
             </Card>
           </div>
