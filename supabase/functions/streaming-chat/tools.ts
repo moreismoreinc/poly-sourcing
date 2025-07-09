@@ -227,6 +227,21 @@ function generateFallbackPrompt(
 
 // Generate subject JSON from product brief
 async function generateSubjectJSON(productBrief: any, openAIApiKey: string): Promise<any> {
+  // Log the input data for debugging
+  console.log('generateSubjectJSON called with productBrief:', JSON.stringify(productBrief, null, 2));
+  console.log('OpenAI API Key present:', !!openAIApiKey);
+
+  // Validate inputs
+  if (!productBrief) {
+    console.error('No product brief provided to generateSubjectJSON');
+    throw new Error('Product brief is required');
+  }
+
+  if (!openAIApiKey) {
+    console.error('No OpenAI API key provided to generateSubjectJSON');
+    throw new Error('OpenAI API key is required');
+  }
+
   const subjectPrompt = `You are a photography expert and JSON-generating assistant. Your task is to produce the "subject" block for a photorealistic product mockup, describing a single physical item in a fixed studio style.
 
 Scene Context (fixed)
@@ -236,10 +251,7 @@ Framing: Centered, upright, medium-close crop
 Lighting: Soft, directional with subtle gloss and shadow
 
 Output Format
-Return a valid JSON block inside:
-"subject": {
-// your output here
-}
+Return ONLY a valid JSON object that starts with { and ends with }. Do not include any text before or after the JSON.
 
 Required Fields
 Describe only what would be visible in a real studio image:
@@ -267,6 +279,8 @@ Product Details:
 ${JSON.stringify(productBrief, null, 2)}`;
 
   try {
+    console.log('Making OpenAI API request for subject JSON generation...');
+    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -274,48 +288,107 @@ ${JSON.stringify(productBrief, null, 2)}`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-2025-04-14', // Use flagship model for better structured output
         messages: [
-          { role: 'system', content: 'You are a photography expert who generates precise JSON descriptions for product photography. Always return valid JSON only.' },
+          { 
+            role: 'system', 
+            content: 'You are a photography expert who generates precise JSON descriptions for product photography. You MUST return valid JSON only, no additional text.' 
+          },
           { role: 'user', content: subjectPrompt }
         ],
-        temperature: 0.3,
+        temperature: 0.1, // Lower temperature for more consistent output
+        response_format: { type: "json_object" }, // Request JSON format
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('OpenAI API error response:', errorText);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('OpenAI API response data:', JSON.stringify(data, null, 2));
+    
     const content = data.choices[0]?.message?.content || '';
+    console.log('Raw OpenAI response content:', content);
     
-    // Extract JSON from response - improved regex for nested objects
-    const jsonMatch = content.match(/"subject":\s*(\{[\s\S]*?\})\s*$/m) || content.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const jsonStr = jsonMatch[1] || jsonMatch[0];
-      return JSON.parse(jsonStr);
+    if (!content) {
+      throw new Error('Empty response from OpenAI API');
     }
+
+    // Try multiple parsing strategies
+    let parsedJSON = null;
     
-    // Try parsing full response as JSON
+    // Strategy 1: Direct JSON parsing (for json_object response format)
     try {
-      const parsed = JSON.parse(content);
-      return parsed.subject || parsed;
-    } catch {
-      // If all parsing fails, extract any JSON-like structure
-      const fallbackMatch = content.match(/\{[\s\S]*\}/);
-      if (fallbackMatch) {
-        return JSON.parse(fallbackMatch[0]);
-      }
-      throw new Error('No valid JSON found in response');
+      parsedJSON = JSON.parse(content);
+      console.log('Successfully parsed JSON directly:', parsedJSON);
+      return parsedJSON;
+    } catch (directParseError) {
+      console.log('Direct JSON parsing failed:', directParseError);
     }
+
+    // Strategy 2: Extract JSON from "subject": {...} pattern
+    const subjectMatch = content.match(/"subject":\s*(\{[^}]*(?:\{[^}]*\}[^}]*)*\})/);
+    if (subjectMatch) {
+      try {
+        parsedJSON = JSON.parse(subjectMatch[1]);
+        console.log('Successfully extracted subject JSON:', parsedJSON);
+        return parsedJSON;
+      } catch (subjectParseError) {
+        console.log('Subject JSON parsing failed:', subjectParseError);
+      }
+    }
+
+    // Strategy 3: Find any JSON object in the response
+    const jsonMatch = content.match(/\{[^}]*(?:\{[^}]*\}[^}]*)*\}/);
+    if (jsonMatch) {
+      try {
+        parsedJSON = JSON.parse(jsonMatch[0]);
+        console.log('Successfully extracted general JSON:', parsedJSON);
+        return parsedJSON;
+      } catch (generalParseError) {
+        console.log('General JSON parsing failed:', generalParseError);
+      }
+    }
+
+    // If all parsing strategies fail
+    throw new Error('Unable to parse JSON from OpenAI response: ' + content);
+
   } catch (error) {
-    console.error('Error generating subject JSON:', error);
-    // Return fallback subject JSON
+    console.error('Error in generateSubjectJSON:', error);
+    console.error('Error stack:', error.stack);
+    
+    // Create a more intelligent fallback based on the product brief
+    let fallbackCategory = "product";
+    let fallbackForm = "basic product form";
+    let fallbackMaterials = ["unknown material"];
+    
+    if (productBrief) {
+      // Try to extract some basic info from the product brief for a better fallback
+      const briefStr = JSON.stringify(productBrief).toLowerCase();
+      
+      if (briefStr.includes('software') || briefStr.includes('app') || briefStr.includes('digital')) {
+        fallbackCategory = "digital product";
+        fallbackForm = "interface design";
+        fallbackMaterials = ["digital display"];
+      } else if (briefStr.includes('skincare') || briefStr.includes('cosmetic') || briefStr.includes('beauty')) {
+        fallbackCategory = "skincare";
+        fallbackForm = "bottle or tube";
+        fallbackMaterials = ["plastic", "glass"];
+      } else if (briefStr.includes('food') || briefStr.includes('beverage') || briefStr.includes('drink')) {
+        fallbackCategory = "food & beverage";
+        fallbackForm = "package or container";
+        fallbackMaterials = ["cardboard", "plastic"];
+      }
+    }
+    
+    console.log('Returning intelligent fallback subject JSON');
     return {
-      "category": "product",
-      "form": "basic product form",
-      "materials": ["unknown material"],
+      "category": fallbackCategory,
+      "form": fallbackForm,
+      "materials": fallbackMaterials,
       "finish": { "base": "standard finish" },
       "color": { "base": "neutral tone" },
       "dimensions": { "height": "standard size" },
