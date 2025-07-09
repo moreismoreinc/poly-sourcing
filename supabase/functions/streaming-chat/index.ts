@@ -525,7 +525,21 @@ async function generateProductImagesForProject(
     console.log('Generating images for project:', project.id);
     
     const productName = productBrief.product_name || 'Product';
-    const productDescription = `${productBrief.category || ''} ${productBrief.intended_use || ''} made of ${productBrief.materials?.join(', ') || 'premium materials'} with ${productBrief.target_aesthetic || 'modern'} aesthetic`;
+    
+    // Handle materials field - it could be an array, string, or object
+    let materialsText = 'premium materials';
+    if (productBrief.materials) {
+      if (Array.isArray(productBrief.materials)) {
+        materialsText = productBrief.materials.join(', ');
+      } else if (typeof productBrief.materials === 'string') {
+        materialsText = productBrief.materials;
+      } else if (typeof productBrief.materials === 'object') {
+        // If it's an object, try to extract meaningful values
+        materialsText = Object.values(productBrief.materials).join(', ') || 'premium materials';
+      }
+    }
+    
+    const productDescription = `${productBrief.category || ''} ${productBrief.intended_use || ''} made of ${materialsText} with ${productBrief.target_aesthetic || 'modern'} aesthetic`;
     const aestheticStyle = productBrief.target_aesthetic || 'modern minimalist';
     
     // Generate product mockup
