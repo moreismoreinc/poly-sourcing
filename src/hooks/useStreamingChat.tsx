@@ -7,7 +7,6 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
-  images?: string[];
 }
 
 type ConversationPhase = 'QUESTIONING' | 'GENERATING' | 'EDITING';
@@ -108,8 +107,7 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
           id: (Date.now() + 1).toString(),
           role: 'assistant',
           content: accumulatedResponse,
-          timestamp: new Date(),
-          images: data.generatedImages || []
+          timestamp: new Date()
         };
 
         setMessages(prev => [...prev, assistantMessage]);

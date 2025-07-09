@@ -11,7 +11,6 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
-  images?: string[];
 }
 
 interface ConversationState {
@@ -173,21 +172,9 @@ const SplitViewChat = ({
                      message.role === 'user' 
                        ? 'bg-primary text-primary-foreground' 
                        : 'bg-muted text-foreground'
-                   }`}>
-                     <div className="whitespace-pre-wrap">{message.content}</div>
-                     {message.images && message.images.length > 0 && (
-                       <div className="mt-3 space-y-2">
-                         {message.images.map((imageUrl, index) => (
-                           <img 
-                             key={index}
-                             src={imageUrl} 
-                             alt={`Generated image ${index + 1}`}
-                             className="max-w-full h-auto rounded-lg border border-border"
-                           />
-                         ))}
-                       </div>
-                     )}
-                   </div>
+                    }`}>
+                      <div className="whitespace-pre-wrap">{message.content}</div>
+                    </div>
                 </div>
               ))}
               

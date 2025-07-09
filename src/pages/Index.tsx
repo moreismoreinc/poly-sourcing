@@ -18,12 +18,14 @@ const Index = () => {
   const [productName, setProductName] = useState<string>('');
   const [showSplitView, setShowSplitView] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
+  const [generatedImages, setGeneratedImages] = useState<string[]>([]);
 
-  const handleBriefUpdate = async (brief: Record<string, any> | null, name?: string, projectId?: string) => {
+  const handleBriefUpdate = async (brief: Record<string, any> | null, name?: string, projectId?: string, images?: string[]) => {
     if (brief) {
       setProductBrief(brief);
       if (name) setProductName(name);
       if (projectId) setCurrentProjectId(projectId);
+      if (images) setGeneratedImages(images);
     }
   };
 
@@ -37,6 +39,7 @@ const Index = () => {
     setProductBrief(brief);
     setProductName(name);
     setCurrentProjectId(projectId);
+    setGeneratedImages([]); // Reset images when loading existing project
     setShowSplitView(true);
   };
 
@@ -51,6 +54,7 @@ const Index = () => {
     setProductBrief(null);
     setProductName('');
     setCurrentProjectId(null);
+    setGeneratedImages([]);
     
     setShowSplitView(true);
     await sendMessage(message, true);
@@ -60,6 +64,7 @@ const Index = () => {
     setProductBrief(null);
     setProductName('');
     setCurrentProjectId(null);
+    setGeneratedImages([]);
     setShowSplitView(false);
     resetChat();
   };
@@ -115,6 +120,7 @@ const Index = () => {
       conversationState={conversationState}
       productBrief={productBrief}
       productName={productName}
+      generatedImages={generatedImages}
       onSendMessage={sendMessage}
       onResetChat={resetChat}
       onStartOver={handleStartOver}
