@@ -25,9 +25,9 @@ const ProductPreview = ({ brief, productName, generatedImages = [] }: ProductPre
           </div>
 
           {/* Right Side: Mockups */}
-          <div className="flex-1 flex flex-col gap-6">
+          <div className="flex-1 flex flex-col">
             {/* Product Mockup */}
-            <Card className="flex-1 bg-card shadow-none rounded-lg overflow-hidden">
+            <Card className="h-full bg-card shadow-none rounded-lg overflow-hidden">
               <CardContent className="h-full p-0">
                 {generatedImages.length > 0 ? (
                   <div className="h-full bg-background rounded-lg overflow-hidden">
@@ -49,8 +49,8 @@ const ProductPreview = ({ brief, productName, generatedImages = [] }: ProductPre
               </CardContent>
             </Card>
             
-            {/* Technical Drawing */}
-            <Card className="flex-1 bg-card shadow-none rounded-lg overflow-hidden">
+            {/* Technical Drawing - Hidden for now, keeping structure */}
+            <Card className="hidden flex-1 bg-card shadow-none rounded-lg overflow-hidden">
               <CardContent className="h-full p-0">
                 {generatedImages.length > 1 ? (
                   <div className="h-full bg-background rounded-lg overflow-hidden">
