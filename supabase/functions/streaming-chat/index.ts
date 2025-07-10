@@ -1026,9 +1026,9 @@ serve(async (req) => {
           // Update content for EDITING phase
           finalContent = `Perfect! I've generated your product brief for "${productBrief.product_name}". You can now review it in the preview panel and tell me what you'd like to edit or improve. What changes would you like to make?`;
           
-          // Generate images in background after saving the project
+          // Generate images in background after saving the project (non-blocking)
           console.log('Starting background image generation...');
-          await generateProductImagesForProject(savedProject, productBrief, openAIApiKey, userId);
+          EdgeRuntime.waitUntil(generateProductImagesForProject(savedProject, productBrief, openAIApiKey, userId));
         } else {
           console.log('saveProjectWithVersion returned null');
         }
