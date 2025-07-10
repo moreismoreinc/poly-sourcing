@@ -39,7 +39,7 @@ const StreamingText = ({ text }: { text: string }) => {
   return (
     <span>
       {text}
-      <span className="animate-pulse">|</span>
+      <span>|</span>
     </span>
   );
 };
@@ -99,9 +99,9 @@ const TypingIndicator = () => {
       <div className="max-w-[85%] p-3 rounded-lg bg-muted text-foreground">
         <div className="flex items-center gap-1">
           <div className="flex space-x-1">
-            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
+            <div className="w-2 h-2 bg-muted-foreground rounded-full"></div>
+            <div className="w-2 h-2 bg-muted-foreground rounded-full"></div>
+            <div className="w-2 h-2 bg-muted-foreground rounded-full"></div>
           </div>
         </div>
       </div>
@@ -284,7 +284,7 @@ const SplitViewChat = ({
           ) : (!productBrief && isLoading && conversationState.currentQuestion >= 1) ? (
             <div className="h-full bg-gradient-to-br from-muted via-muted/80 to-muted overflow-hidden relative">
               {/* Multi-layered animated background */}
-              <div className="absolute inset-0 bg-gradient-to-r from-muted/50 via-primary/5 to-muted/50 animate-pulse"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-muted/50 via-primary/5 to-muted/50"></div>
               
               {/* Primary shimmer wave */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/20 to-transparent animate-shimmer-fast"></div>
@@ -312,9 +312,6 @@ const SplitViewChat = ({
                 <DynamicAIStatus conversationState={conversationState} />
               </div>
               
-              {/* Corner highlights */}
-              <div className="absolute top-0 left-0 w-16 h-16 bg-gradient-to-br from-primary/20 to-transparent animate-corner-glow"></div>
-              <div className="absolute bottom-0 right-0 w-16 h-16 bg-gradient-to-tl from-primary/20 to-transparent animate-corner-glow [animation-delay:-1s]"></div>
             </div>
           ) : (
             <div className="h-full flex items-center justify-center">

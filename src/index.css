@@ -196,27 +196,6 @@ All colors MUST be HSL.
     }
   }
   
-  @keyframes bounce-slow {
-    0%, 100% {
-      transform: translateY(0) scale(1);
-    }
-    50% {
-      transform: translateY(-8px) scale(1.05);
-    }
-  }
-  
-  @keyframes pulse-glow {
-    0%, 100% {
-      transform: scale(1);
-      opacity: 1;
-      box-shadow: 0 0 0 0 rgba(var(--primary) / 0.4);
-    }
-    50% {
-      transform: scale(1.1);
-      opacity: 0.8;
-      box-shadow: 0 0 0 8px rgba(var(--primary) / 0);
-    }
-  }
   
   @keyframes fade-pulse {
     0%, 100% {
@@ -227,16 +206,6 @@ All colors MUST be HSL.
     }
   }
   
-  @keyframes corner-glow {
-    0%, 100% {
-      opacity: 0.3;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.6;
-      transform: scale(1.1);
-    }
-  }
   
   .animate-shimmer {
     animation: shimmer 2s ease-in-out infinite;
@@ -262,13 +231,6 @@ All colors MUST be HSL.
     animation: grid-glow 2s ease-in-out infinite;
   }
   
-  .animate-bounce-slow {
-    animation: bounce-slow 6s ease-in-out infinite;
-  }
-  
-  .animate-pulse-glow {
-    animation: pulse-glow 4s ease-in-out infinite;
-  }
   
   .animate-fade-pulse {
     animation: fade-pulse 4s ease-in-out infinite;

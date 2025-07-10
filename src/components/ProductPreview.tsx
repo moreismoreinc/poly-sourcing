@@ -40,7 +40,7 @@ const ProductPreview = ({ brief, productName, generatedImages = [] }: ProductPre
                 ) : (
                   <div className="h-full bg-gradient-to-br from-muted via-muted/80 to-muted rounded-lg overflow-hidden relative">
                     {/* Multi-layered animated background */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-muted/50 via-primary/5 to-muted/50 animate-pulse"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-muted/50 via-primary/5 to-muted/50"></div>
                     
                     {/* Primary shimmer wave */}
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/20 to-transparent animate-shimmer-fast"></div>
@@ -80,9 +80,6 @@ const ProductPreview = ({ brief, productName, generatedImages = [] }: ProductPre
                       </div>
                     </div>
                     
-                    {/* Corner highlights */}
-                    <div className="absolute top-0 left-0 w-16 h-16 bg-gradient-to-br from-primary/20 to-transparent animate-corner-glow"></div>
-                    <div className="absolute bottom-0 right-0 w-16 h-16 bg-gradient-to-tl from-primary/20 to-transparent animate-corner-glow [animation-delay:-1s]"></div>
                   </div>
                 )}
               </CardContent>
