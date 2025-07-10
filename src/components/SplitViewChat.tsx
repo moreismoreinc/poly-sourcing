@@ -44,6 +44,61 @@ const StreamingText = ({ text }: { text: string }) => {
   );
 };
 
+// Dynamic AI status component
+const DynamicAIStatus = ({ conversationState }: { conversationState: ConversationState }) => {
+  const [currentStage, setCurrentStage] = useState(0);
+  
+  // Extract product details from answers
+  const productName = conversationState.answers['product_idea'] || conversationState.answers['idea'] || 'product';
+  const referenceBrand = conversationState.answers['reference_brand'] || conversationState.answers['brand'] || '';
+  
+  // Define the stages with dynamic content
+  const stages = [
+    `Researching ${productName}...`,
+    referenceBrand ? `Analyzing ${referenceBrand} positioning...` : 'Analyzing market positioning...',
+    'Determining target audience...',
+    'Researching materials and specifications...',
+    'Drafting product brief...',
+    'Finalizing recommendations...'
+  ];
+  
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentStage((prev) => (prev + 1) % stages.length);
+    }, 2000); // Change every 2 seconds
+    
+    return () => clearInterval(interval);
+  }, [stages.length]);
+  
+  return (
+    <div className="text-center text-muted-foreground relative">
+      {/* Glowing icon */}
+      <div className="relative mb-6">
+        <div className="text-5xl animate-bounce-slow filter drop-shadow-lg">📋</div>
+        <div className="absolute inset-0 text-5xl animate-bounce-slow opacity-30 blur-sm scale-110">📋</div>
+      </div>
+      
+      {/* Animated dots with glow */}
+      <div className="flex items-center justify-center gap-2 mb-4">
+        <div className="w-3 h-3 bg-primary rounded-full animate-pulse-glow [animation-delay:-0.4s] shadow-lg shadow-primary/50"></div>
+        <div className="w-3 h-3 bg-primary rounded-full animate-pulse-glow [animation-delay:-0.2s] shadow-lg shadow-primary/50"></div>
+        <div className="w-3 h-3 bg-primary rounded-full animate-pulse-glow shadow-lg shadow-primary/50"></div>
+      </div>
+      
+      {/* Dynamic text with fade transition */}
+      <div className="h-12 flex flex-col justify-center">
+        <p className="text-base font-semibold tracking-wide mb-2 animate-fade-pulse">Generating your product brief...</p>
+        <p 
+          key={currentStage}
+          className="text-sm opacity-75 animate-fade-pulse transition-opacity duration-500"
+        >
+          {stages[currentStage]}
+        </p>
+      </div>
+    </div>
+  );
+};
+
 // Typing indicator component
 const TypingIndicator = () => {
   return (
@@ -229,17 +284,6 @@ const SplitViewChat = ({
 
         {/* Results Panel - 2/3 width */}
         <div className="w-2/3 bg-muted/30">
-          {(() => {
-            console.log('Debug - Animation condition check:', {
-              productBrief: !!productBrief,
-              phase: conversationState.phase,
-              isLoading,
-              questionsCompleted: conversationState.questionsCompleted,
-              currentQuestion: conversationState.currentQuestion,
-              shouldShowAnimation: !productBrief && isLoading && conversationState.currentQuestion >= 1
-            });
-            return null;
-          })()}
           {productBrief ? (
             <ProductPreview brief={productBrief} productName={productName} generatedImages={generatedImages} />
           ) : (!productBrief && isLoading && conversationState.currentQuestion >= 1) ? (
@@ -270,24 +314,7 @@ const SplitViewChat = ({
               
               {/* Central content */}
               <div className="absolute inset-0 flex items-center justify-center bg-gradient-radial from-transparent via-background/5 to-transparent">
-                <div className="text-center text-muted-foreground relative">
-                  {/* Glowing icon */}
-                  <div className="relative mb-6">
-                    <div className="text-5xl animate-bounce-slow filter drop-shadow-lg">📋</div>
-                    <div className="absolute inset-0 text-5xl animate-bounce-slow opacity-30 blur-sm scale-110">📋</div>
-                  </div>
-                  
-                  {/* Animated dots with glow */}
-                  <div className="flex items-center justify-center gap-2 mb-4">
-                    <div className="w-3 h-3 bg-primary rounded-full animate-pulse-glow [animation-delay:-0.4s] shadow-lg shadow-primary/50"></div>
-                    <div className="w-3 h-3 bg-primary rounded-full animate-pulse-glow [animation-delay:-0.2s] shadow-lg shadow-primary/50"></div>
-                    <div className="w-3 h-3 bg-primary rounded-full animate-pulse-glow shadow-lg shadow-primary/50"></div>
-                  </div>
-                  
-                  {/* Text with subtle glow */}
-                  <p className="text-base font-semibold tracking-wide mb-2 animate-fade-pulse">Generating your product brief...</p>
-                  <p className="text-sm opacity-75 animate-fade-pulse [animation-delay:-0.5s]">AI is analyzing your requirements</p>
-                </div>
+                <DynamicAIStatus conversationState={conversationState} />
               </div>
               
               {/* Corner highlights */}
