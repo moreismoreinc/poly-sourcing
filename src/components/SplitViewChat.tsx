@@ -65,7 +65,7 @@ const DynamicAIStatus = ({ conversationState }: { conversationState: Conversatio
   React.useEffect(() => {
     const interval = setInterval(() => {
       setCurrentStage((prev) => (prev + 1) % stages.length);
-    }, 2000); // Change every 2 seconds
+    }, 4000); // Change every 4 seconds (slower)
     
     return () => clearInterval(interval);
   }, [stages.length]);
