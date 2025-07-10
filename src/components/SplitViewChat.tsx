@@ -231,7 +231,7 @@ const SplitViewChat = ({
         <div className="w-2/3 bg-muted/30">
           {productBrief ? (
             <ProductPreview brief={productBrief} productName={productName} generatedImages={generatedImages} />
-          ) : conversationState.phase === 'GENERATING' ? (
+          ) : (conversationState.phase === 'GENERATING' || (isLoading && conversationState.questionsCompleted)) ? (
             <div className="h-full bg-gradient-to-br from-muted via-muted/80 to-muted overflow-hidden relative">
               {/* Multi-layered animated background */}
               <div className="absolute inset-0 bg-gradient-to-r from-muted/50 via-primary/5 to-muted/50 animate-pulse"></div>
