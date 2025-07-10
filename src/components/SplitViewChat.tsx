@@ -229,6 +229,16 @@ const SplitViewChat = ({
 
         {/* Results Panel - 2/3 width */}
         <div className="w-2/3 bg-muted/30">
+          {(() => {
+            console.log('Debug - Animation condition check:', {
+              productBrief: !!productBrief,
+              phase: conversationState.phase,
+              isLoading,
+              questionsCompleted: conversationState.questionsCompleted,
+              shouldShowAnimation: conversationState.phase === 'GENERATING' || (isLoading && conversationState.questionsCompleted)
+            });
+            return null;
+          })()}
           {productBrief ? (
             <ProductPreview brief={productBrief} productName={productName} generatedImages={generatedImages} />
           ) : (conversationState.phase === 'GENERATING' || (isLoading && conversationState.questionsCompleted)) ? (
