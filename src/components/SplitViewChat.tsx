@@ -235,13 +235,14 @@ const SplitViewChat = ({
               phase: conversationState.phase,
               isLoading,
               questionsCompleted: conversationState.questionsCompleted,
-              shouldShowAnimation: !productBrief && isLoading && conversationState.questionsCompleted
+              currentQuestion: conversationState.currentQuestion,
+              shouldShowAnimation: !productBrief && isLoading && conversationState.currentQuestion >= 1
             });
             return null;
           })()}
           {productBrief ? (
             <ProductPreview brief={productBrief} productName={productName} generatedImages={generatedImages} />
-          ) : (!productBrief && isLoading && conversationState.questionsCompleted) ? (
+          ) : (!productBrief && isLoading && conversationState.currentQuestion >= 1) ? (
             <div className="h-full bg-gradient-to-br from-muted via-muted/80 to-muted overflow-hidden relative">
               {/* Multi-layered animated background */}
               <div className="absolute inset-0 bg-gradient-to-r from-muted/50 via-primary/5 to-muted/50 animate-pulse"></div>
