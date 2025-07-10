@@ -93,23 +93,38 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
 
   // Save message to database
   const saveMessageToDB = useCallback(async (message: Message, currentProjectId?: string) => {
-    if (!currentProjectId) return;
+    if (!currentProjectId) {
+      console.log('No project ID provided, cannot save message:', message.content.substring(0, 50));
+      return;
+    }
     
     try {
+      console.log('Saving message to DB:', {
+        projectId: currentProjectId,
+        role: message.role,
+        content: message.content.substring(0, 100) + '...'
+      });
+      
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.log('No user found, cannot save message');
+        return;
+      }
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('chat_messages')
         .insert({
           project_id: currentProjectId,
           user_id: user.id,
           role: message.role,
           content: message.content
-        });
+        })
+        .select();
 
       if (error) {
         console.error('Error saving message:', error);
+      } else {
+        console.log('Message saved successfully:', data);
       }
     } catch (error) {
       console.error('Error saving chat message:', error);

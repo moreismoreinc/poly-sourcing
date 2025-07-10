@@ -31,10 +31,20 @@ const Index = () => {
   const displayImages = projectImages.length > 0 ? projectImages : generatedImages;
 
   const handleBriefUpdate = async (brief: Record<string, any> | null, name?: string, projectId?: string, images?: string[]) => {
+    console.log('handleBriefUpdate called with:', { 
+      brief: !!brief, 
+      name, 
+      projectId, 
+      images: images?.length 
+    });
+    
     if (brief) {
       setProductBrief(brief);
       if (name) setProductName(name);
-      if (projectId) setCurrentProjectId(projectId);
+      if (projectId) {
+        console.log('Setting current project ID to:', projectId);
+        setCurrentProjectId(projectId);
+      }
       if (images) setGeneratedImages(images);
     }
   };
@@ -47,6 +57,7 @@ const Index = () => {
   });
 
   const handleProjectSelect = (brief: Record<string, any>, name: string, projectId: string) => {
+    console.log('handleProjectSelect called with:', { name, projectId, briefExists: !!brief });
     setProductBrief(brief);
     setProductName(name);
     setCurrentProjectId(projectId);
