@@ -53,8 +53,12 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
   // Load messages from database for a given project
   const loadMessagesFromDB = useCallback(async (currentProjectId: string) => {
     try {
+      console.log('Loading messages for project:', currentProjectId);
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.log('No user found, cannot load messages');
+        return;
+      }
 
       const { data, error } = await supabase
         .from('chat_messages')
@@ -68,6 +72,7 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
         return;
       }
 
+      console.log('Loaded messages from DB:', data);
       if (data && data.length > 0) {
         const loadedMessages: Message[] = data.map(msg => ({
           id: msg.id,
@@ -75,8 +80,11 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
           content: msg.content,
           timestamp: new Date(msg.created_at)
         }));
+        console.log('Setting loaded messages:', loadedMessages);
         setMessages(loadedMessages);
         setConversationStarted(true);
+      } else {
+        console.log('No messages found for project');
       }
     } catch (error) {
       console.error('Error loading chat messages:', error);
