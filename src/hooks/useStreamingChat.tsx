@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 // Removed ProductBrief import - using dynamic JSON data
 
@@ -22,9 +22,10 @@ interface UseStreamingChatProps {
   onBriefUpdate?: (brief: Record<string, any> | null, productName?: string, projectId?: string, generatedImages?: string[]) => void;
   existingBrief?: Record<string, any> | null;
   onConversationStart?: () => void;
+  projectId?: string | null;
 }
 
-export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationStart }: UseStreamingChatProps = {}) => {
+export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationStart, projectId }: UseStreamingChatProps = {}) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentResponse, setCurrentResponse] = useState('');
@@ -48,6 +49,75 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
     }
     return null;
   }, []);
+
+  // Load messages from database for a given project
+  const loadMessagesFromDB = useCallback(async (currentProjectId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('project_id', currentProjectId)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error loading messages:', error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        const loadedMessages: Message[] = data.map(msg => ({
+          id: msg.id,
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content,
+          timestamp: new Date(msg.created_at)
+        }));
+        setMessages(loadedMessages);
+        setConversationStarted(true);
+      }
+    } catch (error) {
+      console.error('Error loading chat messages:', error);
+    }
+  }, []);
+
+  // Save message to database
+  const saveMessageToDB = useCallback(async (message: Message, currentProjectId?: string) => {
+    if (!currentProjectId) return;
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('chat_messages')
+        .insert({
+          project_id: currentProjectId,
+          user_id: user.id,
+          role: message.role,
+          content: message.content
+        });
+
+      if (error) {
+        console.error('Error saving message:', error);
+      }
+    } catch (error) {
+      console.error('Error saving chat message:', error);
+    }
+  }, []);
+
+  // Load messages when projectId changes
+  useEffect(() => {
+    if (projectId) {
+      loadMessagesFromDB(projectId);
+    } else {
+      // Clear messages when no project is selected
+      setMessages([]);
+      setConversationStarted(false);
+    }
+  }, [projectId, loadMessagesFromDB]);
 
   const sendMessage = useCallback(async (content: string, isInitial = false) => {
     if (isLoading) return;
@@ -112,6 +182,13 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
 
         setMessages(prev => [...prev, assistantMessage]);
         setCurrentResponse('');
+
+        // Save both user and assistant messages to database
+        if (data.savedProject?.id || projectId) {
+          const currentProjectId = data.savedProject?.id || projectId;
+          await saveMessageToDB(userMessage, currentProjectId);
+          await saveMessageToDB(assistantMessage, currentProjectId);
+        }
 
         // Use saved project data if available, otherwise extract from response
         if (data.savedProject && onBriefUpdate) {

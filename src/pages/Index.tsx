@@ -43,6 +43,7 @@ const Index = () => {
     onBriefUpdate: handleBriefUpdate,
     existingBrief: productBrief,
     onConversationStart: () => setShowSplitView(true),
+    projectId: currentProjectId,
   });
 
   const handleProjectSelect = (brief: Record<string, any>, name: string, projectId: string) => {
