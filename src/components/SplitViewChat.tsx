@@ -74,15 +74,8 @@ const DynamicAIStatus = ({ conversationState }: { conversationState: Conversatio
     <div className="text-center text-muted-foreground relative">
       {/* Glowing text */}
       <div className="relative mb-6">
-        <div className="text-3xl font-geneering animate-bounce-slow filter drop-shadow-lg" style={{color: '#f3f3f3'}}>geneering</div>
-        <div className="absolute inset-0 text-3xl font-geneering animate-bounce-slow opacity-30 blur-sm scale-110" style={{color: '#f3f3f3'}}>geneering</div>
-      </div>
-      
-      {/* Animated dots with glow */}
-      <div className="flex items-center justify-center gap-2 mb-4">
-        <div className="w-3 h-3 bg-primary rounded-full animate-pulse-glow [animation-delay:-0.4s] shadow-lg shadow-primary/50"></div>
-        <div className="w-3 h-3 bg-primary rounded-full animate-pulse-glow [animation-delay:-0.2s] shadow-lg shadow-primary/50"></div>
-        <div className="w-3 h-3 bg-primary rounded-full animate-pulse-glow shadow-lg shadow-primary/50"></div>
+        <div className="text-3xl font-geneering filter drop-shadow-lg" style={{color: '#f3f3f3'}}>geneering</div>
+        <div className="absolute inset-0 text-3xl font-geneering opacity-30 blur-sm scale-110" style={{color: '#f3f3f3'}}>geneering</div>
       </div>
       
       {/* Dynamic text with fade transition */}

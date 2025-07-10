@@ -243,19 +243,19 @@ All colors MUST be HSL.
   }
   
   .animate-shimmer-fast {
-    animation: shimmer-fast 4s ease-in-out infinite;
+    animation: shimmer-fast 8s ease-in-out infinite;
   }
   
   .animate-shimmer-slow {
-    animation: shimmer-slow 6s ease-in-out infinite;
+    animation: shimmer-slow 12s ease-in-out infinite;
   }
   
   .animate-scan-vertical {
-    animation: scan-vertical 2s linear infinite;
+    animation: scan-vertical 4s linear infinite;
   }
   
   .animate-scan-horizontal {
-    animation: scan-horizontal 2.5s linear infinite;
+    animation: scan-horizontal 5s linear infinite;
   }
   
   .animate-grid-glow {
