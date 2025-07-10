@@ -38,11 +38,35 @@ const ProductPreview = ({ brief, productName, generatedImages = [] }: ProductPre
                     />
                   </div>
                 ) : (
-                  <div className="h-full bg-muted rounded-lg flex items-center justify-center">
-                    <div className="text-center text-muted-foreground">
-                      <div className="text-4xl mb-2">📦</div>
-                      <p className="text-sm font-medium">Product Mockup</p>
-                      <p className="text-xs">Generating...</p>
+                  <div className="h-full bg-muted rounded-lg overflow-hidden relative">
+                    {/* Animated generating background */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-muted via-muted/50 to-muted animate-pulse">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/20 to-transparent animate-shimmer"></div>
+                    </div>
+                    
+                    {/* Generating dots animation */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center text-muted-foreground">
+                        <div className="text-4xl mb-4 animate-bounce">🎨</div>
+                        <div className="flex items-center justify-center gap-1 mb-2">
+                          <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                          <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                          <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+                        </div>
+                        <p className="text-sm font-medium">Generating mockup...</p>
+                        <p className="text-xs">This may take a moment</p>
+                      </div>
+                    </div>
+                    
+                    {/* Grid overlay for tech feel */}
+                    <div className="absolute inset-0 opacity-10">
+                      <div className="h-full w-full" style={{
+                        backgroundImage: `
+                          linear-gradient(rgba(var(--primary) / 0.1) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(var(--primary) / 0.1) 1px, transparent 1px)
+                        `,
+                        backgroundSize: '20px 20px'
+                      }}></div>
                     </div>
                   </div>
                 )}
