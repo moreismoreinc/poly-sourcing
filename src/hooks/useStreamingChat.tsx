@@ -122,6 +122,36 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
   const sendMessage = useCallback(async (content: string, isInitial = false) => {
     if (isLoading) return;
 
+    let currentProjectId = projectId;
+
+    // Create project immediately on first message if not exists
+    if (!conversationStarted && !currentProjectId) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: newProject, error } = await supabase
+            .from('projects')
+            .insert({
+              user_id: user.id,
+              product_name: 'New Project', // Temporary name
+              product_brief: { status: 'draft' }, // Minimal brief
+            })
+            .select()
+            .single();
+
+          if (error) {
+            console.error('Error creating project:', error);
+          } else if (newProject) {
+            currentProjectId = newProject.id;
+            // Notify parent component about the new project
+            onBriefUpdate?.(newProject.product_brief as Record<string, any>, newProject.product_name, newProject.id);
+          }
+        }
+      } catch (error) {
+        console.error('Error creating initial project:', error);
+      }
+    }
+
     // Mark conversation as started
     if (!conversationStarted) {
       setConversationStarted(true);
@@ -184,10 +214,10 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
         setCurrentResponse('');
 
         // Save both user and assistant messages to database
-        if (data.savedProject?.id || projectId) {
-          const currentProjectId = data.savedProject?.id || projectId;
-          await saveMessageToDB(userMessage, currentProjectId);
-          await saveMessageToDB(assistantMessage, currentProjectId);
+        if (data.savedProject?.id || currentProjectId) {
+          const saveProjectId = data.savedProject?.id || currentProjectId;
+          await saveMessageToDB(userMessage, saveProjectId);
+          await saveMessageToDB(assistantMessage, saveProjectId);
         }
 
         // Use saved project data if available, otherwise extract from response
@@ -222,7 +252,7 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
       setIsLoading(false);
       abortControllerRef.current = null;
     }
-  }, [messages, isLoading, existingBrief, onBriefUpdate, extractBriefFromResponse, conversationStarted, onConversationStart]);
+  }, [messages, isLoading, existingBrief, onBriefUpdate, extractBriefFromResponse, conversationStarted, onConversationStart, projectId]);
 
   const resetChat = useCallback(() => {
     if (abortControllerRef.current) {
