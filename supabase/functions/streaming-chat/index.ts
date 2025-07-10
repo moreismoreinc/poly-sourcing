@@ -56,7 +56,7 @@ const QUESTIONING_PROMPT = `You are a product development expert conducting a st
 CURRENT CONVERSATION STATE: {{STATE}}
 
 Your role:
-1. Ask the 2 core questions below, one at a time, and ask only those two questions
+1. Ask the 2 core questions below, one at a time, and ask only those two questions then respond once
 2. Accept any reasonable answer - don't ask follow-ups
 3. Keep responses short and encouraging
 
