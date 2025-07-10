@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, RotateCcw, ArrowLeft, Download, User, LogOut } from 'lucide-react';
 // Removed ProductBrief import as we're now using dynamic JSON data
 import ProductPreview from '@/components/ProductPreview';
@@ -124,6 +125,12 @@ const SplitViewChat = ({
 }: SplitViewChatProps) => {
   const { user, signOut } = useAuth();
   const [input, setInput] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, currentResponse]);
 
   const handleSendMessage = () => {
     if (!input.trim() || isLoading) return;
@@ -215,35 +222,40 @@ const SplitViewChat = ({
             
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.map((message) => (
-                <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                   <div className={`max-w-[85%] p-3 rounded-lg text-sm ${
-                     message.role === 'user' 
-                       ? 'bg-primary text-primary-foreground' 
-                       : 'bg-muted text-foreground'
-                    }`}>
-                      <div className="whitespace-pre-wrap">{message.content}</div>
-                    </div>
-                </div>
-              ))}
-              
-              {/* Show typing indicator when loading but no response yet */}
-              {isLoading && !currentResponse && (
-                <TypingIndicator />
-              )}
-              
-              {/* Show streaming response */}
-              {currentResponse && (
-                <div className="flex justify-start">
-                  <div className="max-w-[85%] p-3 rounded-lg bg-muted text-foreground">
-                    <div className="text-sm whitespace-pre-wrap">
-                      <StreamingText text={currentResponse} />
+            <ScrollArea className="flex-1 px-4">
+              <div className="space-y-4 py-4">
+                {messages.map((message) => (
+                  <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                     <div className={`max-w-[85%] p-3 rounded-lg text-sm ${
+                       message.role === 'user' 
+                         ? 'bg-primary text-primary-foreground' 
+                         : 'bg-muted text-foreground'
+                      }`}>
+                        <div className="whitespace-pre-wrap">{message.content}</div>
+                      </div>
+                  </div>
+                ))}
+                
+                {/* Show typing indicator when loading but no response yet */}
+                {isLoading && !currentResponse && (
+                  <TypingIndicator />
+                )}
+                
+                {/* Show streaming response */}
+                {currentResponse && (
+                  <div className="flex justify-start">
+                    <div className="max-w-[85%] p-3 rounded-lg bg-muted text-foreground">
+                      <div className="text-sm whitespace-pre-wrap">
+                        <StreamingText text={currentResponse} />
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+                
+                {/* Invisible anchor for auto-scrolling */}
+                <div ref={messagesEndRef} />
+              </div>
+            </ScrollArea>
 
             {/* Input Area */}
             <div className="border-t border-border p-4 flex-shrink-0">
