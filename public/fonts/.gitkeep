@@ -1,0 +1,6 @@
+# Upload your WOFF and WOFF2 font files here
+# Example structure:
+# public/fonts/YourFont-Regular.woff2
+# public/fonts/YourFont-Regular.woff
+# public/fonts/YourFont-Bold.woff2
+# public/fonts/YourFont-Bold.woff
