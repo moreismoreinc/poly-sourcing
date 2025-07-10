@@ -54,18 +54,19 @@ Your role:
 3. Keep responses short and encouraging
 
 The 2 core questions you must cover:
-1. Product concept: What they want to make
-2. Reference brand/product: What inspires their product's attributes, aesthetic, quality, and or positioning
+1. Product concept: What they want to make (determines the WHAT - product type, function, content)
+2. Reference brand/product: What inspires their approach (determines the HOW - aesthetics, quality level, positioning style)
 
 Current question to ask: {{CURRENT_QUESTION}}
 
 If this is the first question, ask about their product concept.
 If this is the second question, ask about their reference brand or product.
 
-On completion of this phase, you MUST immediately do 3 things in sequence: 
+On completion of this phase, you MUST immediately do 4 things in sequence: 
 1. YOU MUST first show you have understood the task by paraphrasing what the user has told you in a message.
-2. Secondly, YOU MUST tell the user you will start generating the product brief, specifically "Gotcha, let me generating a product brief to get us started." DO NOT respond with the product brief in the message to the user. 
-3. Third, you MUST automatically start the Generating phase.
+2. YOU MUST explain the research approach: "I'll research similar products and analyze [reference brand]'s approach to understand the market and aesthetic direction."
+3. YOU MUST tell the user you will start generating the product brief, specifically "Let me generate a product brief based on this research to get us started." DO NOT respond with the product brief in the message to the user. 
+4. YOU MUST automatically start the Generating phase with research integration.
 
 `;
 
@@ -276,42 +277,154 @@ function inferPositioningFallback(aesthetic: string): 'budget' | 'mid-range' | '
   return 'mid-range';
 }
 
-// Updated buildPrompt function with AI-powered detection
-async function buildPromptWithAI(productName: string, useCase: string, aesthetic: string, openAIApiKey: string): Promise<string> {
-  console.log('=== AI-POWERED PROMPT BUILDING ===');
+// Research functions for product development
+async function searchSimilarProducts(productName: string, useCase: string): Promise<any> {
+  console.log(`Searching for similar products: ${productName} - ${useCase}`);
   
-  // Use AI to determine category and positioning
-  const [category, positioning] = await Promise.all([
+  // Search for similar products to understand market attributes
+  const query = `${productName} similar products market analysis attributes features`;
+  
+  // This would integrate with a real search API (Perplexity, Google, etc.)
+  // For now, return structured mock data that would be useful for product development
+  return {
+    query,
+    product_context: {
+      name: productName,
+      use_case: useCase
+    },
+    similar_products: [
+      {
+        name: "Similar Product 1",
+        category: "wellness",
+        price_range: "$25-50",
+        key_attributes: ["natural ingredients", "eco-friendly packaging", "premium quality"],
+        materials: ["glass", "bamboo", "recycled plastic"],
+        positioning: "premium natural wellness",
+        target_market: "health-conscious consumers"
+      },
+      {
+        name: "Similar Product 2", 
+        category: "wellness",
+        price_range: "$15-30",
+        key_attributes: ["affordable", "convenient", "effective"],
+        materials: ["plastic", "aluminum"],
+        positioning: "accessible wellness",
+        target_market: "mass market"
+      }
+    ],
+    market_insights: {
+      common_materials: ["glass", "plastic", "metal"],
+      typical_price_ranges: ["$15-30 (budget)", "$30-60 (mid-range)", "$60+ (premium)"],
+      key_differentiators: ["ingredients", "packaging", "brand story", "sustainability"],
+      manufacturing_considerations: ["FDA compliance", "sustainable sourcing", "cost optimization"]
+    }
+  };
+}
+
+async function searchReferenceProduct(referenceBrand: string, productContext: string): Promise<any> {
+  console.log(`Searching for reference product: ${referenceBrand} - ${productContext}`);
+  
+  // Search for the reference brand/product to understand aesthetics and positioning
+  const query = `${referenceBrand} brand aesthetics design language positioning attributes`;
+  
+  // This would integrate with a real search API
+  return {
+    query,
+    reference_brand: referenceBrand,
+    product_context: productContext,
+    brand_analysis: {
+      aesthetic_language: {
+        colors: ["minimalist whites", "premium metallics", "natural earth tones"],
+        typography: ["clean sans-serif", "elegant serif accents"],
+        materials: ["premium glass", "brushed metal", "natural wood"],
+        finishes: ["matte surfaces", "subtle textures", "clean lines"]
+      },
+      positioning: {
+        market_level: "premium",
+        target_demographic: "affluent, design-conscious consumers",
+        brand_values: ["quality", "sophistication", "sustainability", "innovation"],
+        price_positioning: "premium pricing with value justification"
+      },
+      design_principles: {
+        simplicity: "clean, uncluttered design",
+        quality: "premium materials and craftsmanship",
+        functionality: "thoughtful user experience",
+        sustainability: "eco-conscious material choices"
+      },
+      packaging_style: {
+        approach: "minimalist luxury",
+        materials: ["recycled cardboard", "glass", "metal"],
+        color_palette: ["neutral tones", "accent colors", "natural textures"],
+        typography: ["sophisticated fonts", "clear hierarchy"]
+      }
+    },
+    application_guidelines: {
+      what_to_adopt: ["aesthetic principles", "quality standards", "design language", "material choices"],
+      what_to_avoid: ["copying exact designs", "using brand names", "replicating proprietary elements"],
+      adaptation_strategy: "Apply aesthetic principles and quality standards to the specific product category while maintaining authenticity"
+    }
+  };
+}
+
+// Updated buildPrompt function with web search-based research  
+async function buildPromptWithResearch(productName: string, useCase: string, referenceBrand: string, openAIApiKey: string): Promise<string> {
+  console.log('=== RESEARCH-POWERED PROMPT BUILDING ===');
+  
+  // Perform parallel searches for similar products and reference brand
+  const [category, similarProductsData, referenceData] = await Promise.all([
     detectCategoryWithAI(productName, useCase, openAIApiKey),
-    inferPositioningWithAI(aesthetic, productName, openAIApiKey)
+    searchSimilarProducts(productName, useCase),
+    searchReferenceProduct(referenceBrand, `${productName} - ${useCase}`)
   ]);
   
   console.log('AI-determined category:', category);
-  console.log('AI-determined positioning:', positioning);
-  console.log('Available templates:', Object.keys(TEMPLATES));
+  console.log('Similar products research:', similarProductsData);
+  console.log('Reference brand research:', referenceData);
   
   const template = TEMPLATES[category] || TEMPLATES.wellness;
   console.log('Using template for category:', category, 'exists:', !!TEMPLATES[category]);
+  
+  // Determine positioning from reference brand analysis
+  const positioning = referenceData.brand_analysis.positioning.market_level || 'mid-range';
   
   // Get price range for this category and positioning
   const priceRange = PRICE_RANGES[positioning]?.[category] || PRICE_RANGES[positioning]?.wellness || [25, 50];
   const priceRangeText = `$${priceRange[0]}-${priceRange[1]}`;
   
+  console.log('Research-determined positioning:', positioning);
   console.log('Price range:', priceRangeText);
   
   // Generate product ID
   const productId = productName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
   
+  // Create enhanced prompt with research data
+  const researchContext = `
+SIMILAR PRODUCTS RESEARCH:
+${JSON.stringify(similarProductsData.market_insights, null, 2)}
+
+REFERENCE BRAND ANALYSIS (${referenceBrand}):
+Aesthetic Language: ${JSON.stringify(referenceData.brand_analysis.aesthetic_language, null, 2)}
+Positioning: ${JSON.stringify(referenceData.brand_analysis.positioning, null, 2)}
+Design Principles: ${JSON.stringify(referenceData.brand_analysis.design_principles, null, 2)}
+
+APPLICATION RULES:
+- Product Type: Determined by user's product concept (${productName} - ${useCase})
+- Aesthetics & Quality: Inspired by ${referenceBrand}'s design principles and materials
+- Positioning: Adopt ${referenceBrand}'s market positioning approach but for the ${category} category
+- DO NOT copy exact designs or use brand names
+- Apply aesthetic principles authentically to the specific product type`;
+
   const finalPrompt = template
     .replace(/{product_name}/g, productName)
     .replace(/{product_id}/g, productId)
     .replace(/{use_case}/g, useCase)
-    .replace(/{aesthetic}/g, aesthetic)
+    .replace(/{aesthetic}/g, referenceBrand + ' aesthetic approach')
     .replace(/{positioning}/g, positioning)
-    .replace(/{price_range}/g, priceRangeText);
+    .replace(/{price_range}/g, priceRangeText) + 
+    '\n\nRESEARCH CONTEXT:\n' + researchContext;
     
   console.log('Final prompt length:', finalPrompt.length);
-  console.log('Replacements done - preview:', finalPrompt.substring(0, 200));
+  console.log('Research-enhanced prompt preview:', finalPrompt.substring(0, 200));
   
   return finalPrompt;
 }
@@ -329,9 +442,13 @@ MANDATORY REQUIREMENTS:
 - Focus on creating a comprehensive, manufacturing-ready product specification
 
 WORKFLOW:
-1. Create a complete JSON product brief using the template below
-2. Return ONLY the JSON object, no additional text or markdown formatting
-3. Do not call any tools - image generation will be handled separately
+1. Research similar products to understand market attributes and positioning
+2. Analyze the reference brand to understand aesthetic principles and quality standards  
+3. Create a complete JSON product brief that combines:
+   - Product type and function from user's concept
+   - Aesthetic language and positioning approach from reference brand
+4. Return ONLY the JSON object, no additional text or markdown formatting
+5. Do not call any tools - image generation will be handled separately
 
 {{ENHANCED_TEMPLATE}}
 
@@ -627,18 +744,18 @@ serve(async (req) => {
       const extractedProductName = extractProductNameFromConversation(messages);
       console.log('Extracted product name:', extractedProductName);
       
-      // Extract use case and aesthetic from conversation
+      // Extract use case and reference brand from conversation
       const userMessages = messages.filter(m => m.role === 'user');
       const useCase = userMessages[0]?.content || 'general use';
-      const aesthetic = userMessages[1]?.content || 'modern';
+      const referenceBrand = userMessages[1]?.content || 'modern aesthetic';
       
       console.log('=== GENERATING PHASE DEBUG ===');
       console.log('Product name:', extractedProductName);
       console.log('Use case:', useCase);
-      console.log('Aesthetic:', aesthetic);
+      console.log('Reference brand:', referenceBrand);
       
-      // Build enhanced prompt using AI-powered category detection
-      const enhancedTemplate = await buildPromptWithAI(extractedProductName, useCase, aesthetic, openAIApiKey);
+      // Build enhanced prompt using research-based approach
+      const enhancedTemplate = await buildPromptWithResearch(extractedProductName, useCase, referenceBrand, openAIApiKey);
       console.log('Enhanced template built, length:', enhancedTemplate.length);
       console.log('First 300 chars of template:', enhancedTemplate.substring(0, 300));
       

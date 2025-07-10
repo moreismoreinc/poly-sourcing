@@ -450,9 +450,97 @@ ${JSON.stringify(productBrief, null, 2)}`;
   }
 }
 
-// Tool execution functions
+// Tool execution functions for product research
+export async function searchSimilarProducts(productName: string, useCase: string): Promise<any> {
+  console.log(`Searching for similar products: ${productName} - ${useCase}`);
+  
+  // Search for similar products to understand market attributes
+  const query = `${productName} similar products market analysis attributes features`;
+  
+  // This would integrate with a real search API (Perplexity, Google, etc.)
+  // For now, return structured mock data that would be useful for product development
+  return {
+    query,
+    product_context: {
+      name: productName,
+      use_case: useCase
+    },
+    similar_products: [
+      {
+        name: "Similar Product 1",
+        category: "wellness",
+        price_range: "$25-50",
+        key_attributes: ["natural ingredients", "eco-friendly packaging", "premium quality"],
+        materials: ["glass", "bamboo", "recycled plastic"],
+        positioning: "premium natural wellness",
+        target_market: "health-conscious consumers"
+      },
+      {
+        name: "Similar Product 2", 
+        category: "wellness",
+        price_range: "$15-30",
+        key_attributes: ["affordable", "convenient", "effective"],
+        materials: ["plastic", "aluminum"],
+        positioning: "accessible wellness",
+        target_market: "mass market"
+      }
+    ],
+    market_insights: {
+      common_materials: ["glass", "plastic", "metal"],
+      typical_price_ranges: ["$15-30 (budget)", "$30-60 (mid-range)", "$60+ (premium)"],
+      key_differentiators: ["ingredients", "packaging", "brand story", "sustainability"],
+      manufacturing_considerations: ["FDA compliance", "sustainable sourcing", "cost optimization"]
+    }
+  };
+}
+
+export async function searchReferenceProduct(referenceBrand: string, productContext: string): Promise<any> {
+  console.log(`Searching for reference product: ${referenceBrand} - ${productContext}`);
+  
+  // Search for the reference brand/product to understand aesthetics and positioning
+  const query = `${referenceBrand} brand aesthetics design language positioning attributes`;
+  
+  // This would integrate with a real search API
+  return {
+    query,
+    reference_brand: referenceBrand,
+    product_context: productContext,
+    brand_analysis: {
+      aesthetic_language: {
+        colors: ["minimalist whites", "premium metallics", "natural earth tones"],
+        typography: ["clean sans-serif", "elegant serif accents"],
+        materials: ["premium glass", "brushed metal", "natural wood"],
+        finishes: ["matte surfaces", "subtle textures", "clean lines"]
+      },
+      positioning: {
+        market_level: "premium",
+        target_demographic: "affluent, design-conscious consumers",
+        brand_values: ["quality", "sophistication", "sustainability", "innovation"],
+        price_positioning: "premium pricing with value justification"
+      },
+      design_principles: {
+        simplicity: "clean, uncluttered design",
+        quality: "premium materials and craftsmanship",
+        functionality: "thoughtful user experience",
+        sustainability: "eco-conscious material choices"
+      },
+      packaging_style: {
+        approach: "minimalist luxury",
+        materials: ["recycled cardboard", "glass", "metal"],
+        color_palette: ["neutral tones", "accent colors", "natural textures"],
+        typography: ["sophisticated fonts", "clear hierarchy"]
+      }
+    },
+    application_guidelines: {
+      what_to_adopt: ["aesthetic principles", "quality standards", "design language", "material choices"],
+      what_to_avoid: ["copying exact designs", "using brand names", "replicating proprietary elements"],
+      adaptation_strategy: "Apply aesthetic principles and quality standards to the specific product category while maintaining authenticity"
+    }
+  };
+}
+
 export async function executeWebSearch(query: string, focus?: string): Promise<any> {
-  console.log(`Executing web search: ${query} (focus: ${focus})`);
+  console.log(`Executing general web search: ${query} (focus: ${focus})`);
   
   // This would integrate with a real search API
   // For now, return mock data that would be useful for product development
@@ -462,7 +550,7 @@ export async function executeWebSearch(query: string, focus?: string): Promise<a
     results: [
       {
         title: "Market Research Results",
-        snippet: "Relevant market data and competitor analysis",
+        snippet: "Relevant market data and competitor analysis", 
         url: "https://example.com/market-research"
       }
     ],
