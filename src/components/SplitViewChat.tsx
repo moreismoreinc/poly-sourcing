@@ -152,7 +152,7 @@ const SplitViewChat = ({
         <div className="px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <h1 className="text-xxl font-bold text-foreground tracking-tight font-geneering">
+              <h1 className="text-5xl font-bold text-foreground tracking-tight font-geneering">
                 geneering
               </h1>
               {productName && (
