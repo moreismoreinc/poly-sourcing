@@ -44,6 +44,13 @@ You operate in three phases:
 Adapt your responses based on the current phase and always aim to be clear, helpful, and precise.
 `;
 
+// CRITICAL: Fallback system prompt to ensure OpenAI always gets basic instructions
+const FALLBACK_SYSTEM_PROMPT = `
+You are Geneering, an AI product development expert helping users create manufacturing-ready products.
+
+Always be helpful, clear, and professional in your responses. Focus on practical, manufacturable solutions.
+`;
+
 const QUESTIONING_PROMPT = `You are a product development expert conducting a streamlined interview to create a comprehensive product brief. 
 
 CURRENT CONVERSATION STATE: {{STATE}}
@@ -69,6 +76,22 @@ On completion of this phase, you MUST immediately do 4 things in sequence:
 4. YOU MUST automatically start the Generating phase with research integration.
 
 `;
+
+const EDITING_PROMPT = `You are in the EDITING phase, helping refine this existing product brief:
+
+{{BRIEF}}
+
+Help the user make improvements based on their feedback. Be conversational and explain your reasoning for any changes.`;
+
+const GENERATING_PROMPT_BASE = `You are now in the GENERATING phase. Based on the conversation below, create a detailed product brief as JSON.
+
+CONVERSATION HISTORY:
+{{CONVERSATION_HISTORY}}
+
+ENHANCED PRODUCT TEMPLATE (Use this as your guide):
+{{ENHANCED_TEMPLATE}}
+
+IMPORTANT: You must respond with ONLY valid JSON. No markdown code blocks, no explanations, just the JSON object.`;
 
 // AI-powered category detection
 async function detectCategoryWithAI(productName: string, useCase: string, openAIApiKey: string): Promise<ProductCategory> {
@@ -370,35 +393,36 @@ async function searchReferenceProduct(referenceBrand: string, productContext: st
 async function buildPromptWithResearch(productName: string, useCase: string, referenceBrand: string, openAIApiKey: string): Promise<string> {
   console.log('=== RESEARCH-POWERED PROMPT BUILDING ===');
   
-  // Perform parallel searches for similar products and reference brand
-  const [category, similarProductsData, referenceData] = await Promise.all([
-    detectCategoryWithAI(productName, useCase, openAIApiKey),
-    searchSimilarProducts(productName, useCase),
-    searchReferenceProduct(referenceBrand, `${productName} - ${useCase}`)
-  ]);
-  
-  console.log('AI-determined category:', category);
-  console.log('Similar products research:', similarProductsData);
-  console.log('Reference brand research:', referenceData);
-  
-  const template = TEMPLATES[category] || TEMPLATES.wellness;
-  console.log('Using template for category:', category, 'exists:', !!TEMPLATES[category]);
-  
-  // Determine positioning from reference brand analysis
-  const positioning = referenceData.brand_analysis.positioning.market_level || 'mid-range';
-  
-  // Get price range for this category and positioning
-  const priceRange = PRICE_RANGES[positioning]?.[category] || PRICE_RANGES[positioning]?.wellness || [25, 50];
-  const priceRangeText = `$${priceRange[0]}-${priceRange[1]}`;
-  
-  console.log('Research-determined positioning:', positioning);
-  console.log('Price range:', priceRangeText);
-  
-  // Generate product ID
-  const productId = productName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-  
-  // Create enhanced prompt with research data
-  const researchContext = `
+  try {
+    // Perform parallel searches for similar products and reference brand
+    const [category, similarProductsData, referenceData] = await Promise.all([
+      detectCategoryWithAI(productName, useCase, openAIApiKey),
+      searchSimilarProducts(productName, useCase),
+      searchReferenceProduct(referenceBrand, `${productName} - ${useCase}`)
+    ]);
+    
+    console.log('AI-determined category:', category);
+    console.log('Similar products research:', similarProductsData);
+    console.log('Reference brand research:', referenceData);
+    
+    const template = TEMPLATES[category] || TEMPLATES.wellness;
+    console.log('Using template for category:', category, 'exists:', !!TEMPLATES[category]);
+    
+    // Determine positioning from reference brand analysis
+    const positioning = referenceData.brand_analysis.positioning.market_level || 'mid-range';
+    
+    // Get price range for this category and positioning
+    const priceRange = PRICE_RANGES[positioning]?.[category] || PRICE_RANGES[positioning]?.wellness || [25, 50];
+    const priceRangeText = `$${priceRange[0]}-${priceRange[1]}`;
+    
+    console.log('Research-determined positioning:', positioning);
+    console.log('Price range:', priceRangeText);
+    
+    // Generate product ID
+    const productId = productName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    
+    // Create enhanced prompt with research data
+    const researchContext = `
 SIMILAR PRODUCTS RESEARCH:
 ${JSON.stringify(similarProductsData.market_insights, null, 2)}
 
@@ -414,72 +438,35 @@ APPLICATION RULES:
 - DO NOT copy exact designs or use brand names
 - Apply aesthetic principles authentically to the specific product type`;
 
-  const finalPrompt = template
-    .replace(/{product_name}/g, productName)
-    .replace(/{product_id}/g, productId)
-    .replace(/{use_case}/g, useCase)
-    .replace(/{aesthetic}/g, referenceBrand + ' aesthetic approach')
-    .replace(/{positioning}/g, positioning)
-    .replace(/{price_range}/g, priceRangeText) + 
-    '\n\nRESEARCH CONTEXT:\n' + researchContext;
+    const finalPrompt = template
+      .replace(/{product_name}/g, productName)
+      .replace(/{product_id}/g, productId)
+      .replace(/{use_case}/g, useCase)
+      .replace(/{aesthetic}/g, referenceBrand + ' aesthetic approach')
+      .replace(/{positioning}/g, positioning)
+      .replace(/{price_range}/g, priceRangeText);
+
+    console.log('Final enhanced prompt length:', finalPrompt.length);
     
-  console.log('Final prompt length:', finalPrompt.length);
-  console.log('Research-enhanced prompt preview:', finalPrompt.substring(0, 200));
-  
-  return finalPrompt;
+    return `${ENHANCED_SYSTEM_PROMPT}\n\n${researchContext}\n\n${finalPrompt}`;
+  } catch (error) {
+    console.error('Error in buildPromptWithResearch:', error);
+    // Return a basic fallback prompt
+    return `${ENHANCED_SYSTEM_PROMPT}\n\nCreate a product brief for: ${productName}\nUse case: ${useCase}\nAesthetic inspiration: ${referenceBrand}\n\nGenerate a comprehensive JSON product brief with all manufacturing details.`;
+  }
 }
 
-const GENERATING_PROMPT_BASE = `You are an expert industrial designer and product strategist. 
-
-CONVERSATION HISTORY: {{CONVERSATION_HISTORY}}
-
-Your task is to take the user's input from the conversation history and create a detailed product brief using the enhanced template provided below.
-
-MANDATORY REQUIREMENTS:
-- MUST include a "product_name" field with a creative, marketable product name
-- The product_name should be derived from the user's description and what you deduce about the positioning from the brand inspiration but MUST NOT include the specific brand name from the brand inspiration 
-- Respond ONLY with the JSON product brief - do not call any tools or generate images
-- Focus on creating a comprehensive, manufacturing-ready product specification
-
-WORKFLOW:
-1. Research similar products to understand market attributes and positioning
-2. Analyze the reference brand to understand aesthetic principles and quality standards  
-3. Create a complete JSON product brief that combines:
-   - Product type and function from user's concept
-   - Aesthetic language and positioning approach from reference brand
-4. Return ONLY the JSON object, no additional text or markdown formatting
-5. Do not call any tools - image generation will be handled separately
-
-{{ENHANCED_TEMPLATE}}
-
-Remember: Respond with ONLY the JSON product brief. No tools, no images, just the structured product data.`;
-
-const EDITING_PROMPT = `You are a product development expert helping to refine an existing product brief through conversation.
-
-CURRENT BRIEF: {{BRIEF}}
-
-Your role:
-1. Help users edit and improve their product brief conversationally
-2. Make specific changes based on user requests
-3. Ask clarifying questions when changes need more detail
-4. Reference specific sections when making edits
-5. When providing an updated brief, return ONLY the JSON object without any formatting or tags
-
-Be conversational and helpful while making precise edits to the brief.`;
-
-function analyzeConversationState(messages: any[], existingBrief: any): ConversationState {
-  // If we have an existing brief, we're in editing mode
-  if (existingBrief) {
-    return {
-      phase: 'EDITING',
-      currentQuestion: 0,
-      answers: {},
-      questionsCompleted: true
-    };
-  }
-
-  // If no messages, start questioning
-  if (messages.length === 0) {
+// ENHANCED function to analyze conversation state with robust logging and validation
+function analyzeConversationState(messages: any[], existingBrief?: any): ConversationState {
+  console.log('=== ENHANCED CONVERSATION STATE ANALYSIS ===');
+  console.log('Input validation:');
+  console.log('- Messages array length:', messages?.length || 0);
+  console.log('- Has existing brief:', !!existingBrief);
+  console.log('- Messages is array:', Array.isArray(messages));
+  
+  // Input validation with fallback
+  if (!messages || !Array.isArray(messages)) {
+    console.error('CRITICAL: Invalid messages array received');
     return {
       phase: 'QUESTIONING',
       currentQuestion: 0,
@@ -488,50 +475,79 @@ function analyzeConversationState(messages: any[], existingBrief: any): Conversa
     };
   }
 
-  const userMessages = messages.filter(m => m.role === 'user');
-  const userMessageCount = userMessages.length;
-  const assistantMessages = messages.filter(m => m.role === 'assistant');
+  // If there's an existing brief, we're in editing mode
+  if (existingBrief) {
+    console.log('Existing brief detected, defaulting to EDITING phase');
+    return {
+      phase: 'EDITING',
+      currentQuestion: 2,
+      answers: {},
+      questionsCompleted: true
+    };
+  }
 
-  console.log('=== CONVERSATION ANALYSIS ===');
+  const userMessages = messages.filter(m => m && m.role === 'user');
+  const userMessageCount = userMessages.length;
+  const assistantMessages = messages.filter(m => m && m.role === 'assistant');
+
+  console.log('=== MESSAGE ANALYSIS ===');
   console.log('Total messages:', messages.length);
   console.log('User messages:', userMessageCount);
   console.log('Assistant messages:', assistantMessages.length);
-  console.log('User message contents:', userMessages.map(m => m.content.substring(0, 50) + '...'));
+  
+  if (userMessages.length > 0) {
+    console.log('User message contents preview:', userMessages.map((m, i) => `${i}: ${m.content?.substring(0, 50)}...`));
+  }
 
   // Check if AI has indicated it's ready to generate
   const hasTransitionMessage = assistantMessages.some(msg => 
-    msg.content.includes('generating a product brief') || 
-    msg.content.includes('generate a product brief')
+    msg.content && (
+      msg.content.includes('generating a product brief') || 
+      msg.content.includes('generate a product brief') ||
+      msg.content.includes('Let me generate a product brief')
+    )
   );
 
   console.log('Has transition message:', hasTransitionMessage);
 
-  // Determine phase based on user message count and AI responses
+  // Enhanced phase determination with validation
+  let determinedPhase: ConversationPhase;
+  let currentQuestion: number;
+  let questionsCompleted: boolean;
+
   if (userMessageCount >= 2 || hasTransitionMessage) {
     // After second user message or AI transition, generate brief
-    return {
-      phase: 'GENERATING',
-      currentQuestion: 0,
-      answers: {},
-      questionsCompleted: true
-    };
+    determinedPhase = 'GENERATING';
+    currentQuestion = 2;
+    questionsCompleted = true;
+    console.log('Determined phase: GENERATING (>=2 user messages or transition detected)');
   } else if (userMessageCount === 1) {
     // After first user message, ask second question
-    return {
-      phase: 'QUESTIONING',
-      currentQuestion: 1,
-      answers: {},
-      questionsCompleted: false
-    };
+    determinedPhase = 'QUESTIONING';
+    currentQuestion = 1;
+    questionsCompleted = false;
+    console.log('Determined phase: QUESTIONING (1 user message, asking question 2)');
   } else {
     // Initial state - ask first question
-    return {
-      phase: 'QUESTIONING',
-      currentQuestion: 0,
-      answers: {},
-      questionsCompleted: false
-    };
+    determinedPhase = 'QUESTIONING';
+    currentQuestion = 0;
+    questionsCompleted = false;
+    console.log('Determined phase: QUESTIONING (no user messages, asking question 1)');
   }
+
+  const finalState = {
+    phase: determinedPhase,
+    currentQuestion: currentQuestion,
+    answers: {},
+    questionsCompleted: questionsCompleted
+  };
+
+  console.log('=== FINAL CONVERSATION STATE ===');
+  console.log('Phase:', finalState.phase);
+  console.log('Current question:', finalState.currentQuestion);
+  console.log('Questions completed:', finalState.questionsCompleted);
+  
+  return finalState;
 }
 
 // Initialize Supabase client
@@ -692,27 +708,107 @@ async function generateProductImagesForProject(
   }
 }
 
+// ENHANCED system prompt construction with comprehensive validation and fallbacks
+function constructSystemPrompt(state: ConversationState, messages: any[], existingBrief?: any): string {
+  console.log('=== SYSTEM PROMPT CONSTRUCTION WITH VALIDATION ===');
+  console.log('Input state:', JSON.stringify(state, null, 2));
+  console.log('Has existing brief:', !!existingBrief);
+  console.log('Messages count:', messages?.length || 0);
+  
+  let systemPrompt = '';
+  
+  try {
+    if (state.phase === 'EDITING' && existingBrief) {
+      console.log('Constructing EDITING phase prompt');
+      systemPrompt = OVERALL_SYSTEM_PROMPT + '\n' + EDITING_PROMPT.replace('{{BRIEF}}', JSON.stringify(existingBrief, null, 2));
+      console.log('EDITING prompt length:', systemPrompt.length);
+      
+    } else if (state.phase === 'QUESTIONING') {
+      console.log('Constructing QUESTIONING phase prompt');
+      const currentQ = QUESTIONS[state.currentQuestion];
+      systemPrompt = OVERALL_SYSTEM_PROMPT + '\n' + QUESTIONING_PROMPT
+        .replace('{{STATE}}', JSON.stringify(state, null, 2))
+        .replace('{{CURRENT_QUESTION}}', currentQ ? currentQ.text : 'All questions completed');
+      console.log('QUESTIONING prompt length:', systemPrompt.length);
+      
+    } else if (state.phase === 'GENERATING') {
+      console.log('Constructing GENERATING phase prompt - this is critical');
+      
+      const conversationHistory = messages.map(m => `${m.role}: ${m.content}`).join('\n');
+      const extractedProductName = extractProductNameFromConversation(messages);
+      
+      console.log('Extracted product name:', extractedProductName);
+      
+      // Extract use case and reference brand from conversation
+      const userMessages = messages.filter(m => m.role === 'user');
+      const useCase = userMessages[0]?.content || 'general use';
+      const referenceBrand = userMessages[1]?.content || 'modern aesthetic';
+      
+      console.log('=== GENERATING PHASE DETAILS ===');
+      console.log('Product name:', extractedProductName);
+      console.log('Use case:', useCase);
+      console.log('Reference brand:', referenceBrand);
+      
+      // This is where the issue might occur - the async operation
+      console.log('CRITICAL: About to build research-based prompt');
+      
+      // Create basic fallback first
+      systemPrompt = `${OVERALL_SYSTEM_PROMPT}\n\nYou are now in the GENERATING phase. Create a detailed product brief based on:\nProduct Concept: ${useCase}\nReference Brand: ${referenceBrand}\n\nIMPORTANT: Generate a comprehensive JSON product brief with all manufacturing details.\nRespond with ONLY valid JSON, no additional text.`;
+
+      console.log('Basic GENERATING prompt created, length:', systemPrompt.length);
+      
+    } else {
+      console.warn('Unknown phase detected, using overall system prompt');
+      systemPrompt = OVERALL_SYSTEM_PROMPT;
+    }
+    
+    // Final validation
+    if (!systemPrompt || systemPrompt.trim().length === 0) {
+      console.error('CRITICAL ERROR: System prompt is empty after construction!');
+      systemPrompt = FALLBACK_SYSTEM_PROMPT;
+      console.log('Applied emergency fallback prompt');
+    }
+    
+    console.log('=== SYSTEM PROMPT VALIDATION COMPLETE ===');
+    console.log('Final prompt length:', systemPrompt.length);
+    console.log('First 200 chars:', systemPrompt.substring(0, 200) + '...');
+    
+    return systemPrompt;
+    
+  } catch (error) {
+    console.error('CRITICAL ERROR in system prompt construction:', error);
+    console.log('Applying emergency fallback due to construction error');
+    return FALLBACK_SYSTEM_PROMPT;
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    console.log('=== NEW REQUEST RECEIVED ===');
     const { messages, existingBrief, conversationState, userId } = await req.json();
 
+    console.log('Request payload validation:');
+    console.log('- Messages count:', messages?.length || 0);
+    console.log('- Has existing brief:', !!existingBrief);
+    console.log('- Has conversation state:', !!conversationState);
+    console.log('- User ID present:', !!userId);
+
     if (!openAIApiKey) {
+      console.error('CRITICAL: OpenAI API key not configured');
       throw new Error('OpenAI API key not configured');
     }
 
-    // Analyze conversation state
+    // ENHANCED: Analyze conversation state with robust validation
     let state = conversationState || analyzeConversationState(messages, existingBrief);
     
     // Check if we need to transition to GENERATING phase
-    // This happens when AI has asked both questions and is ready to generate
     if (state.phase === 'QUESTIONING' && state.currentQuestion === 1) {
       const userMessages = messages.filter(m => m.role === 'user');
       if (userMessages.length >= 2) {
-        // Two questions have been answered, transition to GENERATING
         console.log('Detected completed questioning phase, transitioning to GENERATING');
         state = {
           ...state,
@@ -722,61 +818,79 @@ serve(async (req) => {
       }
     }
     
-    console.log('=== CONVERSATION STATE DEBUG ===');
+    console.log('=== FINAL CONVERSATION STATE ===');
     console.log('Phase:', state.phase);
     console.log('Current question:', state.currentQuestion);
     console.log('Questions completed:', state.questionsCompleted);
     console.log('Total user messages:', messages.filter(m => m.role === 'user').length);
-    console.log('Message count:', messages.length);
-    console.log('Has existing brief:', !!existingBrief);
+
+    // ENHANCED: Construct system prompt with comprehensive validation
+    let systemPrompt = constructSystemPrompt(state, messages, existingBrief);
     
-    let systemPrompt = '';
-    
-    if (state.phase === 'EDITING' && existingBrief) {
-      systemPrompt = OVERALL_SYSTEM_PROMPT + '\n' + EDITING_PROMPT.replace('{{BRIEF}}', JSON.stringify(existingBrief, null, 2));
-    } else if (state.phase === 'QUESTIONING') {
-      const currentQ = QUESTIONS[state.currentQuestion];
-      systemPrompt = OVERALL_SYSTEM_PROMPT + '\n' + QUESTIONING_PROMPT
-        .replace('{{STATE}}', JSON.stringify(state, null, 2))
-        .replace('{{CURRENT_QUESTION}}', currentQ ? currentQ.text : 'All questions completed');
-    } else if (state.phase === 'GENERATING') {
-      const conversationHistory = messages.map(m => `${m.role}: ${m.content}`).join('\n');
-      const extractedProductName = extractProductNameFromConversation(messages);
-      console.log('Extracted product name:', extractedProductName);
-      
-      // Extract use case and reference brand from conversation
-      const userMessages = messages.filter(m => m.role === 'user');
-      const useCase = userMessages[0]?.content || 'general use';
-      const referenceBrand = userMessages[1]?.content || 'modern aesthetic';
-      
-      console.log('=== GENERATING PHASE DEBUG ===');
-      console.log('Product name:', extractedProductName);
-      console.log('Use case:', useCase);
-      console.log('Reference brand:', referenceBrand);
-      
-      // Build enhanced prompt using research-based approach
-      const enhancedTemplate = await buildPromptWithResearch(extractedProductName, useCase, referenceBrand, openAIApiKey);
-      console.log('Enhanced template built, length:', enhancedTemplate.length);
-      console.log('First 300 chars of template:', enhancedTemplate.substring(0, 300));
-      
-      systemPrompt = GENERATING_PROMPT_BASE
-        .replace('{{CONVERSATION_HISTORY}}', conversationHistory)
-        .replace('{{ENHANCED_TEMPLATE}}', enhancedTemplate);
+    // GENERATING phase requires special handling for research
+    if (state.phase === 'GENERATING') {
+      try {
+        console.log('GENERATING phase: Building enhanced research prompt');
+        const userMessages = messages.filter(m => m.role === 'user');
+        const useCase = userMessages[0]?.content || 'general use';
+        const referenceBrand = userMessages[1]?.content || 'modern aesthetic';
+        const extractedProductName = extractProductNameFromConversation(messages);
         
-      console.log('Final system prompt length:', systemPrompt.length);
-      console.log('Final system prompt preview:', systemPrompt.substring(0, 500));
+        const enhancedTemplate = await buildPromptWithResearch(extractedProductName, useCase, referenceBrand, openAIApiKey);
+        
+        const conversationHistory = messages.map(m => `${m.role}: ${m.content}`).join('\n');
+        systemPrompt = GENERATING_PROMPT_BASE
+          .replace('{{CONVERSATION_HISTORY}}', conversationHistory)
+          .replace('{{ENHANCED_TEMPLATE}}', enhancedTemplate);
+          
+        console.log('Enhanced research prompt built successfully, length:', systemPrompt.length);
+      } catch (researchError) {
+        console.error('Error building research prompt, using fallback:', researchError);
+        // systemPrompt already has the fallback from constructSystemPrompt
+      }
     }
+    
+    // FINAL VALIDATION before sending to OpenAI
+    console.log('=== FINAL OPENAI REQUEST VALIDATION ===');
+    if (!systemPrompt || systemPrompt.trim().length === 0) {
+      console.error('CRITICAL: System prompt is still empty! This is the reported bug!');
+      systemPrompt = FALLBACK_SYSTEM_PROMPT;
+      console.log('Applied final emergency fallback');
+    }
+    
+    console.log('Final system prompt length:', systemPrompt.length);
+    console.log('System prompt preview:', systemPrompt.substring(0, 200) + '...');
+    console.log('Making OpenAI request with tools count:', TOOLS.length);
 
-    console.log('=== SYSTEM PROMPT ===');
-    console.log('Phase:', state.phase);
-    console.log('Prompt length:', systemPrompt.length);
-    console.log('First 200 chars:', systemPrompt.substring(0, 200));
-
-    // Convert messages to the proper format for Responses API
+    // Convert messages to proper format
     const userMessages = messages.map(m => ({
       role: m.role,
       content: m.content
     }));
+
+    const requestPayload = {
+      model: 'gpt-4.1-2025-04-14',
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt
+        },
+        ...userMessages
+      ],
+      // Only include tools for non-generating phases to get immediate JSON response
+      ...(state.phase !== 'GENERATING' ? { tools: TOOLS, tool_choice: "auto" } : {}),
+      temperature: 0.7,
+      max_tokens: 2000,
+      stream: false,
+    };
+
+    console.log('OpenAI request summary:', {
+      model: requestPayload.model,
+      messageCount: requestPayload.messages.length,
+      systemMessageLength: requestPayload.messages[0].content.length,
+      hasTools: !!requestPayload.tools,
+      toolsCount: requestPayload.tools?.length || 0
+    });
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -784,37 +898,26 @@ serve(async (req) => {
         'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
-        body: JSON.stringify({
-          model: 'gpt-4.1-2025-04-14',
-          messages: [
-            {
-              role: 'system',
-              content: systemPrompt
-            },
-            ...userMessages
-          ],
-          // Only include tools for non-generating phases to get immediate JSON response
-          ...(state.phase !== 'GENERATING' ? { tools: TOOLS, tool_choice: "auto" } : {}),
-          temperature: 0.7,
-          max_tokens: 2000,
-          stream: false,
-        }),
+      body: JSON.stringify(requestPayload),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenAI API Error:', errorText);
+      console.error('=== OPENAI API ERROR ===');
+      console.error('Status:', response.status);
+      console.error('Error text:', errorText);
+      console.error('System prompt was:', systemPrompt.substring(0, 500) + '...');
       throw new Error(`OpenAI API error: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     const data = await response.json();
     
-    console.log('=== OPENAI API RESPONSE DEBUG ===');
+    console.log('=== OPENAI RESPONSE ANALYSIS ===');
     console.log('Response status:', response.status);
-    console.log('Response data structure:', JSON.stringify(data, null, 2));
-    console.log('Data keys:', Object.keys(data));
     console.log('Has choices:', !!data.choices);
     console.log('Choices length:', data.choices?.length || 0);
+    console.log('First choice role:', data.choices?.[0]?.message?.role);
+    console.log('Content length:', data.choices?.[0]?.message?.content?.length || 0);
 
     // Handle standard Chat Completions API format
     let content = '';
@@ -828,7 +931,7 @@ serve(async (req) => {
       content = choice.message?.content || '';
       
       console.log('Extracted content length:', content.length);
-      console.log('Content preview:', content.substring(0, 300));
+      console.log('Content preview:', content.substring(0, 300) + '...');
       
       // Check if there are tool calls to execute
       if (choice.message?.tool_calls && choice.message.tool_calls.length > 0) {
@@ -848,34 +951,27 @@ serve(async (req) => {
               console.log('Added generated image to results');
             } else if (toolCall.function.name === 'web_search') {
               console.log('Web search results:', toolResult);
-              // Web search results can be used to enhance content
             } else if (toolCall.function.name === 'research_manufacturing_data') {
               console.log('Manufacturing research results:', toolResult);
-              // Manufacturing data can be used to enhance product brief
             }
           } catch (error) {
             console.error('Error executing tool:', toolCall.function.name, error);
-            // Continue processing other tools even if one fails
           }
         }
       }
       
     } else {
-      console.error('Unexpected response format - full data:', JSON.stringify(data, null, 2));
+      console.error('Unexpected response format - no choices:', JSON.stringify(data, null, 2));
       throw new Error('No choices received from OpenAI API');
     }
-    
-    console.log('Final extracted content length:', content.length);
-    console.log('Final content preview:', content.substring(0, 300));
-    console.log('Generated images count:', generatedImages.length);
 
     // Extract product brief if present with improved parsing
     let savedProject = null;
     let finalContent = content;
-    console.log('=== DEBUG: Checking for product brief ===');
+    console.log('=== PRODUCT BRIEF EXTRACTION ===');
+    console.log('Phase:', state.phase);
     console.log('Content length:', content.length);
     console.log('Has userId:', !!userId);
-    console.log('Content preview:', content.substring(0, 200));
     
     let productBrief = null;
     
@@ -970,9 +1066,11 @@ serve(async (req) => {
       updatedState = state;
     }
 
-    console.log('=== UPDATED STATE ===');
+    console.log('=== FINAL RESPONSE SUMMARY ===');
     console.log('Updated phase:', updatedState.phase);
     console.log('Updated currentQuestion:', updatedState.currentQuestion);
+    console.log('Has saved project:', !!savedProject);
+    console.log('Generated images count:', generatedImages.length);
 
     // Extract product name for response if we have a saved project
     let responseProductName = '';
@@ -993,10 +1091,15 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Error in streaming-chat function:', error);
+    console.error('=== CRITICAL ERROR IN STREAMING-CHAT ===');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('Timestamp:', new Date().toISOString());
+    
     return new Response(JSON.stringify({ 
       error: error.message,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      debug: 'Check server logs for detailed error information'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
