@@ -243,11 +243,11 @@ All colors MUST be HSL.
   }
   
   .animate-shimmer-fast {
-    animation: shimmer-fast 1.5s ease-in-out infinite;
+    animation: shimmer-fast 4s ease-in-out infinite;
   }
   
   .animate-shimmer-slow {
-    animation: shimmer-slow 3s ease-in-out infinite;
+    animation: shimmer-slow 6s ease-in-out infinite;
   }
   
   .animate-scan-vertical {
@@ -263,15 +263,15 @@ All colors MUST be HSL.
   }
   
   .animate-bounce-slow {
-    animation: bounce-slow 3s ease-in-out infinite;
+    animation: bounce-slow 6s ease-in-out infinite;
   }
   
   .animate-pulse-glow {
-    animation: pulse-glow 2s ease-in-out infinite;
+    animation: pulse-glow 4s ease-in-out infinite;
   }
   
   .animate-fade-pulse {
-    animation: fade-pulse 2s ease-in-out infinite;
+    animation: fade-pulse 4s ease-in-out infinite;
   }
   
   .animate-corner-glow {

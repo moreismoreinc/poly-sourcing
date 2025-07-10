@@ -66,10 +66,10 @@ const ProductPreview = ({ brief, productName, generatedImages = [] }: ProductPre
                     {/* Central content */}
                     <div className="absolute inset-0 flex items-center justify-center bg-gradient-radial from-transparent via-background/5 to-transparent">
                       <div className="text-center text-muted-foreground relative">
-                        {/* Glowing icon */}
+                        {/* Glowing text */}
                         <div className="relative mb-6">
-                          <div className="text-5xl animate-bounce-slow filter drop-shadow-lg">🎨</div>
-                          <div className="absolute inset-0 text-5xl animate-bounce-slow opacity-30 blur-sm scale-110">🎨</div>
+                          <div className="text-3xl font-geneering animate-bounce-slow filter drop-shadow-lg" style={{color: '#f3f3f3'}}>geneering</div>
+                          <div className="absolute inset-0 text-3xl font-geneering animate-bounce-slow opacity-30 blur-sm scale-110" style={{color: '#f3f3f3'}}>geneering</div>
                         </div>
                         
                         {/* Animated dots with glow */}

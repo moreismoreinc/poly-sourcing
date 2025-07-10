@@ -247,7 +247,7 @@ const ProductBriefDisplay: React.FC<ProductBriefDisplayProps> = ({ brief, produc
       <Card className="bg-primary text-primary-foreground border-0 shadow-none rounded-lg">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <div>
+            <div className="text-center flex-1">
               <CardTitle className="text-3xl font-bold">
                 {productName || brief.product_name || 'Product Brief'}
               </CardTitle>
