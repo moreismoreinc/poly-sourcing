@@ -156,9 +156,11 @@ const SplitViewChat = ({
                 geneering
               </h1>
               {productName && (
-                <span className="text-sm text-muted-foreground">
-                  {productName}
-                </span>
+                <div className="absolute left-1/2 transform -translate-x-1/2">
+                  <span className="text-sm text-muted-foreground">
+                    {productName}
+                  </span>
+                </div>
               )}
             </div>
             
