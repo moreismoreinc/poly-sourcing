@@ -143,8 +143,7 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
             console.error('Error creating project:', error);
           } else if (newProject) {
             currentProjectId = newProject.id;
-            // Notify parent component about the new project
-            onBriefUpdate?.(newProject.product_brief as Record<string, any>, newProject.product_name, newProject.id);
+            // Don't call onBriefUpdate here - wait for actual brief generation
           }
         }
       } catch (error) {
