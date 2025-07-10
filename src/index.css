@@ -134,28 +134,28 @@ All colors MUST be HSL.
   @keyframes shimmer-fast {
     0% {
       transform: translateX(-200%) skewX(-15deg);
-      opacity: 0.6;
+      opacity: 0.2;
     }
     50% {
-      opacity: 1;
+      opacity: 0.4;
     }
     100% {
       transform: translateX(200%) skewX(-15deg);
-      opacity: 0.6;
+      opacity: 0.2;
     }
   }
   
   @keyframes shimmer-slow {
     0% {
       transform: translateX(-150%) skewX(-10deg);
-      opacity: 0.3;
+      opacity: 0.1;
     }
     50% {
-      opacity: 0.8;
+      opacity: 0.3;
     }
     100% {
       transform: translateX(150%) skewX(-10deg);
-      opacity: 0.3;
+      opacity: 0.1;
     }
   }
   
@@ -274,10 +274,33 @@ All colors MUST be HSL.
     animation: fade-pulse 4s ease-in-out infinite;
   }
   
-  .animate-corner-glow {
-    animation: corner-glow 2s ease-in-out infinite;
+  
+  @keyframes typewriter {
+    from {
+      width: 0;
+    }
+    to {
+      width: 100%;
+    }
   }
   
+  @keyframes blink {
+    0%, 50% {
+      opacity: 1;
+    }
+    51%, 100% {
+      opacity: 0;
+    }
+  }
+  
+  .animate-typewriter {
+    overflow: hidden;
+    border-right: 2px solid;
+    white-space: nowrap;
+    animation: typewriter 3s steps(9) 1s forwards, blink 1s infinite;
+    width: 0;
+  }
+
   .bg-gradient-radial {
     background: radial-gradient(circle, var(--tw-gradient-stops));
   }

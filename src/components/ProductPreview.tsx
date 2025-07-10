@@ -66,22 +66,17 @@ const ProductPreview = ({ brief, productName, generatedImages = [] }: ProductPre
                     {/* Central content */}
                     <div className="absolute inset-0 flex items-center justify-center bg-gradient-radial from-transparent via-background/5 to-transparent">
                       <div className="text-center text-muted-foreground relative">
-                        {/* Glowing text */}
+                        {/* Glowing text with typewriter effect */}
                         <div className="relative mb-6">
-                          <div className="text-3xl font-geneering animate-bounce-slow filter drop-shadow-lg" style={{color: '#f3f3f3'}}>geneering</div>
-                          <div className="absolute inset-0 text-3xl font-geneering animate-bounce-slow opacity-30 blur-sm scale-110" style={{color: '#f3f3f3'}}>geneering</div>
-                        </div>
-                        
-                        {/* Animated dots with glow */}
-                        <div className="flex items-center justify-center gap-2 mb-4">
-                          <div className="w-3 h-3 bg-primary rounded-full animate-pulse-glow [animation-delay:-0.4s] shadow-lg shadow-primary/50"></div>
-                          <div className="w-3 h-3 bg-primary rounded-full animate-pulse-glow [animation-delay:-0.2s] shadow-lg shadow-primary/50"></div>
-                          <div className="w-3 h-3 bg-primary rounded-full animate-pulse-glow shadow-lg shadow-primary/50"></div>
+                          <div className="text-5xl font-geneering filter drop-shadow-lg animate-typewriter" style={{color: '#f3f3f3'}}>geneering</div>
+                          <div className="absolute inset-0 text-5xl font-geneering opacity-30 blur-sm scale-110 animate-typewriter" style={{color: '#f3f3f3'}}>geneering</div>
                         </div>
                         
                         {/* Text with subtle glow */}
-                        <p className="text-base font-semibold tracking-wide mb-2 animate-fade-pulse">Generating mockup...</p>
-                        <p className="text-sm opacity-75 animate-fade-pulse [animation-delay:-0.5s]">AI is creating your product visualization</p>
+                        <div className="h-12 flex flex-col justify-center">
+                          <p className="text-base font-semibold tracking-wide mb-2 animate-fade-pulse">Generating mockup...</p>
+                          <p className="text-sm opacity-75 animate-fade-pulse [animation-delay:-0.5s]">AI is creating your product visualization</p>
+                        </div>
                       </div>
                     </div>
                     
