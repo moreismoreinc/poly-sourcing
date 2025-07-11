@@ -73,9 +73,9 @@ const Index = () => {
     }
     
     // Clear any existing project data when starting a new conversation
+    // Don't set currentProjectId to null - let useStreamingChat create the new project
     setProductBrief(null);
     setProductName('');
-    setCurrentProjectId(null);
     setGeneratedImages([]);
     
     setShowSplitView(true);

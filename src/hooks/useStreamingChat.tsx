@@ -147,8 +147,8 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
 
     let currentProjectId = projectId;
 
-    // Create project immediately on first message if not exists
-    if (!conversationStarted && !currentProjectId) {
+    // Create project immediately on first message for new conversations
+    if (!conversationStarted) {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
@@ -164,14 +164,17 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
 
           if (error) {
             console.error('Error creating project:', error);
+            return; // Don't proceed if project creation fails
           } else if (newProject) {
             currentProjectId = newProject.id;
+            console.log('Created new project with ID:', currentProjectId);
             // Notify parent component of new project ID immediately
             onBriefUpdate?.(null, 'New Project', newProject.id);
           }
         }
       } catch (error) {
         console.error('Error creating initial project:', error);
+        return; // Don't proceed if project creation fails
       }
     }
 
@@ -239,8 +242,11 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
         // Save both user and assistant messages to database
         if (data.savedProject?.id || currentProjectId) {
           const saveProjectId = data.savedProject?.id || currentProjectId;
+          console.log('Saving messages with project ID:', saveProjectId);
           await saveMessageToDB(userMessage, saveProjectId);
           await saveMessageToDB(assistantMessage, saveProjectId);
+        } else {
+          console.error('No project ID available for saving messages');
         }
 
         // Use saved project data if available, otherwise extract from response
