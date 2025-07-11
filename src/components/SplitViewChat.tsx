@@ -203,25 +203,7 @@ const SplitViewChat = ({
         {/* Chat Panel - 1/3 width */}
         <div className="w-1/3 border-r border-border bg-background flex flex-col">
           <div className="flex-1 flex flex-col h-full">
-            {/* Progress Header */}
-            {conversationState.phase === 'QUESTIONING' && (
-              <div className="border-b border-border p-4 bg-muted/30 flex-shrink-0">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Product Brief Interview</span>
-                  <span className="text-primary font-medium">
-                    Question {Math.min(conversationState.currentQuestion + 1, 2)}/2
-                  </span>
-                </div>
-                <div className="mt-2 w-full bg-muted rounded-full h-2">
-                  <div 
-                    className="bg-primary h-2 rounded-full transition-all duration-300" 
-                    style={{ width: `${Math.min((conversationState.currentQuestion + 1) / 2 * 100, 100)}%` }}
-                  />
-                </div>
-              </div>
-            )}
             
-
             {/* Messages */}
             <ScrollArea className="flex-1 px-4">
               <div className="space-y-4 py-4">
