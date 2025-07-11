@@ -2,32 +2,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ProductBrief } from '@/types/ProductBrief';
 
-export const saveProject = async (productBrief: ProductBrief, rawAiOutput?: string, openaiRequestDetails?: any) => {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    throw new Error('User must be authenticated to save projects');
-  }
-
-  const { data, error } = await supabase
-    .from('projects')
-    .insert({
-      user_id: user.id,
-      product_name: productBrief.product_name,
-      product_brief: JSON.parse(JSON.stringify(productBrief)),
-      raw_ai_output: rawAiOutput,
-      openai_request_details: openaiRequestDetails
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error saving project:', error);
-    throw error;
-  }
-
-  return data;
-};
 
 export const updateProject = async (projectId: string, productBrief: ProductBrief) => {
   const { data: { user } } = await supabase.auth.getUser();
