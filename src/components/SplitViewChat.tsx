@@ -75,9 +75,9 @@ const DynamicAIStatus = ({ conversationState }: { conversationState: Conversatio
   
   return (
     <div className="text-center text-muted-foreground relative">
-      {/* Glowing text with typewriter effect */}
+      {/* Glowing text */}
       <div className="relative mb-6">
-        <div className="text-5xl font-geneering filter drop-shadow-lg animate-typewriter" style={{color: '#f3f3f3'}}>geneering</div>
+        <div className="text-5xl font-geneering filter drop-shadow-lg" style={{color: '#f3f3f3'}}>geneering</div>
       </div>
       
       {/* Dynamic text with fade transition */}
