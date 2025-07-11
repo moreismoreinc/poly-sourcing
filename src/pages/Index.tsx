@@ -152,9 +152,6 @@ const Index = () => {
       onResetChat={resetChat}
       onStartOver={handleStartOver}
       onDownload={handleDownload}
-      isAdmin={isAdmin}
-      imageGenerationEnabled={imageGenerationEnabled}
-      onImageGenerationToggle={updateImageGenerationPreference}
     />
   );
 };

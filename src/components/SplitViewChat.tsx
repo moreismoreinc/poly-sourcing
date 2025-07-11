@@ -35,9 +35,6 @@ interface SplitViewChatProps {
   onResetChat: () => void;
   onStartOver: () => void;
   onDownload: () => void;
-  isAdmin?: boolean;
-  imageGenerationEnabled?: boolean;
-  onImageGenerationToggle?: (enabled: boolean) => void;
 }
 
 // Streaming text display component
@@ -126,10 +123,7 @@ const SplitViewChat = ({
   onSendMessage, 
   onResetChat,
   onStartOver,
-  onDownload,
-  isAdmin = false,
-  imageGenerationEnabled = true,
-  onImageGenerationToggle
+  onDownload
 }: SplitViewChatProps) => {
   const { user, signOut } = useAuth();
   const [input, setInput] = useState('');
@@ -177,22 +171,6 @@ const SplitViewChat = ({
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mr-4">
                   <User className="h-4 w-4" />
                   {user.email}
-                </div>
-              )}
-              
-              {/* Admin-only Image Generation Toggle */}
-              {isAdmin && onImageGenerationToggle && (
-                <div className="flex items-center gap-2 mr-4 px-3 py-2 rounded-lg bg-muted/50 border border-border">
-                  <Settings className="h-4 w-4 text-muted-foreground" />
-                  <Label htmlFor="image-generation-toggle" className="text-sm text-muted-foreground cursor-pointer">
-                    Image Generation
-                  </Label>
-                  <Switch
-                    id="image-generation-toggle"
-                    checked={imageGenerationEnabled}
-                    onCheckedChange={onImageGenerationToggle}
-                    className="data-[state=checked]:bg-primary"
-                  />
                 </div>
               )}
               
