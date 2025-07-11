@@ -66,20 +66,33 @@ export const useUserPreferences = () => {
     setImageGenerationEnabled(enabled);
 
     try {
-      const { data, error } = await supabase
+      // First, try to update existing record
+      const { data: updateData, error: updateError } = await supabase
         .from('user_preferences')
-        .upsert({
-          user_id: user.id,
-          image_generation_enabled: enabled
-        })
+        .update({ image_generation_enabled: enabled })
+        .eq('user_id', user.id)
         .select();
 
-      if (error) {
-        console.error('Error updating user preferences:', error);
-        // Revert the optimistic update
-        setImageGenerationEnabled(!enabled);
+      if (updateError) {
+        console.log('Update failed, trying insert:', updateError);
+        // If update fails (no record exists), try insert
+        const { data: insertData, error: insertError } = await supabase
+          .from('user_preferences')
+          .insert({
+            user_id: user.id,
+            image_generation_enabled: enabled
+          })
+          .select();
+
+        if (insertError) {
+          console.error('Error inserting user preferences:', insertError);
+          // Revert the optimistic update
+          setImageGenerationEnabled(!enabled);
+        } else {
+          console.log('Successfully inserted preferences:', insertData);
+        }
       } else {
-        console.log('Successfully updated preferences:', data);
+        console.log('Successfully updated preferences:', updateData);
       }
     } catch (error) {
       console.error('Error updating user preferences:', error);
