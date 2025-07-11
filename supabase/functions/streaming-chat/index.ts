@@ -782,6 +782,7 @@ serve(async (req) => {
     console.log('- Has existing brief:', !!existingBrief);
     console.log('- Has conversation state:', !!conversationState);
     console.log('- User ID present:', !!userId);
+    console.log('- Project ID received:', projectId);
     console.log('- Image generation enabled:', imageGenerationEnabled);
 
     if (!openAIApiKey) {
@@ -1002,15 +1003,52 @@ serve(async (req) => {
       if (productBrief && typeof productBrief === 'object' && productBrief.product_name) {
         console.log('Successfully extracted product brief:', productBrief.product_name);
         
-        // VALIDATION: Must have projectId to save product brief
-        if (!projectId) {
-          console.error('CRITICAL: No projectId provided when trying to save product brief');
-          finalContent = `I'm sorry, there was an error saving your product brief for "${productBrief.product_name}". Please try starting a new conversation.`;
+        let currentProjectId = projectId;
+        
+        // FALLBACK: If no projectId provided, create a new project as last resort
+        if (!currentProjectId) {
+          console.warn('No projectId provided - creating emergency project as fallback');
+          try {
+            const { data: newProject, error } = await supabase
+              .from('projects')
+              .insert({
+                user_id: userId,
+                product_name: productBrief.product_name || 'Untitled Product',
+                product_brief: productBrief,
+                raw_ai_output: content,
+                openai_request_details: {
+                  timestamp: new Date().toISOString(),
+                  conversation_length: messages?.length || 0
+                }
+              })
+              .select()
+              .single();
+
+            if (error) {
+              console.error('Failed to create emergency project:', error);
+              finalContent = `I've generated your product brief for "${productBrief.product_name}", but there was an error saving it. Please try starting a new conversation.`;
+            } else {
+              currentProjectId = newProject.id;
+              savedProject = newProject;
+              console.log('Emergency project created with ID:', currentProjectId);
+              finalContent = `Perfect! I've generated your product brief for "${productBrief.product_name}". You can now review it in the preview panel and tell me what you'd like to edit or improve. What changes would you like to make?`;
+              
+              // Generate images in background if enabled
+              if (imageGenerationEnabled) {
+                console.log('Starting background image generation...');
+                EdgeRuntime.waitUntil(generateProductImagesForProject(savedProject, productBrief, openAIApiKey, userId));
+              }
+            }
+          } catch (createError) {
+            console.error('Error creating emergency project:', createError);
+            finalContent = `I've generated your product brief for "${productBrief.product_name}", but encountered an error while saving. Please try again.`;
+          }
         } else {
-          console.log('Updating existing project with ID:', projectId);
+          // Normal path: update existing project
+          console.log('Updating existing project with ID:', currentProjectId);
           
           try {
-            savedProject = await updateExistingProject(projectId, productBrief, content);
+            savedProject = await updateExistingProject(currentProjectId, productBrief, content);
             
             if (savedProject) {
               console.log(`Project successfully saved with version ${savedProject.version}, ID: ${savedProject.id}`);
