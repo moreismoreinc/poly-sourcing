@@ -217,7 +217,8 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
           existingBrief,
           conversationState,
           userId: user?.id || null,
-          imageGenerationEnabled
+          imageGenerationEnabled,
+          projectId: currentProjectId // Pass the current project ID
         }
       });
 
