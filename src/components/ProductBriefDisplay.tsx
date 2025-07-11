@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, FlatCard } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -242,204 +242,191 @@ const ProductBriefDisplay: React.FC<ProductBriefDisplayProps> = ({ brief, produc
   const categories = categorizeFields();
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6">
-      {/* Header Card */}
-      <Card className="bg-primary text-primary-foreground border-0 shadow-none rounded-lg">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="text-center flex-1">
-              <CardTitle className="text-3xl font-bold">
-                {productName || brief.product_name || 'Product Brief'}
-              </CardTitle>
-              <CardDescription className="text-primary-foreground/80 text-lg mt-2">
-                Generated Product Specifications
-              </CardDescription>
-            </div>
-            <div className="text-right">
-              <File className="h-8 w-8 text-primary-foreground/80" />
+    <div className="w-full max-w-4xl mx-auto">
+      <FlatCard className="p-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            {productName || brief.product_name || 'Product Brief'}
+          </h1>
+          <div className="h-px bg-black mb-4"></div>
+          <p className="text-muted-foreground text-lg">
+            Generated Product Specifications
+          </p>
+        </div>
+
+        {/* Basic Information */}
+        {categories.basic.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Basic Information
+            </h2>
+            <div className="h-px bg-black mb-6"></div>
+            <div className="space-y-4">
+              {categories.basic.map(([key, value], index) => (
+                <div key={key}>
+                  <div className="flex justify-between items-start gap-4">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {formatFieldName(key)}:
+                    </span>
+                    <div className="text-right flex-1">
+                      {renderSimpleValue(value)}
+                    </div>
+                  </div>
+                  {index < categories.basic.length - 1 && <div className="h-px bg-gray-300 mt-4"></div>}
+                </div>
+              ))}
             </div>
           </div>
-        </CardHeader>
-      </Card>
+        )}
 
-      {/* Basic Information */}
-      {categories.basic.length > 0 && (
-        <Card className="bg-card shadow-none rounded-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5 text-primary" />
-              Basic Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {categories.basic.map(([key, value], index) => (
-              <div key={key}>
-                <div className="flex justify-between items-start gap-4">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    {formatFieldName(key)}:
-                  </span>
-                  <div className="text-right flex-1">
-                    {renderSimpleValue(value)}
-                  </div>
-                </div>
-                {index < categories.basic.length - 1 && <Separator className="mt-4" />}
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Specifications */}
-      {categories.specifications.length > 0 && (
-        <Card className="bg-card shadow-none rounded-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5 text-primary" />
+        {/* Specifications */}
+        {categories.specifications.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+              <Settings className="h-5 w-5" />
               Specifications
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {categories.specifications.map(([key, value], index) => (
-              <div key={key}>
-                <div className="flex justify-between items-start gap-4">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    {formatFieldName(key)}:
-                  </span>
-                  <div className="text-right flex-1">
-                    {isCollapsibleField(value) ? (
-                      <Accordion type="single" collapsible className="w-full">
-                        <AccordionItem value={key} className="border-none">
-                          <AccordionTrigger className="text-sm font-medium py-2 px-3 bg-muted/30 rounded hover:no-underline">
-                            View Details
-                          </AccordionTrigger>
-                          <AccordionContent className="pt-3">
-                            {renderComplexContent(value)}
-                          </AccordionContent>
-                        </AccordionItem>
-                      </Accordion>
-                    ) : (
-                      renderSimpleValue(value)
-                    )}
+            </h2>
+            <div className="h-px bg-black mb-6"></div>
+            <div className="space-y-4">
+              {categories.specifications.map(([key, value], index) => (
+                <div key={key}>
+                  <div className="flex justify-between items-start gap-4">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {formatFieldName(key)}:
+                    </span>
+                    <div className="text-right flex-1">
+                      {isCollapsibleField(value) ? (
+                        <Accordion type="single" collapsible className="w-full">
+                          <AccordionItem value={key} className="border-none">
+                            <AccordionTrigger className="text-sm font-medium py-2 px-3 bg-muted/30 rounded hover:no-underline">
+                              View Details
+                            </AccordionTrigger>
+                            <AccordionContent className="pt-3">
+                              {renderComplexContent(value)}
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
+                      ) : (
+                        renderSimpleValue(value)
+                      )}
+                    </div>
                   </div>
+                  {index < categories.specifications.length - 1 && <div className="h-px bg-gray-300 mt-4"></div>}
                 </div>
-                {index < categories.specifications.length - 1 && <Separator className="mt-4" />}
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+              ))}
+            </div>
+          </div>
+        )}
 
-      {/* Business Information */}
-      {categories.business.length > 0 && (
-        <Card className="bg-card shadow-none rounded-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-primary" />
+        {/* Business Information */}
+        {categories.business.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+              <DollarSign className="h-5 w-5" />
               Business Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {categories.business.map(([key, value], index) => (
-              <div key={key}>
-                <div className="flex justify-between items-start gap-4">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    {formatFieldName(key)}:
-                  </span>
-                  <div className="text-right flex-1">
-                    {isCollapsibleField(value) ? (
-                      <Accordion type="single" collapsible className="w-full">
-                        <AccordionItem value={key} className="border-none">
-                          <AccordionTrigger className="text-sm font-medium py-2 px-3 bg-muted/30 rounded hover:no-underline">
-                            View Details
-                          </AccordionTrigger>
-                          <AccordionContent className="pt-3">
-                            {renderComplexContent(value)}
-                          </AccordionContent>
-                        </AccordionItem>
-                      </Accordion>
-                    ) : (
-                      renderSimpleValue(value)
-                    )}
+            </h2>
+            <div className="h-px bg-black mb-6"></div>
+            <div className="space-y-4">
+              {categories.business.map(([key, value], index) => (
+                <div key={key}>
+                  <div className="flex justify-between items-start gap-4">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {formatFieldName(key)}:
+                    </span>
+                    <div className="text-right flex-1">
+                      {isCollapsibleField(value) ? (
+                        <Accordion type="single" collapsible className="w-full">
+                          <AccordionItem value={key} className="border-none">
+                            <AccordionTrigger className="text-sm font-medium py-2 px-3 bg-muted/30 rounded hover:no-underline">
+                              View Details
+                            </AccordionTrigger>
+                            <AccordionContent className="pt-3">
+                              {renderComplexContent(value)}
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
+                      ) : (
+                        renderSimpleValue(value)
+                      )}
+                    </div>
                   </div>
+                  {index < categories.business.length - 1 && <div className="h-px bg-gray-300 mt-4"></div>}
                 </div>
-                {index < categories.business.length - 1 && <Separator className="mt-4" />}
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+              ))}
+            </div>
+          </div>
+        )}
 
-      {/* Complex/Technical Information */}
-      {categories.complex.length > 0 && (
-        <Card className="bg-card shadow-none rounded-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Beaker className="h-5 w-5 text-primary" />
+        {/* Complex/Technical Information */}
+        {categories.complex.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+              <Beaker className="h-5 w-5" />
               Technical Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </h2>
+            <div className="h-px bg-black mb-6"></div>
             <Accordion type="multiple" className="w-full space-y-2">
               {categories.complex.map(([key, value]) => {
                 const IconComponent = getFieldIcon(key);
                 return (
-                  <AccordionItem key={key} value={key} className="border border-border rounded-lg">
-                    <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                  <AccordionItem key={key} value={key} className="border-none">
+                    <AccordionTrigger className="px-0 py-3 hover:no-underline border-b border-gray-300">
                       <div className="flex items-center gap-3">
-                        <IconComponent className="h-4 w-4 text-primary" />
+                        <IconComponent className="h-4 w-4" />
                         <span className="font-medium">{formatFieldName(key)}</span>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="px-4 pb-4">
+                    <AccordionContent className="px-0 pb-4 pt-4">
                       {renderComplexContent(value)}
                     </AccordionContent>
                   </AccordionItem>
                 );
               })}
             </Accordion>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        )}
 
-      {/* Other Fields */}
-      {categories.other.length > 0 && (
-        <Card className="bg-card shadow-none rounded-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Info className="h-5 w-5 text-primary" />
+        {/* Other Fields */}
+        {categories.other.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+              <Info className="h-5 w-5" />
               Additional Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {categories.other.map(([key, value], index) => (
-              <div key={key}>
-                <div className="flex justify-between items-start gap-4">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    {formatFieldName(key)}:
-                  </span>
-                  <div className="text-right flex-1">
-                    {isCollapsibleField(value) ? (
-                      <Accordion type="single" collapsible className="w-full">
-                        <AccordionItem value={key} className="border-none">
-                          <AccordionTrigger className="text-sm font-medium py-2 px-3 bg-muted/30 rounded hover:no-underline">
-                            View Details
-                          </AccordionTrigger>
-                          <AccordionContent className="pt-3">
-                            {renderComplexContent(value)}
-                          </AccordionContent>
-                        </AccordionItem>
-                      </Accordion>
-                    ) : (
-                      renderSimpleValue(value)
-                    )}
+            </h2>
+            <div className="h-px bg-black mb-6"></div>
+            <div className="space-y-4">
+              {categories.other.map(([key, value], index) => (
+                <div key={key}>
+                  <div className="flex justify-between items-start gap-4">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {formatFieldName(key)}:
+                    </span>
+                    <div className="text-right flex-1">
+                      {isCollapsibleField(value) ? (
+                        <Accordion type="single" collapsible className="w-full">
+                          <AccordionItem value={key} className="border-none">
+                            <AccordionTrigger className="text-sm font-medium py-2 px-3 bg-muted/30 rounded hover:no-underline">
+                              View Details
+                            </AccordionTrigger>
+                            <AccordionContent className="pt-3">
+                              {renderComplexContent(value)}
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
+                      ) : (
+                        renderSimpleValue(value)
+                      )}
+                    </div>
                   </div>
+                  {index < categories.other.length - 1 && <div className="h-px bg-gray-300 mt-4"></div>}
                 </div>
-                {index < categories.other.length - 1 && <Separator className="mt-4" />}
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+              ))}
+            </div>
+          </div>
+        )}
+      </FlatCard>
     </div>
   );
 };
