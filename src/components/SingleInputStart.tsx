@@ -35,7 +35,7 @@ const SingleInputStart = ({ onStartConversation, isLoading }: SingleInputStartPr
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header with user info and admin controls */}
       <div className="flex justify-between items-center p-6 border-b border-border">
-        <div className="text-2xl font-bold text-foreground">
+        <div className="text-5xl text-foreground tracking-tight font-geneering" style={{color: '#f3f3f3'}}>
           Geneering
         </div>
         
