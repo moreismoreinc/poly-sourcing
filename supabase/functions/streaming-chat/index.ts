@@ -1002,30 +1002,38 @@ serve(async (req) => {
       if (productBrief && typeof productBrief === 'object' && productBrief.product_name) {
         console.log('Successfully extracted product brief:', productBrief.product_name);
         
-        // Only update existing project if projectId is provided
-        if (projectId) {
+        // VALIDATION: Must have projectId to save product brief
+        if (!projectId) {
+          console.error('CRITICAL: No projectId provided when trying to save product brief');
+          finalContent = `I'm sorry, there was an error saving your product brief for "${productBrief.product_name}". Please try starting a new conversation.`;
+        } else {
           console.log('Updating existing project with ID:', projectId);
-          savedProject = await updateExistingProject(projectId, productBrief, content);
-        } else {
-          console.log('No projectId provided - unable to update project');
-          savedProject = null;
-        }
-        
-        if (savedProject) {
-          console.log(`Project saved with version ${savedProject.version}, ID: ${savedProject.id}`);
           
-          // Update content for EDITING phase
-          finalContent = `Perfect! I've generated your product brief for "${productBrief.product_name}". You can now review it in the preview panel and tell me what you'd like to edit or improve. What changes would you like to make?`;
-          
-          // Generate images in background after saving the project (non-blocking)
-          if (imageGenerationEnabled) {
-            console.log('Starting background image generation...');
-            EdgeRuntime.waitUntil(generateProductImagesForProject(savedProject, productBrief, openAIApiKey, userId));
-          } else {
-            console.log('Image generation disabled by user preference');
+          try {
+            savedProject = await updateExistingProject(projectId, productBrief, content);
+            
+            if (savedProject) {
+              console.log(`Project successfully saved with version ${savedProject.version}, ID: ${savedProject.id}`);
+              
+              // Set user-friendly content for EDITING phase
+              finalContent = `Perfect! I've generated your product brief for "${productBrief.product_name}". You can now review it in the preview panel and tell me what you'd like to edit or improve. What changes would you like to make?`;
+              
+              // Generate images in background after saving the project (non-blocking)
+              if (imageGenerationEnabled) {
+                console.log('Starting background image generation...');
+                EdgeRuntime.waitUntil(generateProductImagesForProject(savedProject, productBrief, openAIApiKey, userId));
+              } else {
+                console.log('Image generation disabled by user preference');
+              }
+            } else {
+              console.error('Failed to save project - updateExistingProject returned null');
+              finalContent = `I've generated your product brief for "${productBrief.product_name}", but there was an issue saving it. Please try again or contact support if the problem persists.`;
+            }
+          } catch (error) {
+            console.error('Error updating existing project:', error);
+            finalContent = `I've generated your product brief for "${productBrief.product_name}", but encountered an error while saving. Please try again.`;
+            savedProject = null;
           }
-        } else {
-          console.log('saveProjectWithVersion returned null');
         }
       } else {
         console.log('No valid product brief found in content');
