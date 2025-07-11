@@ -633,51 +633,6 @@ async function updateExistingProject(projectId: string, productBrief: any, rawAi
   }
 }
 
-// Helper function to save project with version control
-async function saveProjectWithVersion(userId: string, productBrief: any, rawAiOutput: string, parentProjectId?: string) {
-  try {
-    // If this is an update to existing project, create new version
-    let version = 1;
-    if (parentProjectId) {
-      const { data: latestVersion } = await supabase
-        .from('projects')
-        .select('version')
-        .eq('parent_project_id', parentProjectId)
-        .order('version', { ascending: false })
-        .limit(1)
-        .single();
-      
-      version = (latestVersion?.version || 0) + 1;
-    }
-
-    const { data, error } = await supabase
-      .from('projects')
-      .insert({
-        user_id: userId,
-        product_name: productBrief.product_name || 'Untitled Product',
-        product_brief: productBrief,
-        raw_ai_output: rawAiOutput,
-        version: version,
-        parent_project_id: parentProjectId || null,
-        openai_request_details: {
-          timestamp: new Date().toISOString(),
-          conversation_length: 0
-        }
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error saving project:', error);
-      return null;
-    }
-
-    return data;
-  } catch (error) {
-    console.error('Error in saveProjectWithVersion:', error);
-    return null;
-  }
-}
 
 // Background function to generate images for a project
 async function generateProductImagesForProject(
@@ -1047,15 +1002,13 @@ serve(async (req) => {
       if (productBrief && typeof productBrief === 'object' && productBrief.product_name) {
         console.log('Successfully extracted product brief:', productBrief.product_name);
         
-        // Save or update project with version control
-        // Check if we have a projectId to update, otherwise create new
+        // Only update existing project if projectId is provided
         if (projectId) {
           console.log('Updating existing project with ID:', projectId);
           savedProject = await updateExistingProject(projectId, productBrief, content);
         } else {
-          const parentProjectId = existingBrief?.id || null;
-          console.log('Creating new project with parentProjectId:', parentProjectId);
-          savedProject = await saveProjectWithVersion(userId, productBrief, content, parentProjectId);
+          console.log('No projectId provided - unable to update project');
+          savedProject = null;
         }
         
         if (savedProject) {
