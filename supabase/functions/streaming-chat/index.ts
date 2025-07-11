@@ -789,13 +789,14 @@ serve(async (req) => {
 
   try {
     console.log('=== NEW REQUEST RECEIVED ===');
-    const { messages, existingBrief, conversationState, userId } = await req.json();
+    const { messages, existingBrief, conversationState, userId, imageGenerationEnabled = true } = await req.json();
 
     console.log('Request payload validation:');
     console.log('- Messages count:', messages?.length || 0);
     console.log('- Has existing brief:', !!existingBrief);
     console.log('- Has conversation state:', !!conversationState);
     console.log('- User ID present:', !!userId);
+    console.log('- Image generation enabled:', imageGenerationEnabled);
 
     if (!openAIApiKey) {
       console.error('CRITICAL: OpenAI API key not configured');
@@ -1027,8 +1028,12 @@ serve(async (req) => {
           finalContent = `Perfect! I've generated your product brief for "${productBrief.product_name}". You can now review it in the preview panel and tell me what you'd like to edit or improve. What changes would you like to make?`;
           
           // Generate images in background after saving the project (non-blocking)
-          console.log('Starting background image generation...');
-          EdgeRuntime.waitUntil(generateProductImagesForProject(savedProject, productBrief, openAIApiKey, userId));
+          if (imageGenerationEnabled) {
+            console.log('Starting background image generation...');
+            EdgeRuntime.waitUntil(generateProductImagesForProject(savedProject, productBrief, openAIApiKey, userId));
+          } else {
+            console.log('Image generation disabled by user preference');
+          }
         } else {
           console.log('saveProjectWithVersion returned null');
         }

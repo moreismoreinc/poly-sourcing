@@ -23,9 +23,10 @@ interface UseStreamingChatProps {
   existingBrief?: Record<string, any> | null;
   onConversationStart?: () => void;
   projectId?: string | null;
+  imageGenerationEnabled?: boolean;
 }
 
-export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationStart, projectId }: UseStreamingChatProps = {}) => {
+export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationStart, projectId, imageGenerationEnabled = true }: UseStreamingChatProps = {}) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentResponse, setCurrentResponse] = useState('');
@@ -215,7 +216,8 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
           })),
           existingBrief,
           conversationState,
-          userId: user?.id || null
+          userId: user?.id || null,
+          imageGenerationEnabled
         }
       });
 

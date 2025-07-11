@@ -6,6 +6,8 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useStreamingChat } from '@/hooks/useStreamingChat';
 import { useProjectImages } from '@/hooks/useProjectImages';
+import { useUserRole } from '@/hooks/useUserRole';
+import { useUserPreferences } from '@/hooks/useUserPreferences';
 import SingleInputStart from '@/components/SingleInputStart';
 import SplitViewChat from '@/components/SplitViewChat';
 import RecentProjects from '@/components/RecentProjects';
@@ -14,6 +16,8 @@ import { useEffect } from 'react';
 
 const Index = () => {
   const { user, loading: authLoading } = useAuth();
+  const { isAdmin } = useUserRole();
+  const { imageGenerationEnabled, updateImageGenerationPreference } = useUserPreferences();
   const navigate = useNavigate();
   const [productBrief, setProductBrief] = useState<Record<string, any> | null>(null);
   const [productName, setProductName] = useState<string>('');
@@ -54,6 +58,7 @@ const Index = () => {
     existingBrief: productBrief,
     onConversationStart: () => setShowSplitView(true),
     projectId: currentProjectId,
+    imageGenerationEnabled,
   });
 
   const handleProjectSelect = (brief: Record<string, any>, name: string, projectId: string) => {
@@ -147,6 +152,9 @@ const Index = () => {
       onResetChat={resetChat}
       onStartOver={handleStartOver}
       onDownload={handleDownload}
+      isAdmin={isAdmin}
+      imageGenerationEnabled={imageGenerationEnabled}
+      onImageGenerationToggle={updateImageGenerationPreference}
     />
   );
 };
