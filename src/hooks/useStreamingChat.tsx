@@ -38,6 +38,9 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
     questionsCompleted: !!existingBrief
   });
   const abortControllerRef = useRef<AbortController | null>(null);
+  
+  // Internal project ID management - this ensures immediate updates
+  const [internalProjectId, setInternalProjectId] = useState(projectId);
 
   const extractBriefFromResponse = useCallback((text: string): Record<string, any> | null => {
     const briefMatch = text.match(/<BRIEF>(.*?)<\/BRIEF>/s);
@@ -132,21 +135,26 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
     }
   }, []);
 
-  // Load messages when projectId changes
+  // Sync internal project ID with prop changes
   useEffect(() => {
-    if (projectId) {
-      loadMessagesFromDB(projectId);
+    setInternalProjectId(projectId);
+  }, [projectId]);
+
+  // Load messages when internal project ID changes
+  useEffect(() => {
+    if (internalProjectId) {
+      loadMessagesFromDB(internalProjectId);
     } else {
       // Clear messages when no project is selected
       setMessages([]);
       setConversationStarted(false);
     }
-  }, [projectId, loadMessagesFromDB]);
+  }, [internalProjectId, loadMessagesFromDB]);
 
   const sendMessage = useCallback(async (content: string, isInitial = false) => {
     if (isLoading) return;
 
-    let currentProjectId = projectId;
+    let currentProjectId = internalProjectId;
 
     // Create project immediately on first message for new conversations
     if (!conversationStarted) {
@@ -168,6 +176,8 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
             return; // Don't proceed if project creation fails
           } else if (newProject) {
             currentProjectId = newProject.id;
+            // Update internal state immediately
+            setInternalProjectId(currentProjectId);
             console.log('Created new project with ID:', currentProjectId);
             // Notify parent component of new project ID immediately
             onBriefUpdate?.(null, 'New Project', newProject.id);
@@ -284,7 +294,7 @@ export const useStreamingChat = ({ onBriefUpdate, existingBrief, onConversationS
       setIsLoading(false);
       abortControllerRef.current = null;
     }
-  }, [messages, isLoading, existingBrief, onBriefUpdate, extractBriefFromResponse, conversationStarted, onConversationStart, projectId]);
+  }, [messages, isLoading, existingBrief, onBriefUpdate, extractBriefFromResponse, conversationStarted, onConversationStart, internalProjectId]);
 
   const resetChat = useCallback(() => {
     if (abortControllerRef.current) {
