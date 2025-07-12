@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, TransparentCard } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, FlatCard } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -243,7 +243,7 @@ const ProductBriefDisplay: React.FC<ProductBriefDisplayProps> = ({ brief, produc
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      <TransparentCard className="p-8">
+      <FlatCard className="p-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">
@@ -426,7 +426,7 @@ const ProductBriefDisplay: React.FC<ProductBriefDisplayProps> = ({ brief, produc
             </div>
           </div>
         )}
-      </TransparentCard>
+      </FlatCard>
     </div>
   );
 };
