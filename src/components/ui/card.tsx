@@ -32,21 +32,6 @@ const FlatCard = React.forwardRef<
 ))
 FlatCard.displayName = "FlatCard"
 
-const TransparentCard = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "bg-transparent border-none shadow-none text-foreground",
-      className
-    )}
-    {...props}
-  />
-))
-TransparentCard.displayName = "TransparentCard"
-
 const CardHeader = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
@@ -106,4 +91,4 @@ const CardFooter = React.forwardRef<
 ))
 CardFooter.displayName = "CardFooter"
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent, FlatCard, TransparentCard }
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent, FlatCard }
